@@ -1,8 +1,9 @@
-package util
+package util_test
 
 import (
 	"testing"
 
+	"github.com/Alonza0314/free-ran-ue/util"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
 	"github.com/go-playground/assert/v2"
@@ -28,9 +29,9 @@ var testPlmnIdCases = []struct {
 func TestPlmnIdToModels(t *testing.T) {
 	for _, testCase := range testPlmnIdCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			modelsPlmnId := PlmnIdToModels(testCase.ngapPlmnId)
+			modelsPlmnId := util.PlmnIdToModels(testCase.ngapPlmnId)
 			assert.Equal(t, testCase.modelsPlmnId, modelsPlmnId)
-			ngapPlmnId, err := PlmnIdToNgap(testCase.modelsPlmnId)
+			ngapPlmnId, err := util.PlmnIdToNgap(testCase.modelsPlmnId)
 			assert.Equal(t, testCase.ngapPlmnId, ngapPlmnId)
 			assert.Equal(t, nil, err)
 		})
@@ -65,9 +66,9 @@ var testTaiCases = []struct {
 func TestTaiToModels(t *testing.T) {
 	for _, testCase := range testTaiCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			modelsTai := TaiToModels(testCase.ngapTai)
+			modelsTai := util.TaiToModels(testCase.ngapTai)
 			assert.Equal(t, testCase.modelsTai, modelsTai)
-			ngapTai, err := TaiToNgap(testCase.modelsTai)
+			ngapTai, err := util.TaiToNgap(testCase.modelsTai)
 			assert.Equal(t, testCase.ngapTai, ngapTai)
 			assert.Equal(t, nil, err)
 		})
@@ -99,9 +100,9 @@ var testSnssaiCases = []struct {
 func TestSnssaiToModels(t *testing.T) {
 	for _, testCase := range testSnssaiCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			modelsSnssai := SNssaiToModels(testCase.ngapSnssai)
+			modelsSnssai := util.SNssaiToModels(testCase.ngapSnssai)
 			assert.Equal(t, testCase.modelsSnssai, modelsSnssai)
-			ngapSnssai, err := SNssaiToNgap(testCase.modelsSnssai)
+			ngapSnssai, err := util.SNssaiToNgap(testCase.modelsSnssai)
 			assert.Equal(t, testCase.ngapSnssai, ngapSnssai)
 			assert.Equal(t, nil, err)
 		})

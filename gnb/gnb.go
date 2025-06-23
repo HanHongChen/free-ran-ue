@@ -44,26 +44,41 @@ func NewGnb(config *model.GnbConfig, logger *logger.Logger) *Gnb {
 		logger.Error("CONFIG", fmt.Sprintf("Error converting gnbId to escaped: %v", err))
 		return nil
 	}
-	plmnId := ngapConvert.PlmnIdToNgap(models.PlmnId{
+
+	plmnId, err := util.PlmnIdToNgap(models.PlmnId{
 		Mcc: config.Gnb.PlmnId.Mcc,
 		Mnc: config.Gnb.PlmnId.Mnc,
 	})
-	tai := ngapConvert.TaiToNgap(models.Tai{
+	if err != nil {
+		logger.Error("CONFIG", fmt.Sprintf("Error converting plmnId to ngap: %v", err))
+		return nil
+	}
+
+	tai, err := util.TaiToNgap(models.Tai{
 		Tac: config.Gnb.Tai.Tac,
 		PlmnId: &models.PlmnId{
 			Mcc: config.Gnb.Tai.BroadcastPlmnId.Mcc,
 			Mnc: config.Gnb.Tai.BroadcastPlmnId.Mnc,
 		},
 	})
+	if err != nil {
+		logger.Error("CONFIG", fmt.Sprintf("Error converting tai to ngap: %v", err))
+		return nil
+	}
+
 	sstInt, err := strconv.Atoi(config.Gnb.Snssai.Sst)
 	if err != nil {
 		logger.Error("CONFIG", fmt.Sprintf("Error converting sst to int: %v", err))
 		return nil
 	}
-	snssai := ngapConvert.SNssaiToNgap(models.Snssai{
+	snssai, err := util.SNssaiToNgap(models.Snssai{
 		Sst: int32(sstInt),
 		Sd:  config.Gnb.Snssai.Sd,
 	})
+	if err != nil {
+		logger.Error("CONFIG", fmt.Sprintf("Error converting snssai to ngap: %v", err))
+		return nil
+	}
 
 	return &Gnb{
 		amfN2Ip: config.Gnb.AmfN2Ip,

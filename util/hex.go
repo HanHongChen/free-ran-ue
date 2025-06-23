@@ -3,7 +3,6 @@ package util
 import (
 	"encoding/hex"
 	"fmt"
-	"strings"
 )
 
 func HexStringToBytes(hexStr string) ([]byte, error) {
@@ -14,20 +13,6 @@ func HexStringToBytes(hexStr string) ([]byte, error) {
 	return hex.DecodeString(hexStr)
 }
 
-func HexStringToEscaped(hexStr string) (string, error) {
-	if len(hexStr)%2 != 0 {
-		return "", fmt.Errorf("hex string length must be even")
-	}
-
-	bytes, err := hex.DecodeString(hexStr)
-	if err != nil {
-		return "", err
-	}
-
-	var escaped strings.Builder
-	for _, b := range bytes {
-		escaped.WriteString(fmt.Sprintf("\\x%02x", b))
-	}
-
-	return escaped.String(), nil
+func BytesToHexString(bytes []byte) string {
+	return hex.EncodeToString(bytes)
 }

@@ -7,5 +7,20 @@ gnb:
 
   ngapPpid: 0x3c000000
 
+  gnbId: "000314"
+  gnbName: "gNB"
+
+  plmnId:
+    mcc: "208"
+    mnc: "93"
+  tai:
+    tac: "000001"
+    broadcastPlmnId:
+      mcc: "208"
+      mnc: "93"
+  snssai:
+    sst: "1"
+    sd: "010203"
+
 logger:
   level: "debug" # error, warn, info, debug

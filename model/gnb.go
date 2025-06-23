@@ -13,6 +13,29 @@ type GnbIE struct {
 	GnbN2Port int `yaml:"gnbN2Port"`
 
 	NgapPpid uint32 `yaml:"ngapPpid"`
+
+	GnbId   string `yaml:"gnbId"`
+	GnbName string `yaml:"gnbName"`
+
+	PlmnId PlmnIdIE `yaml:"plmnId"`
+
+	Tai    TaiIE    `yaml:"tai"`
+	Snssai SnssaiIE `yaml:"snssai"`
+}
+
+type PlmnIdIE struct {
+	Mcc string `yaml:"mcc"`
+	Mnc string `yaml:"mnc"`
+}
+
+type TaiIE struct {
+	Tac             string   `yaml:"tac"`
+	BroadcastPlmnId PlmnIdIE `yaml:"broadcastPlmnId"`
+}
+
+type SnssaiIE struct {
+	Sst string `yaml:"sst"`
+	Sd  string `yaml:"sd"`
 }
 
 type LoggerIE struct {

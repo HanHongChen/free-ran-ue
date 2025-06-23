@@ -23,11 +23,15 @@ func main() {
 	}
 
 	gnb := gnb.NewGnb(&gnbConfig, logger)
-	gnb.Start()
+	if gnb == nil {
+		return
+	}
+	if err := gnb.Start(); err != nil {
+		return
+	}
+	defer gnb.Stop()
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
-
-	gnb.Stop()
 }

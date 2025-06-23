@@ -28,42 +28,16 @@ var testHexToBytesCases = []struct {
 	},
 }
 
-var testHexToEscapedCases = []struct {
-	name            string
-	hexStr          string
-	expectedEscaped string
-	expectedError   error
-}{
-	{
-		name:            "testHexToEscaped",
-		hexStr:          "000102",
-		expectedEscaped: "\\x00\\x01\\x02",
-		expectedError:   nil,
-	},
-	{
-		name:            "testHexToEscapedOddLength",
-		hexStr:          "0003040",
-		expectedEscaped: "",
-		expectedError:   errors.New("hex string length must be even"),
-	},
-}
-
 func TestHexToBytes(t *testing.T) {
 	for _, testCase := range testHexToBytesCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			bytes, err := util.HexStringToBytes(testCase.hexStr)
 			assert.Equal(t, testCase.expectedBytes, bytes)
 			assert.Equal(t, testCase.expectedError, err)
-		})
-	}
-}
-
-func TestHexToEscaped(t *testing.T) {
-	for _, testCase := range testHexToEscapedCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			escaped, err := util.HexStringToEscaped(testCase.hexStr)
-			assert.Equal(t, testCase.expectedEscaped, escaped)
-			assert.Equal(t, testCase.expectedError, err)
+			if err == nil {
+				hexStr := util.BytesToHexString(bytes)
+				assert.Equal(t, testCase.hexStr, hexStr)
+			}
 		})
 	}
 }

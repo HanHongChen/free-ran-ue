@@ -1,8 +1,10 @@
-package util
+package util_test
 
 import (
 	"os"
 	"testing"
+
+	"github.com/Alonza0314/free-ran-ue/util"
 )
 
 type testStruct struct {
@@ -10,7 +12,7 @@ type testStruct struct {
 	B int `yaml:"b"`
 }
 
-var testCases = []struct {
+var testYamlCases = []struct {
 	name         string
 	actionType   string
 	filePath     string
@@ -46,17 +48,17 @@ var testCases = []struct {
 }
 
 func TestYaml(t *testing.T) {
-	for _, testCase := range testCases {
+	for _, testCase := range testYamlCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			switch testCase.actionType {
 			case "save":
-				err := SaveToYaml(testCase.filePath, testCase.testData)
+				err := util.SaveToYaml(testCase.filePath, testCase.testData)
 				if err != nil {
 					t.Errorf("save yaml failed: %v", err)
 				}
 			case "load":
 				var data testStruct
-				err := LoadFromYaml(testCase.filePath, &data)
+				err := util.LoadFromYaml(testCase.filePath, &data)
 				if err != nil {
 					t.Errorf("load yaml failed: %v", err)
 				}

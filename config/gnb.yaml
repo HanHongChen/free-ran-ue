@@ -1,5 +1,5 @@
 gnb:
-  amfN2Ip: "127.0.0.1"
+  amfN2Ip: "127.0.0.18"
   gnbN2Ip: "127.0.0.1"
 
   amfN2Port: 38412

@@ -41,29 +41,44 @@ type Gnb struct {
 func NewGnb(config *model.GnbConfig, logger *logger.Logger) *Gnb {
 	gnbId, err := util.HexStringToBytes(config.Gnb.GnbId)
 	if err != nil {
-		logger.Error("GNB", fmt.Sprintf("Error converting gnbId to escaped: %v", err))
+		logger.Error("CONFIG", fmt.Sprintf("Error converting gnbId to escaped: %v", err))
 		return nil
 	}
-	plmnId := ngapConvert.PlmnIdToNgap(models.PlmnId{
+
+	plmnId, err := util.PlmnIdToNgap(models.PlmnId{
 		Mcc: config.Gnb.PlmnId.Mcc,
 		Mnc: config.Gnb.PlmnId.Mnc,
 	})
-	tai := ngapConvert.TaiToNgap(models.Tai{
+	if err != nil {
+		logger.Error("CONFIG", fmt.Sprintf("Error converting plmnId to ngap: %v", err))
+		return nil
+	}
+
+	tai, err := util.TaiToNgap(models.Tai{
 		Tac: config.Gnb.Tai.Tac,
 		PlmnId: &models.PlmnId{
 			Mcc: config.Gnb.Tai.BroadcastPlmnId.Mcc,
 			Mnc: config.Gnb.Tai.BroadcastPlmnId.Mnc,
 		},
 	})
-	sstInt, err := strconv.Atoi(config.Gnb.Snssai.Sst)
 	if err != nil {
-		logger.Error("GNB", fmt.Sprintf("Error converting sst to int: %v", err))
+		logger.Error("CONFIG", fmt.Sprintf("Error converting tai to ngap: %v", err))
 		return nil
 	}
-	snssai := ngapConvert.SNssaiToNgap(models.Snssai{
+
+	sstInt, err := strconv.Atoi(config.Gnb.Snssai.Sst)
+	if err != nil {
+		logger.Error("CONFIG", fmt.Sprintf("Error converting sst to int: %v", err))
+		return nil
+	}
+	snssai, err := util.SNssaiToNgap(models.Snssai{
 		Sst: int32(sstInt),
 		Sd:  config.Gnb.Snssai.Sd,
 	})
+	if err != nil {
+		logger.Error("CONFIG", fmt.Sprintf("Error converting snssai to ngap: %v", err))
+		return nil
+	}
 
 	return &Gnb{
 		amfN2Ip: config.Gnb.AmfN2Ip,
@@ -88,16 +103,14 @@ func NewGnb(config *model.GnbConfig, logger *logger.Logger) *Gnb {
 func (g *Gnb) Start() error {
 	g.logger.Info("GNB", "Starting GNB")
 	if err := g.connectToAmf(); err != nil {
-		g.logger.Error("GNB", err.Error())
+		g.logger.Error("SCTP", err.Error())
 		return err
 	}
 
 	if err := g.setupN2(); err != nil {
-		g.logger.Error("GNB", fmt.Sprintf("Error setting up N2: %v", err))
+		g.logger.Error("NGAP", fmt.Sprintf("Error setting up N2: %v", err))
 		return err
 	}
-
-	g.PrintBasicInfo()
 
 	g.logger.Info("GNB", "GNB started")
 	return nil
@@ -106,7 +119,7 @@ func (g *Gnb) Start() error {
 func (g *Gnb) Stop() {
 	g.logger.Info("GNB", "Stopping GNB")
 	if err := g.n2Conn.Close(); err != nil {
-		g.logger.Error("GNB", fmt.Sprintf("Error stopping GNB: %v", err))
+		g.logger.Error("SCTP", fmt.Sprintf("Error stopping GNB: %v", err))
 		return
 	}
 	g.logger.Info("GNB", "GNB stopped")
@@ -119,8 +132,8 @@ func (g *Gnb) connectToAmf() error {
 	if err != nil {
 		return err
 	}
-	g.logger.Debug("GNB", fmt.Sprintf("AMF N2 Address: %v", amfAddr.String()))
-	g.logger.Debug("GNB", fmt.Sprintf("GNB N2 Address: %v", gnbAddr.String()))
+	g.logger.Debug("SCTP", fmt.Sprintf("AMF N2 Address: %v", amfAddr.String()))
+	g.logger.Debug("SCTP", fmt.Sprintf("GNB N2 Address: %v", gnbAddr.String()))
 
 	conn, err := sctp.DialSCTP("sctp", gnbAddr, amfAddr)
 	if err != nil {
@@ -145,27 +158,26 @@ func (g *Gnb) connectToAmf() error {
 func (g *Gnb) setupN2() error {
 	g.logger.Info("GNB", "Setting up N2")
 	if err := ngapSetup(g.n2Conn, g.gnbId, g.gnbName, g.plmnId, g.tai, g.snssai); err != nil {
-		g.logger.Error("GNB", fmt.Sprintf("Error setting up N2: %v", err))
+		g.logger.Error("NGAP", fmt.Sprintf("Error setting up N2: %v", err))
 		return err
 	}
-	g.logger.Info("GNB", "N2 setup complete")
-	return nil
-}
 
-func (g *Gnb) PrintBasicInfo() {
-	g.logger.Info("GNB", "========== gNB Basic Info ==========")
+	g.logger.Info("NGAP", "========== gNB Basic Info ==========")
 
 	gnbId := util.BytesToHexString(g.gnbId)
-	g.logger.Info("GNB", fmt.Sprintf("gNB ID: %v, name: %s", gnbId, g.gnbName))
+	g.logger.Info("NGAP", fmt.Sprintf("gNB ID: %v, name: %s", gnbId, g.gnbName))
 
 	plmnId := ngapConvert.PlmnIdToModels(g.plmnId)
-	g.logger.Info("GNB", fmt.Sprintf("PLMN ID: %v", plmnId))
+	g.logger.Info("NGAP", fmt.Sprintf("PLMN ID: %v", plmnId))
 
 	tai := ngapConvert.TaiToModels(g.tai)
-	g.logger.Info("GNB", fmt.Sprintf("TAC: %v, broadcast PLMN ID: %v", tai.Tac, tai.PlmnId))
+	g.logger.Info("NGAP", fmt.Sprintf("TAC: %v, broadcast PLMN ID: %v", tai.Tac, tai.PlmnId))
 
 	snssai := ngapConvert.SNssaiToModels(g.snssai)
-	g.logger.Info("GNB", fmt.Sprintf("SST: %v, SD: %v", snssai.Sst, snssai.Sd))
+	g.logger.Info("NGAP", fmt.Sprintf("SST: %v, SD: %v", snssai.Sst, snssai.Sd))
 
-	g.logger.Info("GNB", "====================================")
+	g.logger.Info("NGAP", "====================================")
+
+	g.logger.Info("GNB", "N2 setup complete")
+	return nil
 }

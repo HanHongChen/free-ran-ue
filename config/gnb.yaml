@@ -1,9 +1,11 @@
 gnb:
   amfN2Ip: "127.0.0.18"
   gnbN2Ip: "127.0.0.1"
+  ranIp: "127.0.0.1"
 
   amfN2Port: 38412
   gnbN2Port: 38413
+  ranPort: 31413
 
   ngapPpid: 0x3c000000
 
@@ -23,4 +25,4 @@ gnb:
     sd: "010203"
 
 logger:
-  level: "debug" # error, warn, info, debug
+  level: "debug" # error, warn, info, debug, trace

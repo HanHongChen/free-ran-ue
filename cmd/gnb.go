@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,6 +10,7 @@ import (
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/util"
+	loggergoUtil "github.com/Alonza0314/logger-go/v2/util"
 	"github.com/spf13/cobra"
 )
 
@@ -39,16 +41,16 @@ func gnbFunc(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	logger, err := logger.NewLogger(gnbConfig.Logger.Level)
-	if err != nil {
-		panic(err)
-	}
+	logger := logger.NewGnbLogger(loggergoUtil.LogLevelString(gnbConfig.Logger.Level), "", true)
 
-	gnb := gnb.NewGnb(&gnbConfig, logger)
+	gnb := gnb.NewGnb(&gnbConfig, &logger)
 	if gnb == nil {
 		return
 	}
-	if err := gnb.Start(); err != nil {
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	if err := gnb.Start(ctx); err != nil {
 		return
 	}
 	defer gnb.Stop()
@@ -56,4 +58,6 @@ func gnbFunc(cmd *cobra.Command, args []string) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
+
+	cancel()
 }

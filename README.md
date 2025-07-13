@@ -8,9 +8,15 @@ This project is going to simulate the behavior between core network and RAN/UE. 
 
 For more details, please checkout: [free-ran-ue official website](https://alonza0314.github.io/free-ran-ue/).
 
+## Packages
+
+free-ran-ue used tool packages and model packages from [free5GC](https://github.com/free5gc).
+
 ## License
 
 free-ran-ue is now under [Apache 2.0](LICENSE) license.
+
+Copyright © 2025 Alonza0314. All rights reserved.
 
 ## Log Description
 

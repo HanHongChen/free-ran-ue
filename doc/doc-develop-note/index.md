@@ -3,6 +3,10 @@
 > [!Important]
 > Beleive myself that I can do everything.
 
+## 20250714 PDU Session Establishment
+
+I finished the PDU session establishment procedure, now it can be observed a correct tcpdump record in pcap files. But it still need to do more handler about processing the NAS message sent from RAN to UE. In current implement, the NAS parts are ignored.
+
 ## 20250711 gh-page Deployment and Main Image
 
 Today I have ChatGPT to generate an image for this project and use mkdocs to deploy a github page for presenting free-ran-ue.

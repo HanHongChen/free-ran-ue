@@ -268,8 +268,7 @@ func (g *Gnb) setupN2() error {
 
 	g.NgapLog.Infoln("============= gNB Info =============")
 
-	gnbId := util.BytesToHexString(g.gnbId)
-	g.NgapLog.Infof("gNB ID: %v, name: %s", gnbId, g.gnbName)
+	g.NgapLog.Infof("gNB ID: %s, name: %s", hex.EncodeToString(g.gnbId), g.gnbName)
 
 	plmnId := ngapConvert.PlmnIdToModels(g.plmnId)
 	g.NgapLog.Infof("PLMN ID: %v", plmnId)

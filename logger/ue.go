@@ -13,6 +13,7 @@ type UeLogger struct {
 	UeLog  loggergoModel.LoggerInterface
 	RanLog loggergoModel.LoggerInterface
 	NasLog loggergoModel.LoggerInterface
+	PduLog loggergoModel.LoggerInterface
 }
 
 func NewUeLogger(level loggergoUtil.LogLevelString, filePath string, debugMode bool) UeLogger {
@@ -26,5 +27,6 @@ func NewUeLogger(level loggergoUtil.LogLevelString, filePath string, debugMode b
 		UeLog:  logger.WithTags(UE_TAG, UE_TAG),
 		RanLog: logger.WithTags(UE_TAG, RAN_TAG),
 		NasLog: logger.WithTags(UE_TAG, NAS_TAG),
+		PduLog: logger.WithTags(UE_TAG, PDU_TAG),
 	}
 }

@@ -24,6 +24,13 @@ ue:
     nea2: false
     nea3: false
 
+  pduSession:
+    pduSessionId: 4
+    dnn: "internet"
+    snssai:
+      sst: "1"
+      sd: "010203"
+
   accessType: "3GPP_ACCESS" # 3GPP_ACCESS, NON_3GPP_ACCESS
 
 logger:

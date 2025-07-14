@@ -5,6 +5,7 @@ import (
 
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
+	"github.com/free5gc/openapi/models"
 	"github.com/go-playground/assert"
 )
 
@@ -126,6 +127,59 @@ func TestBuildNasRegistrationCompleteMessage(t *testing.T) {
 	for _, testCase := range testBuildNasRegistrationCompleteMessageCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			_, err := buildNasRegistrationCompleteMessage(testCase.param)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}
+
+var testBuildPduSessionEstablishmentRequestCases = []struct {
+	name          string
+	pduSessionId  uint8
+	expectedError error
+}{
+	{
+		name:          "testBuildPduSessionEstablishmentRequest",
+		pduSessionId:  4,
+		expectedError: nil,
+	},
+}
+
+func TestBuildPduSessionEstablishmentRequest(t *testing.T) {
+	for _, testCase := range testBuildPduSessionEstablishmentRequestCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := buildPduSessionEstablishmentRequest(testCase.pduSessionId)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}
+
+var testBuildUlNasTransportMessageCases = []struct {
+	name                string
+	nasMessageContainer []byte
+	pduSessionId        uint8
+	requestType         uint8
+	dnn                 string
+	sNssai              *models.Snssai
+	expectedError       error
+}{
+	{
+		name:                "testBuildUlNasTransportMessage",
+		nasMessageContainer: []byte{0x7e, 0x00, 0x41, 0x79, 0x00, 0x0c, 0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		pduSessionId:        4,
+		requestType:         0,
+		dnn:                 "internet",
+		sNssai: &models.Snssai{
+			Sst: 1,
+			Sd:  "010203",
+		},
+		expectedError: nil,
+	},
+}
+
+func TestBuildUlNasTransportMessage(t *testing.T) {
+	for _, testCase := range testBuildUlNasTransportMessageCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := buildUlNasTransportMessage(testCase.nasMessageContainer, testCase.pduSessionId, testCase.requestType, testCase.dnn, testCase.sNssai)
 			assert.Equal(t, testCase.expectedError, err)
 		})
 	}

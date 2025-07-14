@@ -3,6 +3,8 @@ package ue
 import (
 	"fmt"
 	"net"
+	"strconv"
+	"time"
 
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
@@ -10,8 +12,6 @@ import (
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
-	"github.com/free5gc/ngap"
-	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
 )
 
@@ -37,6 +37,12 @@ type authenticationSubscription struct {
 	sequenceNumber                string
 }
 
+type pduSession struct {
+	pduSessionId uint8
+	dnn          string
+	sNssai       *models.Snssai
+}
+
 type Ue struct {
 	ranIp   string
 	ranPort int
@@ -50,6 +56,8 @@ type Ue struct {
 
 	accessType models.AccessType
 	authenticationSubscription
+
+	pduSession
 
 	*logger.UeLogger
 }
@@ -79,6 +87,11 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 		cipheringAlgorithm = security.AlgCiphering128NEA3
 	}
 
+	sstInt, err := strconv.Atoi(config.Ue.PduSession.Snssai.Sst)
+	if err != nil {
+		logger.CfgLog.Errorf("Error converting sst to int: %v", err)
+	}
+
 	return &Ue{
 		ranIp:   config.Ue.RanIp,
 		ranPort: config.Ue.RanPort,
@@ -106,6 +119,15 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 			sequenceNumber:                config.Ue.AuthenticationSubscription.SequenceNumber,
 		},
 
+		pduSession: pduSession{
+			pduSessionId: config.Ue.PduSession.PduSessionId,
+			dnn:          config.Ue.PduSession.Dnn,
+			sNssai: &models.Snssai{
+				Sst: int32(sstInt),
+				Sd:  config.Ue.PduSession.Snssai.Sd,
+			},
+		},
+
 		UeLogger: logger,
 	}
 }
@@ -118,8 +140,16 @@ func (u *Ue) Start() error {
 		return err
 	}
 
+	// ue registration
 	if err := u.processUeRegistration(); err != nil {
-		u.UeLog.Errorf("Error sending UE Registration Request: %v", err)
+		u.UeLog.Errorf("Error processing UE registration: %v", err)
+		return err
+	}
+	time.Sleep(1 * time.Second)
+
+	// pdu session establishment
+	if err := u.processPduSessionEstablishment(); err != nil {
+		u.UeLog.Errorf("Error processing PDU session establishment: %v", err)
 		return err
 	}
 
@@ -185,24 +215,14 @@ func (u *Ue) processUeRegistration() error {
 	}
 	u.NasLog.Tracef("Received %d bytes of NAS Authentication Request from RAN", n)
 
-	nasAuthenticationRequest, err := ngap.Decoder(nasAuthenticationRequestRaw[:n])
+	nasPdu, err := nasDecode(u, nas.GetSecurityHeaderType(nasAuthenticationRequestRaw[:n]), nasAuthenticationRequestRaw[:n])
 	if err != nil {
 		return fmt.Errorf("Error decode nas authentication request: %+v", err)
 	}
-	if nasAuthenticationRequest.Present != ngapType.NGAPPDUPresentInitiatingMessage || nasAuthenticationRequest.InitiatingMessage.ProcedureCode.Value != ngapType.ProcedureCodeDownlinkNASTransport {
-		return fmt.Errorf("Error NGAP nas authentication request: %+v", nasAuthenticationRequest)
+	if nasPdu.GmmHeader.GetMessageType() != nas.MsgTypeAuthenticationRequest {
+		return fmt.Errorf("Error nas pdu message type: %+v, expected authenticatoin request", nasPdu)
 	}
-	u.NasLog.Tracef("NGAP nas authentication request: %+v", nasAuthenticationRequest)
-
-	nasPdu, err := getNasPdu(u, nasAuthenticationRequest.InitiatingMessage.Value.DownlinkNASTransport)
-	if err != nil {
-		return fmt.Errorf("Error get nas pdu: %+v", err)
-	} else {
-		if nasPdu.GmmHeader.GetMessageType() != nas.MsgTypeAuthenticationRequest {
-			return fmt.Errorf("Error nas pdu message type: %+v, expected authenticatoin request", nasPdu)
-		}
-		u.NasLog.Tracef("NAS authentication request: %+v", nasPdu)
-	}
+	u.NasLog.Tracef("NAS authentication request: %+v", nasPdu)
 	u.NasLog.Debugln("Receive NAS Authentication Request from RAN")
 
 	// calculate for RES* and send nas authentication response
@@ -241,21 +261,14 @@ func (u *Ue) processUeRegistration() error {
 	}
 	u.NasLog.Tracef("Received %d bytes of NAS Security Mode Command from RAN", n)
 
-	nasSecurityCommand, err := ngap.Decoder(nasSecurityCommandRaw[:n])
-	if err != nil {
-		return fmt.Errorf("Error decode nas security command: %+v", err)
-	}
-	u.NasLog.Tracef("NGAP nas security command: %+v", nasSecurityCommand)
-
-	nasPdu, err = getNasPdu(u, nasSecurityCommand.InitiatingMessage.Value.DownlinkNASTransport)
+	nasPdu, err = nasDecode(u, nas.GetSecurityHeaderType(nasSecurityCommandRaw[:n]), nasSecurityCommandRaw[:n])
 	if err != nil {
 		return fmt.Errorf("Error get nas pdu: %+v", err)
-	} else {
-		if nasPdu.GmmHeader.GetMessageType() != nas.MsgTypeSecurityModeCommand {
-			return fmt.Errorf("Error nas pdu message type: %+v, expected security mode command", nasPdu)
-		}
-		u.NasLog.Tracef("NAS security mode command: %+v", nasPdu)
 	}
+	if nasPdu.GmmHeader.GetMessageType() != nas.MsgTypeSecurityModeCommand {
+		return fmt.Errorf("Error nas pdu message type: %+v, expected security mode command", nasPdu)
+	}
+	u.NasLog.Tracef("NAS security mode command: %+v", nasPdu)
 	u.NasLog.Debugln("Receive NAS Security Mode Command from RAN")
 
 	// send nas security mode complete message
@@ -305,6 +318,42 @@ func (u *Ue) processUeRegistration() error {
 	u.NasLog.Debugln("Send NAS Registration Complete Message to RAN")
 
 	u.RanLog.Infoln("UE Registration finished")
+	return nil
+}
+
+func (u *Ue) processPduSessionEstablishment() error {
+	u.PduLog.Infoln("Processing PDU session establishment")
+
+	// send pdu session establishment request
+	pduSessionEstablishmentRequest, err := getPduSessionEstablishmentRequest(u.pduSession.pduSessionId)
+	if err != nil {
+		return fmt.Errorf("Error get pdu session establishment request: %+v", err)
+	}
+	u.NasLog.Tracef("PDU session establishment request: %+v", pduSessionEstablishmentRequest)
+
+	ulNasTransportPduSessionEstablishmentRequest, err := getUlNasTransportMessage(pduSessionEstablishmentRequest, u.pduSession.pduSessionId, nasMessage.ULNASTransportRequestTypeInitialRequest, u.pduSession.dnn, u.pduSession.sNssai)
+	if err != nil {
+		return fmt.Errorf("Error get ul nas transport pdu session establishment request: %+v", err)
+	}
+	u.NasLog.Tracef("UL NAS transport pdu session establishment request: %+v", ulNasTransportPduSessionEstablishmentRequest)
+
+	encodedUlNasTransportPduSessionEstablishmentRequest, err := encodeNasPduWithSecurity(ulNasTransportPduSessionEstablishmentRequest, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, u, true, false)
+	if err != nil {
+		return fmt.Errorf("Error encode ul nas transport pdu session establishment request: %+v", err)
+	}
+	u.NasLog.Tracef("Encoded UL NAS transport pdu session establishment request: %+v", encodedUlNasTransportPduSessionEstablishmentRequest)
+
+	n, err := u.ranConn.Write(encodedUlNasTransportPduSessionEstablishmentRequest)
+	if err != nil {
+		return fmt.Errorf("Error send ul nas transport pdu session establishment request: %+v", err)
+	}
+	u.NasLog.Tracef("Sent %d bytes of UL NAS transport pdu session establishment request to RAN", n)
+	u.NasLog.Debugln("Send UL NAS transport pdu session establishment request to RAN")
+
+	// receive pdu session establishment accept
+	// TODO: It is not implemented in free5GC test script, need to implement it
+
+	u.PduLog.Infof("UE %s PDU session establishment complete", u.supi)
 	return nil
 }
 

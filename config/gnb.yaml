@@ -1,10 +1,14 @@
 gnb:
   amfN2Ip: "127.0.0.18"
-  gnbN2Ip: "127.0.0.1"
+  ranN2Ip: "127.0.0.1"
+  upfN3Ip: "127.0.0.1"
+  ranN3Ip: "127.0.0.1"
   ranIp: "127.0.0.1"
 
   amfN2Port: 38412
-  gnbN2Port: 38413
+  ranN2Port: 38413
+  upfN3Port: 2152
+  ranN3Port: 2152
   ranPort: 31413
 
   ngapPpid: 0x3c000000
@@ -15,11 +19,13 @@ gnb:
   plmnId:
     mcc: "208"
     mnc: "93"
+
   tai:
     tac: "000001"
     broadcastPlmnId:
       mcc: "208"
       mnc: "93"
+
   snssai:
     sst: "1"
     sd: "010203"

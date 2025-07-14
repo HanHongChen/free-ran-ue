@@ -14,11 +14,13 @@ type UeIE struct {
 	PlmnId PlmnIdIE `yaml:"plmnId"`
 	Msin   string   `yaml:"msin"`
 
+	AccessType                 models.AccessType            `yaml:"accessType"`
+	AuthenticationSubscription AuthenticationSubscriptionIE `yaml:"authenticationSubscription"`
+
 	CipheringAlgorithm CipheringAlgorithmIE `yaml:"cipheringAlgorithm"`
 	IntegrityAlgorithm IntegrityAlgorithmIE `yaml:"integrityAlgorithm"`
 
-	AccessType                 models.AccessType            `yaml:"accessType"`
-	AuthenticationSubscription AuthenticationSubscriptionIE `yaml:"authenticationSubscription"`
+	PduSession PduSessionIE `yaml:"pduSession"`
 }
 
 type AuthenticationSubscriptionIE struct {
@@ -40,4 +42,10 @@ type CipheringAlgorithmIE struct {
 	Nea1 bool `yaml:"nea1"`
 	Nea2 bool `yaml:"nea2"`
 	Nea3 bool `yaml:"nea3"`
+}
+
+type PduSessionIE struct {
+	PduSessionId uint8    `yaml:"pduSessionId"`
+	Dnn          string   `yaml:"dnn"`
+	Snssai       SnssaiIE `yaml:"snssai"`
 }

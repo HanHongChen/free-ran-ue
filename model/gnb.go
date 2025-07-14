@@ -7,11 +7,15 @@ type GnbConfig struct {
 
 type GnbIE struct {
 	AmfN2Ip string `yaml:"amfN2Ip"`
-	GnbN2Ip string `yaml:"gnbN2Ip"`
+	RanN2Ip string `yaml:"ranN2Ip"`
+	UpfN3Ip string `yaml:"upfN3Ip"`
+	RanN3Ip string `yaml:"ranN3Ip"`
 	RanIp   string `yaml:"ranIp"`
 
 	AmfN2Port int `yaml:"amfN2Port"`
-	GnbN2Port int `yaml:"gnbN2Port"`
+	RanN2Port int `yaml:"ranN2Port"`
+	UpfN3Port int `yaml:"upfN3Port"`
+	RanN3Port int `yaml:"ranN3Port"`
 	RanPort   int `yaml:"ranPort"`
 
 	NgapPpid uint32 `yaml:"ngapPpid"`
@@ -23,9 +27,4 @@ type GnbIE struct {
 
 	Tai    TaiIE    `yaml:"tai"`
 	Snssai SnssaiIE `yaml:"snssai"`
-}
-
-type SnssaiIE struct {
-	Sst string `yaml:"sst"`
-	Sd  string `yaml:"sd"`
 }

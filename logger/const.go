@@ -11,4 +11,5 @@ const (
 	SCTP_TAG = "SCTP"
 	NGAP_TAG = "NGAP"
 	NAS_TAG  = "NAS"
+	PDU_TAG  = "PDU"
 )

@@ -1,8 +1,8 @@
 gnb:
   amfN2Ip: "127.0.0.18"
   ranN2Ip: "127.0.0.1"
-  upfN3Ip: "127.0.0.1"
-  ranN3Ip: "127.0.0.1"
+  upfN3Ip: "127.0.0.8"
+  ranN3Ip: "127.0.0.88"
   ranIp: "127.0.0.1"
 
   amfN2Port: 38412

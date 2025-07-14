@@ -37,6 +37,7 @@ type Gnb struct {
 	ranPort   int
 
 	n2Conn      *sctp.SCTPConn
+	n3Conn      *net.UDPConn
 	ranListener *net.Listener
 
 	ngapPpid uint32
@@ -123,6 +124,7 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 
 func (g *Gnb) Start(ctx context.Context) error {
 	g.RanLog.Infoln("Starting GNB")
+
 	if err := g.connectToAmf(); err != nil {
 		g.SctpLog.Errorf("Error connecting to AMF: %v", err)
 		return err
@@ -130,6 +132,11 @@ func (g *Gnb) Start(ctx context.Context) error {
 
 	if err := g.setupN2(); err != nil {
 		g.NgapLog.Errorf("Error setting up N2: %v", err)
+		return err
+	}
+
+	if err := g.connectToUpf(); err != nil {
+		g.RanLog.Errorf("Error connecting to UPF: %v", err)
 		return err
 	}
 
@@ -165,6 +172,7 @@ func (g *Gnb) Start(ctx context.Context) error {
 
 func (g *Gnb) Stop() {
 	g.RanLog.Infoln("Stopping GNB")
+
 	if err := (*g.ranListener).Close(); err != nil {
 		g.RanLog.Errorf("Error stopping gNB: %v", err)
 		return
@@ -229,6 +237,28 @@ func (g *Gnb) connectToAmf() error {
 	g.n2Conn = conn
 
 	g.RanLog.Infof("Connected to AMF: %v", amfAddr.String())
+	return nil
+}
+
+func (g *Gnb) connectToUpf() error {
+	upfAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", g.upfN3Ip, g.upfN3Port))
+	if err != nil {
+		return fmt.Errorf("Error resolving UPF N3 IP address: %v", err)
+	}
+
+	ranAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", g.ranN3Ip, g.ranN3Port))
+	if err != nil {
+		return fmt.Errorf("Error resolving RAN N3 IP address: %v", err)
+	}
+
+	conn, err := net.DialUDP("udp", ranAddr, upfAddr)
+	if err != nil {
+		return fmt.Errorf("Error connecting to UPF: %v", err)
+	}
+	g.RanLog.Debugln("Dial UDP to UPF success")
+
+	g.n3Conn = conn
+	g.RanLog.Infof("Connected to UPF: %v, local: %v", upfAddr.String(), conn.LocalAddr().String())
 	return nil
 }
 
@@ -306,6 +336,7 @@ func (g *Gnb) setupN1(n1Conn net.Conn) error {
 
 func (g *Gnb) startRanListener() error {
 	g.RanLog.Infoln("Starting RAN listener")
+
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", g.ranIp, g.ranPort))
 	if err != nil {
 		return err

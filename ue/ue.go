@@ -312,18 +312,21 @@ func (u *Ue) processUeRegistration() error {
 	u.NasLog.Debugln("Receive NAS Authentication Request from RAN")
 
 	// calculate for RES* and send nas authentication response
-	rand := nasPdu.AuthenticationRequest.GetRANDValue()
-	kAmf, kenc, kint, resStar, err := deriveResStarAndSetKey(fmt.Sprintf("supi-%s", u.supi), u.cipheringAlgorithm, u.integrityAlgorithm, u.authenticationSubscription.sequenceNumber, u.authenticationSubscription.authenticationManagementField, u.authenticationSubscription.encPermanentKey, u.authenticationSubscription.encOpcKey, rand[:], "5G:mnc093.mcc208.3gppnetwork.org")
+	rand, autn := nasPdu.AuthenticationRequest.GetRANDValue(), nasPdu.AuthenticationRequest.GetAUTN()
+	kAmf, kenc, kint, resStar, newSqn, err := deriveResStarAndSetKey(fmt.Sprintf("supi-%s", u.supi), u.cipheringAlgorithm, u.integrityAlgorithm, u.authenticationSubscription.sequenceNumber, u.authenticationSubscription.authenticationManagementField, u.authenticationSubscription.encPermanentKey, u.authenticationSubscription.encOpcKey, rand[:], autn[:], "5G:mnc093.mcc208.3gppnetwork.org")
 	if err != nil {
 		return fmt.Errorf("Error derive res star and set key: %+v", err)
 	} else {
 		u.kAmf = kAmf
 		copy(u.kNasEnc[:], kenc[16:32])
 		copy(u.kNasInt[:], kint[16:32])
+		u.authenticationSubscription.sequenceNumber = newSqn
+
 		u.NasLog.Tracef("RES*: %+v", resStar)
 		u.NasLog.Tracef("kAMF: %+v", kAmf)
 		u.NasLog.Tracef("kNAS_ENC: %+v", kenc)
 		u.NasLog.Tracef("kNAS_INT: %+v", kint)
+		u.NasLog.Tracef("New SQN: %s", newSqn)
 	}
 
 	authenticationResponse, err := getAuthenticationResponse(resStar)

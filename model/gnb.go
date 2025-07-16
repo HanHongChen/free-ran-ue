@@ -10,13 +10,17 @@ type GnbIE struct {
 	RanN2Ip string `yaml:"ranN2Ip"`
 	UpfN3Ip string `yaml:"upfN3Ip"`
 	RanN3Ip string `yaml:"ranN3Ip"`
-	RanIp   string `yaml:"ranIp"`
+
+	RanControlPlaneIp string `yaml:"ranControlPlaneIp"`
+	RanDataPlaneIp    string `yaml:"ranDataPlaneIp"`
 
 	AmfN2Port int `yaml:"amfN2Port"`
 	RanN2Port int `yaml:"ranN2Port"`
 	UpfN3Port int `yaml:"upfN3Port"`
 	RanN3Port int `yaml:"ranN3Port"`
-	RanPort   int `yaml:"ranPort"`
+
+	RanControlPlanePort int `yaml:"ranControlPlanePort"`
+	RanDataPlanePort    int `yaml:"ranDataPlanePort"`
 
 	NgapPpid uint32 `yaml:"ngapPpid"`
 

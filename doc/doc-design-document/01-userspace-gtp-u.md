@@ -1,4 +1,4 @@
-# Userspace GTP-U Forward between RAN and UE
+# Userspace GTP-U
 
 ## Introduction
 

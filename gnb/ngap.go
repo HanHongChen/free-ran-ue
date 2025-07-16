@@ -242,7 +242,6 @@ func buildUplinkNasTransport(amfUeNgapId int64, ranUeNgapId int64, plmnId ngapTy
 	ie.Value.Present = ngapType.UplinkNASTransportIEsPresentNASPDU
 	ie.Value.NASPDU = new(ngapType.NASPDU)
 
-	// TODO: complete NAS-PDU
 	nASPDU := ie.Value.NASPDU
 	nASPDU.Value = nasPdu
 

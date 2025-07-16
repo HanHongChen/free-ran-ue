@@ -3,6 +3,18 @@
 > [!Important]
 > Beleive myself that I can do everything.
 
+## 20250716 Userspace GTP-U: DOWNLINK
+
+It is a great day for finishing the full data plane traffic of user space GTP-U. Now, free-ran-ue can establishment a complete control plane message and funtional data plane trasmission.
+
+It also help me to understand a lot of linux based network setting about routing and namespace ip setting.
+
+## 20250715 Userspace GTP-U: UPLINK
+
+Today I finished the UPLINK data plane from UE to data network. It is a hard working day for debuging conflict in routing rules with 10.60.0.x source ip.
+
+It also prove that it is available that we do the whole GTP-U packet encapsulating and forwardign in userspace without using kernel module in traditional.
+
 ## 20250714 PDU Session Establishment
 
 I finished the PDU session establishment procedure, now it can be observed a correct tcpdump record in pcap files. But it still need to do more handler about processing the NAS message sent from RAN to UE. In current implement, the NAS parts are ignored.

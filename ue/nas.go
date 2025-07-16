@@ -114,8 +114,6 @@ func nasEncode(nasMessage *nas.Message, securityContextAvailable bool, newSecuri
 	msgSecurityHeader := []byte{nasMessage.SecurityHeader.ProtocolDiscriminator, nasMessage.SecurityHeader.SecurityHeaderType}
 	payload = append(msgSecurityHeader, payload[:]...)
 
-	ue.ulCount.AddOne()
-
 	return payload, nil
 }
 
@@ -417,4 +415,15 @@ func buildUlNasTransportMessage(nasMessageContainer []byte, pduSessionId uint8, 
 
 func getUlNasTransportMessage(nasMessageContainer []byte, pduSessionId uint8, requestType uint8, dnn string, sNssai *models.Snssai) ([]byte, error) {
 	return buildUlNasTransportMessage(nasMessageContainer, pduSessionId, requestType, dnn, sNssai)
+}
+
+func getNasPduFromNasPduSessionEstablishmentAccept(nasPduSessionEstablishmentAccept *nas.Message) (*nas.Message, error) {
+	content := nasPduSessionEstablishmentAccept.DLNASTransport.GetPayloadContainerContents()
+
+	nasMessage := new(nas.Message)
+	if err := nasMessage.PlainNasDecode(&content); err != nil {
+		return nil, err
+	}
+
+	return nasMessage, nil
 }

@@ -8,8 +8,11 @@ type UeConfig struct {
 }
 
 type UeIE struct {
-	RanIp   string `yaml:"ranIp"`
-	RanPort int    `yaml:"ranPort"`
+	RanControlPlaneIp string `yaml:"ranControlPlaneIp"`
+	RanDataPlaneIp    string `yaml:"ranDataPlaneIp"`
+
+	RanControlPlanePort int `yaml:"ranControlPlanePort"`
+	RanDataPlanePort    int `yaml:"ranDataPlanePort"`
 
 	PlmnId PlmnIdIE `yaml:"plmnId"`
 	Msin   string   `yaml:"msin"`
@@ -21,6 +24,8 @@ type UeIE struct {
 	IntegrityAlgorithm IntegrityAlgorithmIE `yaml:"integrityAlgorithm"`
 
 	PduSession PduSessionIE `yaml:"pduSession"`
+
+	UeTunnelDevice string `yaml:"ueTunnelDevice"`
 }
 
 type AuthenticationSubscriptionIE struct {

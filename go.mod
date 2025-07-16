@@ -14,6 +14,7 @@ require (
 	github.com/free5gc/util v1.0.7-0.20240911054252-194b3b49aba9
 	github.com/go-playground/assert v1.2.1
 	github.com/go-playground/assert/v2 v2.2.0
+	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/spf13/cobra v1.8.1
 	gopkg.in/yaml.v2 v2.4.0
 )

@@ -14,6 +14,7 @@ type GnbLogger struct {
 	SctpLog loggergoModel.LoggerInterface
 	NgapLog loggergoModel.LoggerInterface
 	NasLog  loggergoModel.LoggerInterface
+	GtpLog  loggergoModel.LoggerInterface
 }
 
 func NewGnbLogger(level loggergoUtil.LogLevelString, filePath string, debugMode bool) GnbLogger {
@@ -28,5 +29,6 @@ func NewGnbLogger(level loggergoUtil.LogLevelString, filePath string, debugMode 
 		SctpLog: logger.WithTags(GNB_TAG, SCTP_TAG),
 		NgapLog: logger.WithTags(GNB_TAG, NGAP_TAG),
 		NasLog:  logger.WithTags(GNB_TAG, NAS_TAG),
+		GtpLog:  logger.WithTags(GNB_TAG, GTP_TAG),
 	}
 }

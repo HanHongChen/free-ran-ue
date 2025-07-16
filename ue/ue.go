@@ -1,6 +1,8 @@
 package ue
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -13,6 +15,7 @@ import (
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/openapi/models"
+	"github.com/songgao/water"
 )
 
 type authentication struct {
@@ -43,10 +46,23 @@ type pduSession struct {
 	sNssai       *models.Snssai
 }
 
+type pduSessionEstablishmentAccept struct {
+	ueIp    string
+	qosRule []uint8
+	dnn     string
+	sst     uint8
+	sd      [3]uint8
+}
+
 type Ue struct {
-	ranIp   string
-	ranPort int
-	ranConn net.Conn
+	ranControlPlaneIp string
+	ranDataPlaneIp    string
+
+	ranControlPlanePort int
+	ranDataPlanePort    int
+
+	ranControlPlaneConn net.Conn
+	ranDataPlaneConn    net.Conn
 
 	mcc  string
 	mnc  string
@@ -58,6 +74,14 @@ type Ue struct {
 	authenticationSubscription
 
 	pduSession
+
+	ueTunnelDeviceName string
+	ueTunnelDevice     *water.Interface
+
+	readFromTun chan []byte
+	readFromRan chan []byte
+
+	pduSessionEstablishmentAccept
 
 	*logger.UeLogger
 }
@@ -93,8 +117,11 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 	}
 
 	return &Ue{
-		ranIp:   config.Ue.RanIp,
-		ranPort: config.Ue.RanPort,
+		ranControlPlaneIp: config.Ue.RanControlPlaneIp,
+		ranDataPlaneIp:    config.Ue.RanDataPlaneIp,
+
+		ranControlPlanePort: config.Ue.RanControlPlanePort,
+		ranDataPlanePort:    config.Ue.RanDataPlanePort,
 
 		mcc:  config.Ue.PlmnId.Mcc,
 		mnc:  config.Ue.PlmnId.Mnc,
@@ -128,30 +155,59 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 			},
 		},
 
+		ueTunnelDeviceName: config.Ue.UeTunnelDevice,
+
 		UeLogger: logger,
 	}
 }
 
-func (u *Ue) Start() error {
+func (u *Ue) Start(ctx context.Context) error {
 	u.UeLog.Infof("Starting UE: imsi-%s", u.supi)
 
-	if err := u.connectToRan(); err != nil {
+	if err := u.connectToRanControlPlane(); err != nil {
 		u.UeLog.Errorf("Error connecting to RAN: %v", err)
 		return err
 	}
 
-	// ue registration
 	if err := u.processUeRegistration(); err != nil {
 		u.UeLog.Errorf("Error processing UE registration: %v", err)
+		if err := u.ranControlPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing RAN connection: %v", err)
+		}
 		return err
 	}
 	time.Sleep(1 * time.Second)
 
-	// pdu session establishment
 	if err := u.processPduSessionEstablishment(); err != nil {
 		u.UeLog.Errorf("Error processing PDU session establishment: %v", err)
+		if err := u.ranControlPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing RAN connection: %v", err)
+		}
 		return err
 	}
+	time.Sleep(1 * time.Second)
+
+	if err := u.connectToRanDataPlane(); err != nil {
+		u.UeLog.Errorf("Error connecting to RAN data plane: %v", err)
+		if err := u.ranControlPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing RAN connection: %v", err)
+		}
+		return err
+	}
+
+	if err := u.setupTunnelDevice(); err != nil {
+		u.UeLog.Errorf("Error setting up tunnel device: %v", err)
+		if err := u.ranDataPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing RAN connection: %v", err)
+		}
+		if err := u.ranControlPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing RAN connection: %v", err)
+		}
+		return err
+	}
+
+	// handle data plane
+	go u.handleDataPlane(ctx)
 
 	u.UeLog.Infoln("UE started")
 	return nil
@@ -160,27 +216,57 @@ func (u *Ue) Start() error {
 func (u *Ue) Stop() {
 	u.UeLog.Infof("Stopping UE: imsi-%s", u.supi)
 
-	if err := u.ranConn.Close(); err != nil {
+	close(u.readFromTun)
+	close(u.readFromRan)
+
+	if err := u.cleanUpTunnelDevice(); err != nil {
+		u.UeLog.Errorf("Error cleaning up tunnel device: %v", err)
+	}
+
+	if err := u.ranDataPlaneConn.Close(); err != nil {
 		u.UeLog.Errorf("Error closing RAN connection: %v", err)
 	}
+
+	if err := u.ranControlPlaneConn.Close(); err != nil {
+		u.UeLog.Errorf("Error closing RAN connection: %v", err)
+	}
+
 	u.UeLog.Infoln("UE stopped")
 }
 
-func (u *Ue) connectToRan() error {
-	u.RanLog.Infoln("Connecting to RAN")
+func (u *Ue) connectToRanControlPlane() error {
+	u.RanLog.Infoln("Connecting to RAN control plane")
 
-	u.RanLog.Tracef("AMF address: %s:%d", u.ranIp, u.ranPort)
+	u.RanLog.Tracef("RAN control plane address: %s:%d", u.ranControlPlaneIp, u.ranControlPlanePort)
 
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.ranIp, u.ranPort))
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.ranControlPlaneIp, u.ranControlPlanePort))
 	if err != nil {
 		return err
 	}
 
-	u.RanLog.Debugln("Dial SCTP to RAN success")
+	u.RanLog.Debugln("Dial TCP to RAN control plane success")
 
-	u.ranConn = conn
+	u.ranControlPlaneConn = conn
 
-	u.RanLog.Infof("Connected to RAN: %s:%d", u.ranIp, u.ranPort)
+	u.RanLog.Infof("Connected to RAN control plane: %s:%d", u.ranControlPlaneIp, u.ranControlPlanePort)
+	return nil
+}
+
+func (u *Ue) connectToRanDataPlane() error {
+	u.RanLog.Infoln("Connecting to RAN data plane")
+
+	u.RanLog.Tracef("RAN data plane address: %s:%d", u.ranDataPlaneIp, u.ranDataPlanePort)
+
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.ranDataPlaneIp, u.ranDataPlanePort))
+	if err != nil {
+		return err
+	}
+
+	u.RanLog.Debugln("Dial TCP to RAN data plane success")
+
+	u.ranDataPlaneConn = conn
+
+	u.RanLog.Infof("Connected to RAN data plane: %s:%d", u.ranDataPlaneIp, u.ranDataPlanePort)
 	return nil
 }
 
@@ -200,7 +286,7 @@ func (u *Ue) processUeRegistration() error {
 	}
 	u.NasLog.Tracef("Get UE %s registration request: %+v", u.supi, registrationRequest)
 
-	n, err := u.ranConn.Write(registrationRequest)
+	n, err := u.ranControlPlaneConn.Write(registrationRequest)
 	if err != nil {
 		return fmt.Errorf("Error send ue registration request: %+v", err)
 	}
@@ -209,7 +295,7 @@ func (u *Ue) processUeRegistration() error {
 
 	// receive nas authentication request
 	nasAuthenticationRequestRaw := make([]byte, 1024)
-	n, err = u.ranConn.Read(nasAuthenticationRequestRaw)
+	n, err = u.ranControlPlaneConn.Read(nasAuthenticationRequestRaw)
 	if err != nil {
 		return fmt.Errorf("Error read nas authentication request: %+v", err)
 	}
@@ -246,7 +332,7 @@ func (u *Ue) processUeRegistration() error {
 	}
 	u.NasLog.Tracef("Authentication response: %+v", authenticationResponse)
 
-	n, err = u.ranConn.Write(authenticationResponse)
+	n, err = u.ranControlPlaneConn.Write(authenticationResponse)
 	if err != nil {
 		return fmt.Errorf("Error send authentication response: %+v", err)
 	}
@@ -255,7 +341,7 @@ func (u *Ue) processUeRegistration() error {
 
 	// receive nas security mode command message
 	nasSecurityCommandRaw := make([]byte, 1024)
-	n, err = u.ranConn.Read(nasSecurityCommandRaw)
+	n, err = u.ranControlPlaneConn.Read(nasSecurityCommandRaw)
 	if err != nil {
 		return fmt.Errorf("Error read nas security command: %+v", err)
 	}
@@ -290,7 +376,7 @@ func (u *Ue) processUeRegistration() error {
 	}
 	u.NasLog.Tracef("Encoded NAS security mode complete message: %+v", encodedNasSecurityModeCompleteMessage)
 
-	n, err = u.ranConn.Write(encodedNasSecurityModeCompleteMessage)
+	n, err = u.ranControlPlaneConn.Write(encodedNasSecurityModeCompleteMessage)
 	if err != nil {
 		return fmt.Errorf("Error send nas security mode complete message: %+v", err)
 	}
@@ -310,7 +396,7 @@ func (u *Ue) processUeRegistration() error {
 	}
 	u.NasLog.Tracef("Encoded NAS registration complete message: %+v", encodedNasRegistrationCompleteMessage)
 
-	n, err = u.ranConn.Write(encodedNasRegistrationCompleteMessage)
+	n, err = u.ranControlPlaneConn.Write(encodedNasRegistrationCompleteMessage)
 	if err != nil {
 		return fmt.Errorf("Error send nas registration complete message: %+v", err)
 	}
@@ -343,7 +429,7 @@ func (u *Ue) processPduSessionEstablishment() error {
 	}
 	u.NasLog.Tracef("Encoded UL NAS transport pdu session establishment request: %+v", encodedUlNasTransportPduSessionEstablishmentRequest)
 
-	n, err := u.ranConn.Write(encodedUlNasTransportPduSessionEstablishmentRequest)
+	n, err := u.ranControlPlaneConn.Write(encodedUlNasTransportPduSessionEstablishmentRequest)
 	if err != nil {
 		return fmt.Errorf("Error send ul nas transport pdu session establishment request: %+v", err)
 	}
@@ -351,9 +437,158 @@ func (u *Ue) processPduSessionEstablishment() error {
 	u.NasLog.Debugln("Send UL NAS transport pdu session establishment request to RAN")
 
 	// receive pdu session establishment accept
-	// TODO: It is not implemented in free5GC test script, need to implement it
+	nasPduSessionEstablishmentAcceptRaw := make([]byte, 1024)
+	n, err = u.ranControlPlaneConn.Read(nasPduSessionEstablishmentAcceptRaw)
+	if err != nil {
+		return fmt.Errorf("Error read nas pdu session establishment accept: %+v", err)
+	}
+	u.NasLog.Tracef("Received %d bytes of NAS PDU Session Establishment Accept from RAN", n)
+
+	nasPduSessionEstablishmentAccept, err := nasDecode(u, nas.GetSecurityHeaderType(nasPduSessionEstablishmentAcceptRaw[:n]), nasPduSessionEstablishmentAcceptRaw[:n])
+	if err != nil {
+		return fmt.Errorf("Error decode nas pdu session establishment accept: %+v", err)
+	}
+	if nasPduSessionEstablishmentAccept.GmmHeader.GetMessageType() != nas.MsgTypeDLNASTransport {
+		return fmt.Errorf("Error nas pdu message type: %+v, expected pdu session establishment accept", nasPduSessionEstablishmentAccept.GmmHeader.GetMessageType())
+	}
+	u.NasLog.Tracef("NAS PDU Session Establishment Accept: %+v", nasPduSessionEstablishmentAccept)
+	u.NasLog.Debugln("Receive NAS PDU Session Establishment Accept from RAN")
+
+	// store ue information
+	if err := u.extractUeInformationFromNasPduSessionEstablishmentAccept(nasPduSessionEstablishmentAccept); err != nil {
+		return fmt.Errorf("Error extract ue information from nas pdu session establishment accept: %+v", err)
+	}
 
 	u.PduLog.Infof("UE %s PDU session establishment complete", u.supi)
+	return nil
+}
+
+func (u *Ue) extractUeInformationFromNasPduSessionEstablishmentAccept(nasPduSessionEstablishmentAccept *nas.Message) error {
+	nasMessage, err := getNasPduFromNasPduSessionEstablishmentAccept(nasPduSessionEstablishmentAccept)
+	if err != nil {
+		return fmt.Errorf("Error get nas pdu from nas pdu session establishment accept: %+v", err)
+	}
+	u.NasLog.Tracef("NAS message: %+v", nasMessage)
+
+	switch nasMessage.GsmHeader.GetMessageType() {
+	case nas.MsgTypePDUSessionEstablishmentAccept:
+		pduSessionEstablishmentAccept := nasMessage.PDUSessionEstablishmentAccept
+
+		pduAddress := pduSessionEstablishmentAccept.GetPDUAddressInformation()
+		u.pduSessionEstablishmentAccept.ueIp = fmt.Sprintf("%d.%d.%d.%d", pduAddress[0], pduAddress[1], pduAddress[2], pduAddress[3])
+		u.PduLog.Infof("PDU session UE IP: %s", u.pduSessionEstablishmentAccept.ueIp)
+
+		u.pduSessionEstablishmentAccept.qosRule = pduSessionEstablishmentAccept.AuthorizedQosRules.GetQosRule()
+		u.PduLog.Infof("PDU session QoS rule: %+v", u.pduSessionEstablishmentAccept.qosRule)
+
+		u.pduSessionEstablishmentAccept.dnn = pduSessionEstablishmentAccept.GetDNN()
+		u.PduLog.Infof("PDU session DNN: %s", u.pduSessionEstablishmentAccept.dnn)
+
+		u.pduSessionEstablishmentAccept.sst = pduSessionEstablishmentAccept.GetSST()
+		u.pduSessionEstablishmentAccept.sd = pduSessionEstablishmentAccept.GetSD()
+		u.PduLog.Infof("PDU session SNSSAI, sst: %d, sd: %s", u.pduSessionEstablishmentAccept.sst, fmt.Sprintf("%x%x%x", u.pduSessionEstablishmentAccept.sd[0], u.pduSessionEstablishmentAccept.sd[1], u.pduSessionEstablishmentAccept.sd[2]))
+	case nas.MsgTypePDUSessionReleaseCommand:
+		return fmt.Errorf("Not implemented: PDUSessionReleaseCommand")
+	case nas.MsgTypePDUSessionEstablishmentReject:
+		return fmt.Errorf("Not implemented: PDUSessionEstablishmentReject")
+	default:
+		return fmt.Errorf("Not implemented: %+v", nasMessage.GsmHeader.GetMessageType())
+	}
+
+	return nil
+}
+
+func (u *Ue) setupTunnelDevice() error {
+	u.TunLog.Infoln("Setting up UE tunnel device")
+
+	waterInterface, err := bringUpUeTunnelDevice(u.ueTunnelDeviceName, u.ueIp)
+	if err != nil {
+		return fmt.Errorf("Error bring up ue tunnel device: %+v", err)
+	}
+	u.TunLog.Debugln("Bring up ue tunnel device success")
+
+	u.ueTunnelDevice = waterInterface
+
+	// go routine for read data from TUN
+	u.readFromTun = make(chan []byte)
+	go func() {
+		buffer := make([]byte, 4096)
+		for {
+			n, err := u.ueTunnelDevice.Read(buffer)
+			if err != nil {
+				u.TunLog.Errorf("Error read from ue tunnel device: %+v", err)
+				return
+			}
+			version := buffer[0] >> 4
+			if version == 6 {
+				continue
+			}
+			u.readFromTun <- buffer[:n]
+		}
+	}()
+	u.TunLog.Debugln("Read from TUN started")
+
+	// go routing for read data from RAN
+	u.readFromRan = make(chan []byte)
+	go func() {
+		buffer := make([]byte, 4096)
+		for {
+			n, err := u.ranDataPlaneConn.Read(buffer)
+			if err != nil {
+				if errors.Is(err, net.ErrClosed) {
+					return
+				}
+				u.RanLog.Errorf("Error read from ran data plane: %+v", err)
+				return
+			}
+			u.readFromRan <- buffer[:n]
+		}
+	}()
+	u.TunLog.Debugln("Read from RAN started")
+
+	u.TunLog.Infof("UE tunnel device setup as %s", u.ueTunnelDeviceName)
+	return nil
+}
+
+func (u *Ue) cleanUpTunnelDevice() error {
+	u.TunLog.Infoln("Cleaning up UE tunnel device")
+
+	if err := bringDownUeTunnelDevice(u.ueTunnelDeviceName); err != nil {
+		return fmt.Errorf("Error bring down ue tunnel device: %+v", err)
+	}
+	u.TunLog.Debugln("Bring down ue tunnel device success")
+
+	u.TunLog.Infoln("UE tunnel device cleaned up")
+	return nil
+}
+
+func (u *Ue) handleDataPlane(ctx context.Context) error {
+	// forward data from TUN to RAN and RAN to TUN
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case buffer := <-u.readFromTun:
+				n, err := u.ranDataPlaneConn.Write(buffer)
+				if err != nil {
+					if errors.Is(err, net.ErrClosed) {
+						return
+					}
+					u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
+				}
+				u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
+				u.RanLog.Tracef("Sent %d bytes of data to RAN", n)
+			case buffer := <-u.readFromRan:
+				n, err := u.ueTunnelDevice.Write(buffer)
+				if err != nil {
+					u.TunLog.Warnf("Error write to ue tunnel device: %+v", err)
+				}
+				u.TunLog.Tracef("Wrote %d bytes of data to TUN: %+v", n, buffer[:n])
+				u.TunLog.Tracef("Wrote %d bytes of data to TUN", n)
+			}
+		}
+	}(ctx)
 	return nil
 }
 

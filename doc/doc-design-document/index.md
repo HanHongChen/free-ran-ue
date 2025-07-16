@@ -5,4 +5,6 @@
 
 ## Links
 
-1. [Userspace GTP-U Forward between RAN and UE](01-userspace-gtp-u.md)
+1. [Userspace GTP-U](01-userspace-gtp-u.md)
+2. [gNB](02-gnb.md)
+3. [ue](03-ue.md)

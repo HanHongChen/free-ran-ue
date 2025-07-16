@@ -3,11 +3,13 @@
 > [!Important]
 > Beleive myself that I can do everything.
 
-## 20250716 Userspace GTP-U: DOWNLINK
+## 20250716 Userspace GTP-U: DOWNLINK & Fix SQN Error
 
 It is a great day for finishing the full data plane traffic of user space GTP-U. Now, free-ran-ue can establishment a complete control plane message and funtional data plane trasmission.
 
 It also help me to understand a lot of linux based network setting about routing and namespace ip setting.
+
+I also fix the MAC authentication error caused by sequence number increasement on core network side.
 
 ## 20250715 Userspace GTP-U: UPLINK
 

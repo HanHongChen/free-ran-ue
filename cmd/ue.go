@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,6 +11,7 @@ import (
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/ue"
 	"github.com/Alonza0314/free-ran-ue/util"
+	loggergo "github.com/Alonza0314/logger-go/v2"
 	loggergoUtil "github.com/Alonza0314/logger-go/v2/util"
 	"github.com/spf13/cobra"
 )
@@ -30,6 +33,11 @@ func init() {
 }
 
 func ueFunc(cmd *cobra.Command, args []string) {
+	if os.Geteuid() != 0 {
+		loggergo.Error("UE", fmt.Sprintf("This program requires root privileges to bring up tunnel device."))
+		return
+	}
+
 	ueConfigFilePath, err := cmd.Flags().GetString("config")
 	if err != nil {
 		panic(err)
@@ -47,7 +55,8 @@ func ueFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if err := ue.Start(); err != nil {
+	ctx, cancel := context.WithCancel(context.Background())
+	if err := ue.Start(ctx); err != nil {
 		return
 	}
 	defer ue.Stop()
@@ -55,4 +64,6 @@ func ueFunc(cmd *cobra.Command, args []string) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
+
+	cancel()
 }

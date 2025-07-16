@@ -1,6 +1,9 @@
 ue:
-  ranIp: "127.0.0.1"
-  ranPort: 31413
+  ranControlPlaneIp: "10.0.2.1"
+  ranDataPlaneIp: "10.0.2.1"
+
+  ranControlPlanePort: 31413
+  ranDataPlanePort: 31414
 
   plmnId:
     mcc: "208"
@@ -24,7 +27,16 @@ ue:
     nea2: false
     nea3: false
 
+  pduSession:
+    pduSessionId: 4
+    dnn: "internet"
+    snssai:
+      sst: "1"
+      sd: "010203"
+
   accessType: "3GPP_ACCESS" # 3GPP_ACCESS, NON_3GPP_ACCESS
 
+  ueTunnelDevice: "ueTun0"
+
 logger:
-  level: "debug" # error, warn, info, debug, trace
+  level: "info" # error, warn, info, debug, trace

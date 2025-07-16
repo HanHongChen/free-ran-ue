@@ -9,9 +9,9 @@ repo_url: 'https://github.com/alonza0314/free-ran-ue'
 # Documentation layout
 nav:
   - Home: index.md
-  - User Guide: user-guide.md
-  - Design Document: design-doc.md
-  - Development Note: dev-note.md
+  - User Guide: doc-user-guide/index.md
+  - Design Document: doc-design-document/index.md
+  - Development Note: doc-develop-note/index.md
 
 # Theme configuration
 theme:
@@ -65,7 +65,11 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details

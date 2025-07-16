@@ -8,17 +8,24 @@ type UeConfig struct {
 }
 
 type UeIE struct {
-	RanIp   string `yaml:"ranIp"`
-	RanPort int    `yaml:"ranPort"`
+	RanControlPlaneIp string `yaml:"ranControlPlaneIp"`
+	RanDataPlaneIp    string `yaml:"ranDataPlaneIp"`
+
+	RanControlPlanePort int `yaml:"ranControlPlanePort"`
+	RanDataPlanePort    int `yaml:"ranDataPlanePort"`
 
 	PlmnId PlmnIdIE `yaml:"plmnId"`
 	Msin   string   `yaml:"msin"`
 
+	AccessType                 models.AccessType            `yaml:"accessType"`
+	AuthenticationSubscription AuthenticationSubscriptionIE `yaml:"authenticationSubscription"`
+
 	CipheringAlgorithm CipheringAlgorithmIE `yaml:"cipheringAlgorithm"`
 	IntegrityAlgorithm IntegrityAlgorithmIE `yaml:"integrityAlgorithm"`
 
-	AccessType                 models.AccessType            `yaml:"accessType"`
-	AuthenticationSubscription AuthenticationSubscriptionIE `yaml:"authenticationSubscription"`
+	PduSession PduSessionIE `yaml:"pduSession"`
+
+	UeTunnelDevice string `yaml:"ueTunnelDevice"`
 }
 
 type AuthenticationSubscriptionIE struct {
@@ -40,4 +47,10 @@ type CipheringAlgorithmIE struct {
 	Nea1 bool `yaml:"nea1"`
 	Nea2 bool `yaml:"nea2"`
 	Nea3 bool `yaml:"nea3"`
+}
+
+type PduSessionIE struct {
+	PduSessionId uint8    `yaml:"pduSessionId"`
+	Dnn          string   `yaml:"dnn"`
+	Snssai       SnssaiIE `yaml:"snssai"`
 }

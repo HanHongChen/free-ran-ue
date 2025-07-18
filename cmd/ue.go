@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -34,7 +33,7 @@ func init() {
 
 func ueFunc(cmd *cobra.Command, args []string) {
 	if os.Geteuid() != 0 {
-		loggergo.Error("UE", fmt.Sprintf("This program requires root privileges to bring up tunnel device."))
+		loggergo.Error("UE", "This program requires root privileges to bring up tunnel device.")
 		return
 	}
 
@@ -56,6 +55,8 @@ func ueFunc(cmd *cobra.Command, args []string) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	if err := ue.Start(ctx); err != nil {
 		return
 	}

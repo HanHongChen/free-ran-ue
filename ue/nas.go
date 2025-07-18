@@ -13,7 +13,6 @@ import (
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/nas/security"
-	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
 )
 
@@ -50,7 +49,7 @@ func nasDecode(ue *Ue, securityHeaderType uint8, payload []byte) (*nas.Message, 
 			ciphered = true
 			ue.dlCount.Set(0, 0)
 		default:
-			return nil, fmt.Errorf("Wrong security header type: 0x%0x", msg.SecurityHeader.SecurityHeaderType)
+			return nil, fmt.Errorf("wrong security header type: 0x%0x", msg.SecurityHeader.SecurityHeaderType)
 		}
 
 		if ue.dlCount.SQN() > sequenceNumber {
@@ -115,20 +114,6 @@ func nasEncode(nasMessage *nas.Message, securityContextAvailable bool, newSecuri
 	payload = append(msgSecurityHeader, payload[:]...)
 
 	return payload, nil
-}
-
-func getNasPdu(ue *Ue, msg *ngapType.DownlinkNASTransport) (*nas.Message, error) {
-	for _, ie := range msg.ProtocolIEs.List {
-		if ie.Id.Value == ngapType.ProtocolIEIDNASPDU {
-			pkg := []byte(ie.Value.NASPDU.Value)
-			m, err := nasDecode(ue, nas.GetSecurityHeaderType(pkg), pkg)
-			if err != nil {
-				return nil, err
-			}
-			return m, nil
-		}
-	}
-	return nil, errors.New("nas pdu not found")
 }
 
 func buildUeMobileIdentity5GS(supi string) nasType.MobileIdentity5GS {

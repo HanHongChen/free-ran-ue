@@ -22,7 +22,7 @@ var testGetAmfAndGnbSctpN2AddrCases = []struct {
 	},
 }
 
-func testGetAmfAndGnbSctpN2Addr(t *testing.T) {
+func TestGetAmfAndGnbSctpN2Addr(t *testing.T) {
 	for _, testCase := range testGetAmfAndGnbSctpN2AddrCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			amfAddr, gnbAddr, err := getAmfAndGnbSctpN2Addr(testCase.amfN2Ip, testCase.gnbN2Ip, testCase.amfN2Port, testCase.gnbN2Port)

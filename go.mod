@@ -1,17 +1,15 @@
 module github.com/Alonza0314/free-ran-ue
 
-go 1.24.2
-
-toolchain go1.24.5
+go 1.24.5
 
 require (
 	github.com/Alonza0314/logger-go/v2 v2.0.3
 	github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a
-	github.com/free5gc/nas v1.1.5
-	github.com/free5gc/ngap v1.0.10
-	github.com/free5gc/openapi v1.1.0
-	github.com/free5gc/sctp v1.0.1
-	github.com/free5gc/util v1.0.7-0.20240911054252-194b3b49aba9
+	github.com/free5gc/nas v1.2.0
+	github.com/free5gc/ngap v1.1.0
+	github.com/free5gc/openapi v1.2.0
+	github.com/free5gc/sctp v1.1.0
+	github.com/free5gc/util v1.1.1
 	github.com/go-playground/assert v1.2.1
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
@@ -28,5 +26,5 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tim-ywliu/nested-logrus-formatter v1.3.2 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 )

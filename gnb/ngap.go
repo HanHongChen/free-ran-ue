@@ -354,7 +354,7 @@ func getPduSessionResourceSetupResponseTransfer(dlTeid []byte, ranN3Ip string, q
 	transferMessage := buildPduSessionResourceSetupResponseTransfer(dlTeid, ranN3Ip, qosId)
 	encodedTransferMessage, err := aper.MarshalWithParams(transferMessage, "valueExt")
 	if err != nil {
-		return nil, fmt.Errorf("Error marshal pdu session resource setup response transfer message: %v", err)
+		return nil, fmt.Errorf("error marshal pdu session resource setup response transfer message: %v", err)
 	}
 	return encodedTransferMessage, nil
 }

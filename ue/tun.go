@@ -15,7 +15,7 @@ func bringUpUeTunnelDevice(ueTunnelDeviceName string, ip string) (*water.Interfa
 
 	tun, err := water.New(tunCfg)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating tunnel device: %v", err)
+		return nil, fmt.Errorf("error creating tunnel device: %v", err)
 	}
 
 	cmds := [][]string{
@@ -25,7 +25,7 @@ func bringUpUeTunnelDevice(ueTunnelDeviceName string, ip string) (*water.Interfa
 
 	for _, cmd := range cmds {
 		if err := exec.Command(cmd[0], cmd[1:]...).Run(); err != nil {
-			return nil, fmt.Errorf("Error bringing up tunnel device: %v", err)
+			return nil, fmt.Errorf("error bringing up tunnel device: %v", err)
 		}
 	}
 
@@ -40,7 +40,7 @@ func bringDownUeTunnelDevice(ueTunnelDeviceName string) error {
 
 	for _, cmd := range cmds {
 		if err := exec.Command(cmd[0], cmd[1:]...).Run(); err != nil {
-			return fmt.Errorf("Error bringing down tunnel device: %v", err)
+			return fmt.Errorf("error bringing down tunnel device: %v", err)
 		}
 	}
 

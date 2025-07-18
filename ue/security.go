@@ -91,7 +91,6 @@ func milenageF2345(opc, k, rand []byte, res, ck, ik, ak, akstar []byte) error {
 	return nil
 }
 
-
 func deriveKAmf(supi string, key []byte, snName string, SQN, AK []byte) ([]byte, error) {
 	FC := ueauth.FC_FOR_KAUSF_DERIVATION
 	P0 := []byte(snName)
@@ -165,22 +164,22 @@ func deriveSequenceNumber(autn []byte, ak []uint8) []byte {
 func deriveResStarAndSetKey(supi string, cipheringAlgorithm, integrityAlgorithm uint8, sqn, amf, encPermanentKey, encOpcKey string, rand []byte, autn []byte, snName string) ([]byte, []byte, []byte, []byte, string, error) {
 	sqnHex, err := hex.DecodeString(sqn)
 	if err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error decode sqn: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error decode sqn: %v", err)
 	}
 
 	amfHex, err := hex.DecodeString(amf)
 	if err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error decode amf: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error decode amf: %v", err)
 	}
 
 	kHex, err := hex.DecodeString(encPermanentKey)
 	if err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error decode encPermanentKey: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error decode encPermanentKey: %v", err)
 	}
 
 	opcHex, err := hex.DecodeString(encOpcKey)
 	if err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error decode encOpcKey: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error decode encOpcKey: %v", err)
 	}
 
 	macA, macS := make([]byte, 8), make([]byte, 8)
@@ -190,12 +189,12 @@ func deriveResStarAndSetKey(supi string, cipheringAlgorithm, integrityAlgorithm 
 
 	// generate macA and macS
 	if err := milenageF1(opcHex, kHex, rand, sqnHex, amfHex, macA, macS); err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error F1: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error F1: %v", err)
 	}
 
 	//generate res, ck, ik, ak, akstar
 	if err := milenageF2345(opcHex, kHex, rand, res, ck, ik, ak, akStar); err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error F2345: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error F2345: %v", err)
 	}
 
 	// update sqn if sqn is not equal to autn's sqn
@@ -212,15 +211,15 @@ func deriveResStarAndSetKey(supi string, cipheringAlgorithm, integrityAlgorithm 
 
 	kAmf, err := deriveKAmf(supi, key, snName, sqnHex, ak)
 	if err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error deriveKAmf: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error deriveKAmf: %v", err)
 	}
 	kenc, kint, err := deriveAlgorithmKey(kAmf, cipheringAlgorithm, integrityAlgorithm)
 	if err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error deriveAlgorithmKey: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error deriveAlgorithmKey: %v", err)
 	}
 	kdfVal_for_resStar, err := ueauth.GetKDFValue(key, FC, P0, ueauth.KDFLen(P0), P1, ueauth.KDFLen(P1), P2, ueauth.KDFLen(P2))
 	if err != nil {
-		return nil, nil, nil, nil, "", fmt.Errorf("Error GetKDFValue: %v", err)
+		return nil, nil, nil, nil, "", fmt.Errorf("error GetKDFValue: %v", err)
 	}
 	return kAmf, kenc, kint, kdfVal_for_resStar[len(kdfVal_for_resStar)/2:], hex.EncodeToString(sqnHex), nil
 }

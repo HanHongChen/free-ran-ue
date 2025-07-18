@@ -65,7 +65,9 @@ func TestYaml(t *testing.T) {
 				if data != testCase.expectedData {
 					t.Errorf("expected data: %v, actual data: %v", testCase.expectedData, data)
 				}
-				os.Remove(testCase.filePath)
+				if err := os.Remove(testCase.filePath); err != nil {
+					t.Errorf("remove file failed: %v", err)
+				}
 			}
 		})
 	}

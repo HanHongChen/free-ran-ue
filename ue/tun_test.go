@@ -27,7 +27,11 @@ func TestUeTunnelDeviceName(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error bringing up tunnel device: %v", err)
 			}
-			defer bringDownUeTunnelDevice(test.tunnelDeviceName)
+			defer func() {
+				if err := bringDownUeTunnelDevice(test.tunnelDeviceName); err != nil {
+					t.Fatalf("Error bringing down tunnel device: %v", err)
+				}
+			}()
 
 			t.Logf("Tunnel device %s brought up", test.tunnelDeviceName)
 			t.Logf("Tunnel device %s IP: %s", test.tunnelDeviceName, test.ip)

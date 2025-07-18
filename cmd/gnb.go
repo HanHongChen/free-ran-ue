@@ -49,6 +49,7 @@ func gnbFunc(cmd *cobra.Command, args []string) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	if err := gnb.Start(ctx); err != nil {
 		return

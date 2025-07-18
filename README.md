@@ -4,28 +4,28 @@
 
 ## Introduction
 
-This project is going to simulate the behavior between core network and RAN/UE. The basic idea is to design a useful tool for testing the feature [NR-DC](https://free5gc.org/blog/20250219/20250219/).
+free-ran-ue is a tool designed to simulate interactions between the core network and RAN/UE. Its primary goal is to provide a practical platform for testing the [NR-DC(New Radio Dual Connectivity)](https://free5gc.org/blog/20250219/20250219/) feature.
 
-For more details, please checkout: [free-ran-ue official website](https://alonza0314.github.io/free-ran-ue/).
+For more details, please visit the [free-ran-ue official website](https://alonza0314.github.io/free-ran-ue/).
 
 ## Packages
 
-free-ran-ue used tool packages and model packages from [free5GC](https://github.com/free5gc).
+free-ran-ue utilizes tool and model packages from [free5GC](https://github.com/free5gc).
 
 ## License
 
-free-ran-ue is now under [Apache 2.0](LICENSE) license.
+free-ran-ue is licensed under the [Apache 2.0](LICENSE) license.
 
 Copyright © 2025 Alonza0314. All rights reserved.
 
 ## Log Description
 
-There will be 5 types of log level can choose in both **gNB** and **UE**:
+There are five log levels available for both gNB and UE:
 
-- ERROR: Significant error which makes the app stop.
-- WARN: Someting strange but does not get impact on the app.
-- INFO: Informations that user should know.
-- DEBUG: Informations for developer getting
-- TRACE: More detail information in each steps.
+- ERROR: Critical errors that cause the application to stop.
+- WARN: Unusual events that do not affect application functionality.
+- INFO: General information that users should be aware of.
+- DEBUG: Information useful for developers during debugging.
+- TRACE: Detailed step-by-step information for in-depth analysis.
 
 This can customized in the [configuration files](/config).

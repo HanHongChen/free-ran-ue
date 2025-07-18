@@ -1,5 +1,24 @@
 version: "2"
 
+run:
+  concurrency: 4
+  go: "1.24"
+  issues-exit-code: 1
+  tests: true
+  allow-parallel-runners: true
+  allow-serial-runners: true
+
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+  sort-order:
+    - linter
+    - severity
+    - file
+
 linters:
   # Default set of linters.
   # The value can be:

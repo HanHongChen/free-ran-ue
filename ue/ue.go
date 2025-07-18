@@ -386,6 +386,8 @@ func (u *Ue) processUeRegistration() error {
 	u.NasLog.Tracef("Sent %d bytes of NAS Security Mode Complete Message to RAN", n)
 	u.NasLog.Debugln("Send NAS Security Mode Complete Message to RAN")
 
+	time.Sleep(500 * time.Microsecond)
+
 	// send nas registration complete message to RAN
 	nasRegistrationCompleteMessage, err := getNasRegistrationCompleteMessage(nil)
 	if err != nil {
@@ -431,6 +433,7 @@ func (u *Ue) processPduSessionEstablishment() error {
 		return fmt.Errorf("Error encode ul nas transport pdu session establishment request: %+v", err)
 	}
 	u.NasLog.Tracef("Encoded UL NAS transport pdu session establishment request: %+v", encodedUlNasTransportPduSessionEstablishmentRequest)
+	fmt.Println("encodedUlNasTransportPduSessionEstablishmentRequest", encodedUlNasTransportPduSessionEstablishmentRequest)
 
 	n, err := u.ranControlPlaneConn.Write(encodedUlNasTransportPduSessionEstablishmentRequest)
 	if err != nil {

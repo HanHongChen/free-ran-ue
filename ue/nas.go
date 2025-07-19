@@ -402,6 +402,39 @@ func getUlNasTransportMessage(nasMessageContainer []byte, pduSessionId uint8, re
 	return buildUlNasTransportMessage(nasMessageContainer, pduSessionId, requestType, dnn, sNssai)
 }
 
+func buildUeDeRegistrationRequest(accessType uint8, switchOff uint8, ngKsi uint8, mobileIdentity5GS nasType.MobileIdentity5GS) ([]byte, error) {
+	m := nas.NewMessage()
+	m.GmmMessage = nas.NewGmmMessage()
+	m.GmmHeader.SetMessageType(nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
+
+	deregistrationRequest := nasMessage.NewDeregistrationRequestUEOriginatingDeregistration(0)
+	deregistrationRequest.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	deregistrationRequest.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	deregistrationRequest.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
+	deregistrationRequest.DeregistrationRequestMessageIdentity.SetMessageType(nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
+
+	deregistrationRequest.NgksiAndDeregistrationType.SetAccessType(accessType)
+	deregistrationRequest.NgksiAndDeregistrationType.SetSwitchOff(switchOff)
+	deregistrationRequest.NgksiAndDeregistrationType.SetReRegistrationRequired(0)
+	deregistrationRequest.NgksiAndDeregistrationType.SetTSC(ngKsi)
+	deregistrationRequest.NgksiAndDeregistrationType.SetNasKeySetIdentifiler(ngKsi)
+	deregistrationRequest.MobileIdentity5GS.SetLen(mobileIdentity5GS.GetLen())
+	deregistrationRequest.MobileIdentity5GS.SetMobileIdentity5GSContents(mobileIdentity5GS.GetMobileIdentity5GSContents())
+
+	m.GmmMessage.DeregistrationRequestUEOriginatingDeregistration = deregistrationRequest
+
+	request := new(bytes.Buffer)
+	if err := m.GmmMessageEncode(request); err != nil {
+		return nil, err
+	}
+
+	return request.Bytes(), nil
+}
+
+func getUeDeRegistrationRequest(accessType uint8, switchOff uint8, ngKsi uint8, mobileIdentity5GS nasType.MobileIdentity5GS) ([]byte, error) {
+	return buildUeDeRegistrationRequest(accessType, switchOff, ngKsi, mobileIdentity5GS)
+}
+
 func getNasPduFromNasPduSessionEstablishmentAccept(nasPduSessionEstablishmentAccept *nas.Message) (*nas.Message, error) {
 	content := nasPduSessionEstablishmentAccept.DLNASTransport.GetPayloadContainerContents()
 

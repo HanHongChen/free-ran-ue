@@ -385,13 +385,13 @@ func (g *Gnb) setupN2() error {
 	return nil
 }
 
-func (g *Gnb) setupN1(n1Conn net.Conn) (net.Conn, aper.OctetString, aper.OctetString, error) {
+func (g *Gnb) setupN1(n1Conn net.Conn) (net.Conn, aper.OctetString, aper.OctetString, nasType.MobileIdentity5GS, error) {
 	g.RanLog.Infoln("Setting up N1")
 
 	// ue initialization
 	mobileIdentity5GS, err := g.processUeInitialization(n1Conn)
 	if err != nil {
-		return nil, aper.OctetString{}, aper.OctetString{}, err
+		return nil, aper.OctetString{}, aper.OctetString{}, mobileIdentity5GS, err
 	}
 	time.Sleep(1 * time.Second)
 
@@ -399,18 +399,18 @@ func (g *Gnb) setupN1(n1Conn net.Conn) (net.Conn, aper.OctetString, aper.OctetSt
 	dlTeid := "00000001"
 	dlTeidBytes, err := hex.DecodeString(dlTeid)
 	if err != nil {
-		return nil, aper.OctetString{}, aper.OctetString{}, fmt.Errorf("error decode dlTeid: %v", err)
+		return nil, aper.OctetString{}, aper.OctetString{}, mobileIdentity5GS, fmt.Errorf("error decode dlTeid: %v", err)
 	}
 	pduSessionResourceSetupRequestTransfer := ngapType.PDUSessionResourceSetupRequestTransfer{}
 	if err := g.processUePduSessionEstablishment(n1Conn, mobileIdentity5GS, dlTeidBytes, &pduSessionResourceSetupRequestTransfer); err != nil {
-		return nil, aper.OctetString{}, aper.OctetString{}, err
+		return nil, aper.OctetString{}, aper.OctetString{}, mobileIdentity5GS, err
 	}
 	time.Sleep(1 * time.Second)
 
 	// accept UE data plane connection
 	ueDataPlaneConn, err := (*g.ranDataPlaneListener).Accept()
 	if err != nil {
-		return nil, aper.OctetString{}, aper.OctetString{}, err
+		return nil, aper.OctetString{}, aper.OctetString{}, mobileIdentity5GS, err
 	}
 	g.RanLog.Infof("Accepted UE data plane connection from: %v", ueDataPlaneConn.RemoteAddr())
 
@@ -429,7 +429,18 @@ func (g *Gnb) setupN1(n1Conn net.Conn) (net.Conn, aper.OctetString, aper.OctetSt
 	g.GtpLog.Debugf("Stored UE %s data plane connection with teid %s to teidToConn", mobileIdentity5GS.GetSUCI(), hex.EncodeToString(dlTeidBytes))
 
 	g.RanLog.Infof("UE %s N1 setup complete", mobileIdentity5GS.GetSUCI())
-	return ueDataPlaneConn, dlTeidBytes, ulTeidBytes, nil
+	return ueDataPlaneConn, dlTeidBytes, ulTeidBytes, mobileIdentity5GS, nil
+}
+
+func (g *Gnb) releaseN1(n1Conn net.Conn, mobileIdentity5GS nasType.MobileIdentity5GS) error {
+	g.RanLog.Infoln("Releasing N1")
+
+	if err := g.processUeDeRegistration(n1Conn); err != nil {
+		return fmt.Errorf("error processing UE deregistration: %v", err)
+	}
+
+	g.RanLog.Infoln("N1 released")
+	return nil
 }
 
 func (g *Gnb) startGtpProcessor(ctx context.Context) error {
@@ -490,7 +501,7 @@ func (g *Gnb) handleRanConnection(ctx context.Context, conn net.Conn) {
 		g.activeConns.Delete(conn)
 	}()
 
-	ueDataPlaneConn, dlTeidBytes, ulTeidBytes, err := g.setupN1(conn)
+	ueDataPlaneConn, dlTeidBytes, ulTeidBytes, mobileIdentity5GS, err := g.setupN1(conn)
 	if err != nil {
 		g.RanLog.Errorf("Error setting up N1: %v", err)
 		return
@@ -519,27 +530,11 @@ func (g *Gnb) handleRanConnection(ctx context.Context, conn net.Conn) {
 		}
 	}()
 
-	// handle control plane from UE
-	for {
-		select {
-		case <-ctx.Done():
-			if err := ueDataPlaneConn.Close(); err != nil {
-				g.RanLog.Errorf("Error closing UE connection: %v", err)
-			}
-			return
-		default:
-			buffer := make([]byte, 1024)
-			_, err := conn.Read(buffer)
-			if err != nil {
-				if err == io.EOF {
-					g.RanLog.Debugf("RAN control plane connection closed by client: %v", conn.RemoteAddr())
-					return
-				}
-				g.RanLog.Errorf("Error reading from UE connection: %v", err)
-				return
-			}
-		}
+	if err := g.releaseN1(conn, mobileIdentity5GS); err != nil {
+		g.RanLog.Errorf("Error releasing N1: %v", err)
+		return
 	}
+	g.RanLog.Infoln("UE %s N1 released", mobileIdentity5GS.GetSUCI())
 }
 
 func (g *Gnb) processUeInitialization(n1Conn net.Conn) (nasType.MobileIdentity5GS, error) {
@@ -864,5 +859,106 @@ func (g *Gnb) processUePduSessionEstablishment(n1Conn net.Conn, mobileIdentity5G
 	g.NgapLog.Debugln("Send PDU Session Resource Setup Response to AMF")
 
 	g.NgapLog.Infof("UE %s PDU session establishment completed", mobileIdentity5GS.GetSUCI())
+	return nil
+}
+
+func (g *Gnb) processUeDeRegistration(n1Conn net.Conn) error {
+	g.RanLog.Infoln("Processing UE deregistration")
+
+	// receive ue deregistration request from UE and send to AMF
+	ueDeRegistrationRequest := make([]byte, 1024)
+	n, err := n1Conn.Read(ueDeRegistrationRequest)
+	if err != nil {
+		return fmt.Errorf("error reading from UE connection: %v", err)
+	}
+	g.RanLog.Tracef("Received %d bytes of UE deregistration request from UE: %+v", n, ueDeRegistrationRequest[:n])
+	g.RanLog.Tracef("Received %d bytes of UE deregistration request from UE", n)
+
+	uplinkNasTransport, err := getUplinkNasTransport(1, 1, g.plmnId, g.tai, ueDeRegistrationRequest[:n])
+	if err != nil {
+		return fmt.Errorf("error get uplink nas transport: %v", err)
+	}
+	g.NgapLog.Tracef("Get uplink NAS transport: %+v", uplinkNasTransport)
+
+	n, err = g.n2Conn.Write(uplinkNasTransport)
+	if err != nil {
+		return fmt.Errorf("error send uplink nas transport to AMF: %v", err)
+	}
+	g.NgapLog.Tracef("Sent %d bytes of uplink NAS transport to AMF", n)
+	g.NgapLog.Debugln("Send UE deregistration request to AMF")
+
+	// receive ue deregistration accept from AMF
+	ngapUeDeRegistrationAcceptRaw := make([]byte, 1024)
+	n, err = g.n2Conn.Read(ngapUeDeRegistrationAcceptRaw)
+	if err != nil {
+		return fmt.Errorf("error receive ue deregistration accept from AMF: %v", err)
+	}
+	g.NgapLog.Tracef("Received %d bytes of UE deregistration accept from AMF", n)
+	g.NgapLog.Debugln("Receive UE deregistration accept from AMF")
+
+	ngapUeDeRegistrationAccept, err := ngap.Decoder(ngapUeDeRegistrationAcceptRaw[:n])
+	if err != nil {
+		return fmt.Errorf("error decode ue deregistration accept from AMF: %v", err)
+	}
+	if ngapUeDeRegistrationAccept.Present != ngapType.NGAPPDUPresentInitiatingMessage || ngapUeDeRegistrationAccept.InitiatingMessage.ProcedureCode.Value != ngapType.ProcedureCodeDownlinkNASTransport {
+		return fmt.Errorf("error NGAP ue deregistration accept: %+v", ngapUeDeRegistrationAccept)
+	}
+	g.NgapLog.Tracef("NGAP UE deregistration accept: %+v", ngapUeDeRegistrationAccept)
+
+	var nasUeDeRegistrationAccept []byte
+	for _, ie := range ngapUeDeRegistrationAccept.InitiatingMessage.Value.DownlinkNASTransport.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDAMFUENGAPID:
+		case ngapType.ProtocolIEIDRANUENGAPID:
+		case ngapType.ProtocolIEIDNASPDU:
+			if ie.Value.NASPDU == nil {
+				return fmt.Errorf("error NGAP ue deregistration accept: NASPDU is nil")
+			}
+			nasUeDeRegistrationAccept = make([]byte, len(ie.Value.NASPDU.Value))
+			copy(nasUeDeRegistrationAccept, ie.Value.NASPDU.Value)
+			g.NgapLog.Tracef("Get NASPDU: %+v", nasUeDeRegistrationAccept)
+		}
+	}
+
+	n, err = n1Conn.Write(nasUeDeRegistrationAccept)
+	if err != nil {
+		return fmt.Errorf("error send nas ue deregistration accept to UE: %v", err)
+	}
+	g.NasLog.Tracef("Sent %d bytes of NAS UE deregistration Accept to UE", n)
+	g.NasLog.Debugln("Send NAS UE deregistration Accept to UE")
+
+	// receive ngap ue context release command from AMF
+	ngapUeContextReleaseCommandRaw := make([]byte, 1024)
+	n, err = g.n2Conn.Read(ngapUeContextReleaseCommandRaw)
+	if err != nil {
+		return fmt.Errorf("error receive ngap ue context release command from AMF: %v", err)
+	}
+	g.NgapLog.Tracef("Received %d bytes of NGAP UE Context Release Command from AMF", n)
+
+	ngapUeContextReleaseCommand, err := ngap.Decoder(ngapUeContextReleaseCommandRaw[:n])
+	if err != nil {
+		return fmt.Errorf("error decode ngap ue context release command from AMF: %v", err)
+	}
+	if ngapUeContextReleaseCommand.Present != ngapType.NGAPPDUPresentInitiatingMessage || ngapUeContextReleaseCommand.InitiatingMessage.ProcedureCode.Value != ngapType.ProcedureCodeUEContextRelease {
+		return fmt.Errorf("error ngap ue context release command: %+v", ngapUeContextReleaseCommand)
+	}
+	g.NgapLog.Tracef("NGAP UE Context Release Command: %+v", ngapUeContextReleaseCommand)
+	g.NgapLog.Debugln("Receive NGAP UE Context Release Command from AMF")
+
+	// send ngap ue context release complete to AMF
+	ngapUeContextReleaseCompleteMessage, err := getNgapUeContextReleaseCompleteMessage(1, 1, []int64{4}, g.plmnId, g.tai)
+	if err != nil {
+		return fmt.Errorf("error get ngap ue context release complete message: %v", err)
+	}
+	g.NgapLog.Tracef("Get NGAP UE Context Release Complete Message: %+v", ngapUeContextReleaseCompleteMessage)
+
+	n, err = g.n2Conn.Write(ngapUeContextReleaseCompleteMessage)
+	if err != nil {
+		return fmt.Errorf("error send ngap ue context release complete message to AMF: %v", err)
+	}
+	g.NgapLog.Tracef("Sent %d bytes of NGAP UE Context Release Complete Message to AMF", n)
+	g.NgapLog.Debugln("Send NGAP UE Context Release Complete Message to AMF")
+
+	g.RanLog.Infoln("UE deregistration complete")
 	return nil
 }

@@ -250,3 +250,49 @@ func TestBuildPduSessionResourceSetupResponse(t *testing.T) {
 		})
 	}
 }
+
+var testBuildNgapUeContextReleaseCompleteMessageCases = []struct {
+	name             string
+	amfUeNgapId      int64
+	ranUeNgapId      int64
+	pduSessionIdList []int64
+	plmnId           ngapType.PLMNIdentity
+	tai              ngapType.TAI
+}{
+	{
+		name:             "testBuildNgapUeContextReleaseCommand",
+		amfUeNgapId:      1,
+		ranUeNgapId:      1,
+		pduSessionIdList: []int64{1},
+		plmnId: ngapType.PLMNIdentity{
+			Value: aper.OctetString("\x02\xF8\x39"),
+		},
+		tai: ngapType.TAI{
+			TAC: ngapType.TAC{
+				Value: aper.OctetString("\x00\x00\x01"),
+			},
+			PLMNIdentity: ngapType.PLMNIdentity{
+				Value: aper.OctetString("\x02\xF8\x39"),
+			},
+		},
+	},
+}
+
+func TestBuildNgapUeContextReleaseCompleteMessage(t *testing.T) {
+	for _, testCase := range testBuildNgapUeContextReleaseCompleteMessageCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			pdu := buildNgapUeContextReleaseCompleteMessage(testCase.amfUeNgapId, testCase.ranUeNgapId, testCase.pduSessionIdList, testCase.plmnId, testCase.tai)
+			encodeData, err := ngap.Encoder(pdu)
+			if err != nil {
+				t.Fatalf("Failed to encode NGAP ue context release command: %v", err)
+			} else {
+				decodeData, err := ngap.Decoder(encodeData)
+				if err != nil {
+					t.Fatalf("Failed to decode NGAP ue context release command: %v", err)
+				} else if !reflect.DeepEqual(pdu, *decodeData) {
+					t.Fatalf("NGAP ue context release command mismatch")
+				}
+			}
+		})
+	}
+}

@@ -216,6 +216,10 @@ func (u *Ue) Start(ctx context.Context) error {
 func (u *Ue) Stop() {
 	u.UeLog.Infof("Stopping UE: imsi-%s", u.supi)
 
+	if err := u.processUeDeregistration(); err != nil {
+		u.UeLog.Errorf("Error processing UE deregistration: %v", err)
+	}
+
 	close(u.readFromTun)
 	close(u.readFromRan)
 
@@ -465,6 +469,54 @@ func (u *Ue) processPduSessionEstablishment() error {
 	}
 
 	u.PduLog.Infof("UE %s PDU session establishment complete", u.supi)
+	return nil
+}
+
+func (u *Ue) processUeDeregistration() error {
+	u.RanLog.Infoln("Processing UE deregistration")
+
+	mobileIdentity5GS := buildUeMobileIdentity5GS(u.supi)
+	u.NasLog.Tracef("Mobile identity 5GS: %+v", mobileIdentity5GS)
+
+	// send ue deregistration request
+	deregistrationRequest, err := getUeDeRegistrationRequest(nasMessage.AccessType3GPP, 0x00, 0x04, mobileIdentity5GS)
+	if err != nil {
+		return fmt.Errorf("error get ue deregistration request: %+v", err)
+	}
+	u.NasLog.Tracef("Get UE deregistration request: %+v", deregistrationRequest)
+
+	encodedDeregistrationRequest, err := encodeNasPduWithSecurity(deregistrationRequest, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, u, true, false)
+	if err != nil {
+		return fmt.Errorf("error encode ue deregistration request: %+v", err)
+	}
+	u.NasLog.Tracef("Encoded UE deregistration request: %+v", encodedDeregistrationRequest)
+
+	n, err := u.ranControlPlaneConn.Write(encodedDeregistrationRequest)
+	if err != nil {
+		return fmt.Errorf("error send ue deregistration request: %+v", err)
+	}
+	u.NasLog.Tracef("Sent %d bytes of UE deregistration request to RAN", n)
+	u.NasLog.Debugln("Send UE deregistration request to RAN")
+
+	// receive ue deregistration accept
+	ueDeRegistrationAcceptRaw := make([]byte, 1024)
+	n, err = u.ranControlPlaneConn.Read(ueDeRegistrationAcceptRaw)
+	if err != nil {
+		return fmt.Errorf("error read ue deregistration accept: %+v", err)
+	}
+	u.NasLog.Tracef("Received %d bytes of UE deregistration accept from RAN", n)
+
+	ueDeRegistrationAccept, err := nasDecode(u, nas.GetSecurityHeaderType(ueDeRegistrationAcceptRaw[:n]), ueDeRegistrationAcceptRaw[:n])
+	if err != nil {
+		return fmt.Errorf("error decode ue deregistration accept: %+v", err)
+	}
+	if ueDeRegistrationAccept.GmmHeader.GetMessageType() != nas.MsgTypeDeregistrationAcceptUEOriginatingDeregistration {
+		return fmt.Errorf("error nas pdu message type: %+v, expected pdu session establishment accept", ueDeRegistrationAccept.GmmHeader.GetMessageType())
+	}
+	u.NasLog.Tracef("NAS UE deregistration accept: %+v", ueDeRegistrationAccept)
+	u.NasLog.Debugln("Receive NAS UE deregistration accept from RAN")
+
+	u.RanLog.Infoln("UE deregistration complete")
 	return nil
 }
 

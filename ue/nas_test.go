@@ -184,3 +184,33 @@ func TestBuildUlNasTransportMessage(t *testing.T) {
 		})
 	}
 }
+
+var testBuildUeDeRegistrationRequestCases = []struct {
+	name              string
+	accessType        uint8
+	switchOff         uint8
+	ngKsi             uint8
+	mobileIdentity5GS nasType.MobileIdentity5GS
+	expectedError     error
+}{
+	{
+		name:       "imsi-208930000007487",
+		accessType: nasMessage.AccessType3GPP,
+		switchOff:  0x00,
+		ngKsi:      0x04,
+		mobileIdentity5GS: nasType.MobileIdentity5GS{
+			Len:    12,
+			Buffer: []byte{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		},
+		expectedError: nil,
+	},
+}
+
+func TestBuildUeDeRegistrationRequest(t *testing.T) {
+	for _, testCase := range testBuildUeDeRegistrationRequestCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := buildUeDeRegistrationRequest(testCase.accessType, testCase.switchOff, testCase.ngKsi, testCase.mobileIdentity5GS)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

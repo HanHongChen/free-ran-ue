@@ -9,6 +9,7 @@
 
 - [Start free5GC](01-start-free5gc.md)
 - [Start free-ran-ue](02-start-free-ran-ue.md)
+- [Logger Level](04-logger-level.md)
 
 ## Advanced Feature
 

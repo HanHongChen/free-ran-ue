@@ -17,15 +17,3 @@ free-ran-ue utilizes tool and model packages from [free5GC](https://github.com/f
 free-ran-ue is licensed under the [Apache 2.0](LICENSE) license.
 
 Copyright © 2025 Alonza0314. All rights reserved.
-
-## Log Description
-
-There are five log levels available for both gNB and UE:
-
-- ERROR: Critical errors that cause the application to stop.
-- WARN: Unusual events that do not affect application functionality.
-- INFO: General information that users should be aware of.
-- DEBUG: Information useful for developers during debugging.
-- TRACE: Detailed step-by-step information for in-depth analysis.
-
-This can customized in the [configuration files](/config).

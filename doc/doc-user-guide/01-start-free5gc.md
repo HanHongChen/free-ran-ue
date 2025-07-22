@@ -39,11 +39,11 @@ Please refer to the official document: [Install free5GC](https://free5gc.org/gui
 
     - ~/free5gc/config/upfcfg.yaml
 
-        Replace N6 interfacce address IP from `127.0.0.8` to your export IP:
+        Replace N6 interface address IP from `127.0.0.8` to your export IP:
 
         ```yaml
         gtpu:
-          forwarder: mgtp5g
+          forwarder: gtp5g
           iifList:
             - addr: <your export IP>
         ```

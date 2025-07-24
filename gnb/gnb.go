@@ -478,6 +478,7 @@ func (g *Gnb) setupN1(ranUe *RanUe) error {
 		case ngapType.ProtocolIEIDPDUSessionAggregateMaximumBitRate:
 		case ngapType.ProtocolIEIDULNGUUPTNLInformation:
 			ranUe.SetUlTeid(item.Value.ULNGUUPTNLInformation.GTPTunnel.GTPTEID.Value)
+		case ngapType.ProtocolIEIDAdditionalULNGUUPTNLInformation:
 		case ngapType.ProtocolIEIDPDUSessionType:
 		case ngapType.ProtocolIEIDQosFlowSetupRequestList:
 		}
@@ -581,32 +582,34 @@ func (g *Gnb) handleRanConnection(ctx context.Context, ranUe *RanUe) {
 	g.GtpLog.Debugf("DL TEID: %s, UL TEID: %s", hex.EncodeToString(ranUe.GetDlTeid()), hex.EncodeToString(ranUe.GetUlTeid()))
 
 	// handle data plane from UE
-	go func() {
-		buffer := make([]byte, 4096)
-		for {
-			n, err := ranUe.GetDataPlaneConn().Read(buffer)
-			if err != nil {
-				if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-					g.teidToConn.Delete(hex.EncodeToString(ranUe.GetDlTeid()))
-					g.GtpLog.Debugf("Deleted teid %s from teidToConn", hex.EncodeToString(ranUe.GetDlTeid()))
-					return
-				}
-				g.RanLog.Warnf("Error reading from UE connection: %v", err)
-			}
-			g.RanLog.Tracef("Received %d bytes of data from UE: %+v", n, buffer[:n])
-			g.RanLog.Tracef("Received %d bytes of data from UE", n)
-
-			tmp := make([]byte, n)
-			copy(tmp, buffer[:n])
-			go formatGtpPacketAndWriteToGtpChannel(ranUe.GetUlTeid(), tmp, g.gtpChannel, g.GnbLogger)
-		}
-	}()
+	go g.startUeDataPlaneProcessor(ranUe.GetDataPlaneConn(), ranUe.GetUlTeid(), ranUe.GetDlTeid())
 
 	if err := g.releaseN1(ranUe); err != nil {
 		g.RanLog.Errorf("Error releasing N1: %v", err)
 		return
 	}
 	g.RanLog.Infof("UE %s N1 released", ranUe.GetMobileIdentitySUCI())
+}
+
+func (g *Gnb) startUeDataPlaneProcessor(ueDataPlaneConn net.Conn, ulTeid, dlTeid aper.OctetString) {
+	buffer := make([]byte, 4096)
+	for {
+		n, err := ueDataPlaneConn.Read(buffer)
+		if err != nil {
+			if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
+				g.teidToConn.Delete(hex.EncodeToString(dlTeid))
+				g.GtpLog.Debugf("Deleted teid %s from teidToConn", hex.EncodeToString(dlTeid))
+				return
+			}
+			g.RanLog.Warnf("Error reading from UE connection: %v", err)
+		}
+		g.RanLog.Tracef("Received %d bytes of data from UE: %+v", n, buffer[:n])
+		g.RanLog.Tracef("Received %d bytes of data from UE", n)
+
+		tmp := make([]byte, n)
+		copy(tmp, buffer[:n])
+		go formatGtpPacketAndWriteToGtpChannel(ulTeid, tmp, g.gtpChannel, g.GnbLogger)
+	}
 }
 
 func (g *Gnb) processUeInitialization(ranUe *RanUe) error {
@@ -905,6 +908,13 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 		}
 	}
 
+	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
+	if g.nrdc {
+		if qosFlowPerTNLInformationItem, err = g.xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSetupRequestRaw); err != nil {
+			g.XnLog.Warnf("Error xn pdu session resource setup request transfer: %v", err)
+		}
+	}
+
 	n, err = ranUe.GetN1Conn().Write(nasPduSessionEstablishmentAccept)
 	if err != nil {
 		return fmt.Errorf("error send nas pdu session establishment accept to UE: %v", err)
@@ -913,7 +923,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	g.NasLog.Debugln("Send NAS PDU Session Establishment Accept to UE")
 
 	// send ngap pdu session resource setup response to AMF
-	ngapPduSessionResourceSetupResponseTransfer, err := getPduSessionResourceSetupResponseTransfer(ranUe.GetDlTeid(), g.ranN3Ip, 1)
+	ngapPduSessionResourceSetupResponseTransfer, err := getPduSessionResourceSetupResponseTransfer(ranUe.GetDlTeid(), g.ranN3Ip, 1, g.nrdc, qosFlowPerTNLInformationItem)
 	if err != nil {
 		return fmt.Errorf("error get pdu session resource setup response transfer: %v", err)
 	}
@@ -1035,4 +1045,51 @@ func (g *Gnb) processUeDeRegistration(ranUe *RanUe) error {
 
 	g.RanLog.Infoln("UE deregistration complete")
 	return nil
+}
+
+func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSetupRequestRaw []byte) (ngapType.QosFlowPerTNLInformationItem, error) {
+	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
+
+	g.XnLog.Infoln("Processing XN PDU Session Resource Setup Request Transfer")
+
+	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnIp, g.xnPort))
+	if err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error dial xn: %v", err)
+	}
+
+	n, err := xnConn.Write(ngapPduSessionResourceSetupRequestRaw)
+	if err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error send ngap pdu session resource setup request to xn: %v", err)
+	}
+	g.XnLog.Tracef("Sent %d bytes of NGAP PDU Session Resource Setup Request to XN", n)
+	g.XnLog.Debugln("Send NGAP PDU Session Resource Setup Request to XN")
+
+	buffer := make([]byte, 4096)
+	n, err = xnConn.Read(buffer)
+	if err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error read ngap pdu session resource setup response from xn: %v", err)
+	}
+	g.XnLog.Tracef("Received %d bytes of NGAP PDU Session Resource Setup Response from XN", n)
+	g.XnLog.Debugln("Receive NGAP PDU Session Resource Setup Response from XN")
+
+	if err = xnConn.SetReadDeadline(time.Now().Add(time.Second * 5)); err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error set read deadline: %v", err)
+	}
+	n, err = xnConn.Read(buffer)
+	if err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error read ngap pdu session resource setup response from xn: %v", err)
+	}
+	g.XnLog.Tracef("Received %d bytes of NGAP PDU Session Resource Setup Response from XN", n)
+	g.XnLog.Debugln("Receive NGAP PDU Session Resource Setup Response from XN")
+
+	if err := aper.UnmarshalWithParams(buffer[:n], &qosFlowPerTNLInformationItem, "valueExt"); err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error unmarshal qos flow per tnl information item: %v", err)
+	}
+	g.XnLog.Tracef("Get QoS Flow per TNL Information Item: %+v", qosFlowPerTNLInformationItem)
+
+	if err := xnConn.Close(); err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error close xn connection: %v", err)
+	}
+
+	return qosFlowPerTNLInformationItem, nil
 }

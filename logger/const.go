@@ -15,4 +15,6 @@ const (
 	PDU_TAG  = "PDU"
 	GTP_TAG  = "GTP"
 	TUN_TAG  = "TUN"
+
+	XN_TAG = "XN"
 )

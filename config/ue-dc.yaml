@@ -37,7 +37,12 @@ ue:
   accessType: "3GPP_ACCESS" # 3GPP_ACCESS, NON_3GPP_ACCESS
 
   nrdc:
-    enable: false
+    enable: true
+    dcRanDataPlane:
+      ip: "10.0.3.1"
+      port: 31414
+    qosFlow:
+      - "1.1.1.1/32"
 
   ueTunnelDevice: "ueTun0"
 

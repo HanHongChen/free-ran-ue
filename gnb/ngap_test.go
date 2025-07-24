@@ -6,6 +6,7 @@ import (
 
 	"github.com/free5gc/aper"
 	"github.com/free5gc/ngap"
+	"github.com/free5gc/ngap/ngapConvert"
 	"github.com/free5gc/ngap/ngapType"
 )
 
@@ -200,7 +201,63 @@ var testBuildPduSessionResourceSetupResponseTransferMessageCases = []struct {
 func TestBuildPduSessionResourceSetupResponseTransferMessage(t *testing.T) {
 	for _, testCase := range testBuildPduSessionResourceSetupResponseTransferMessageCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			transferMessage := buildPduSessionResourceSetupResponseTransfer(testCase.dlTeid, testCase.ranN3Ip, testCase.qosId)
+			transferMessage := buildPduSessionResourceSetupResponseTransfer(testCase.dlTeid, testCase.ranN3Ip, testCase.qosId, false, ngapType.QosFlowPerTNLInformationItem{})
+			encodeTransferMessage, err := aper.MarshalWithParams(transferMessage, "valueExt")
+			if err != nil {
+				t.Fatalf("Failed to marshal pdu session resource setup response transfer message: %v", err)
+			} else {
+				decodeTransferMessage := &ngapType.PDUSessionResourceSetupResponseTransfer{}
+				if err := aper.UnmarshalWithParams(encodeTransferMessage, decodeTransferMessage, "valueExt"); err != nil {
+					t.Fatalf("Failed to unmarshal pdu session resource setup response transfer message: %v", err)
+				} else if !reflect.DeepEqual(transferMessage, *decodeTransferMessage) {
+					t.Fatalf("PDU session resource setup response transfer message mismatch")
+				}
+			}
+		})
+	}
+}
+
+var testBuildPduSessionResourceSetupResponseTransferMessageWithNRDCases = []struct {
+	name    string
+	dlTeid  []byte
+	ranN3Ip string
+	qosId   int64
+	ngapType.QosFlowPerTNLInformationItem
+}{
+	{
+		name:    "testBuildPduSessionResourceSetupResponseTransferMessageWithNRDCases",
+		dlTeid:  []byte("\x00\x00\x00\x01"),
+		ranN3Ip: "127.0.0.1",
+		qosId:   1,
+		QosFlowPerTNLInformationItem: ngapType.QosFlowPerTNLInformationItem{
+			QosFlowPerTNLInformation: ngapType.QosFlowPerTNLInformation{
+				UPTransportLayerInformation: ngapType.UPTransportLayerInformation{
+					Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
+					GTPTunnel: &ngapType.GTPTunnel{
+						GTPTEID: ngapType.GTPTEID{
+							Value: aper.OctetString("\x00\x00\x00\x01"),
+						},
+						TransportLayerAddress: ngapConvert.IPAddressToNgap("127.0.0.1", ""),
+					},
+				},
+				AssociatedQosFlowList: ngapType.AssociatedQosFlowList{
+					List: []ngapType.AssociatedQosFlowItem{
+						{
+							QosFlowIdentifier: ngapType.QosFlowIdentifier{
+								Value: 1,
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+func TestBuildPduSessionResourceSetupResponseTransferMessageWithNRDCases(t *testing.T) {
+	for _, testCase := range testBuildPduSessionResourceSetupResponseTransferMessageWithNRDCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			transferMessage := buildPduSessionResourceSetupResponseTransfer(testCase.dlTeid, testCase.ranN3Ip, testCase.qosId, true, testCase.QosFlowPerTNLInformationItem)
 			encodeTransferMessage, err := aper.MarshalWithParams(transferMessage, "valueExt")
 			if err != nil {
 				t.Fatalf("Failed to marshal pdu session resource setup response transfer message: %v", err)

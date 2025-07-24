@@ -326,7 +326,7 @@ func getNgapInitialContextSetupResponse(amfUeNgapId, ranUeNgapId int64) ([]byte,
 	return ngap.Encoder(initialContextSetupResponse)
 }
 
-func buildPduSessionResourceSetupResponseTransfer(dlTeid []byte, ranN3Ip string, qosId int64) ngapType.PDUSessionResourceSetupResponseTransfer {
+func buildPduSessionResourceSetupResponseTransfer(dlTeid []byte, ranN3Ip string, qosId int64, nrdcIndicator bool, qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem) ngapType.PDUSessionResourceSetupResponseTransfer {
 	var transferMessage ngapType.PDUSessionResourceSetupResponseTransfer
 
 	// QoS Flow per TNL Information
@@ -347,11 +347,16 @@ func buildPduSessionResourceSetupResponseTransfer(dlTeid []byte, ranN3Ip string,
 	associatedQosFlowItem.QosFlowIdentifier.Value = qosId
 	associatedQosFlowList.List = append(associatedQosFlowList.List, associatedQosFlowItem)
 
+	if nrdcIndicator && qosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present == ngapType.UPTransportLayerInformationPresentGTPTunnel && qosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel.GTPTEID.Value != nil {
+		transferMessage.AdditionalDLQosFlowPerTNLInformation = new(ngapType.QosFlowPerTNLInformationList)
+		transferMessage.AdditionalDLQosFlowPerTNLInformation.List = append(transferMessage.AdditionalDLQosFlowPerTNLInformation.List, qosFlowPerTNLInformationItem)
+	}
+
 	return transferMessage
 }
 
-func getPduSessionResourceSetupResponseTransfer(dlTeid []byte, ranN3Ip string, qosId int64) ([]byte, error) {
-	transferMessage := buildPduSessionResourceSetupResponseTransfer(dlTeid, ranN3Ip, qosId)
+func getPduSessionResourceSetupResponseTransfer(dlTeid []byte, ranN3Ip string, qosId int64, nrdcIndicator bool, qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem) ([]byte, error) {
+	transferMessage := buildPduSessionResourceSetupResponseTransfer(dlTeid, ranN3Ip, qosId, nrdcIndicator, qosFlowPerTNLInformationItem)
 	encodedTransferMessage, err := aper.MarshalWithParams(transferMessage, "valueExt")
 	if err != nil {
 		return nil, fmt.Errorf("error marshal pdu session resource setup response transfer message: %v", err)

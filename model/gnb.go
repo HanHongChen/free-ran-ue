@@ -14,6 +14,8 @@ type GnbIE struct {
 	RanControlPlaneIp string `yaml:"ranControlPlaneIp"`
 	RanDataPlaneIp    string `yaml:"ranDataPlaneIp"`
 
+	XnIp string `yaml:"xnIp"`
+
 	AmfN2Port int `yaml:"amfN2Port"`
 	RanN2Port int `yaml:"ranN2Port"`
 	UpfN3Port int `yaml:"upfN3Port"`
@@ -21,6 +23,8 @@ type GnbIE struct {
 
 	RanControlPlanePort int `yaml:"ranControlPlanePort"`
 	RanDataPlanePort    int `yaml:"ranDataPlanePort"`
+
+	XnPort int `yaml:"xnPort"`
 
 	NgapPpid uint32 `yaml:"ngapPpid"`
 
@@ -31,4 +35,13 @@ type GnbIE struct {
 
 	Tai    TaiIE    `yaml:"tai"`
 	Snssai SnssaiIE `yaml:"snssai"`
+
+	Nrdc bool `yaml:"nrdc"`
+
+	XnInterface XnInterfaceIE `yaml:"xnInterface"`
+}
+
+type XnInterfaceIE struct {
+	XnIp   string `yaml:"xnIp"`
+	XnPort int    `yaml:"xnPort"`
 }

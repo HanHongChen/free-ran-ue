@@ -23,6 +23,11 @@ import (
 	"github.com/free5gc/sctp"
 )
 
+type XnInterfaceIE struct {
+	XnIp   string `yaml:"xnIp"`
+	XnPort int    `yaml:"xnPort"`
+}
+
 type Gnb struct {
 	amfN2Ip string
 	ranN2Ip string
@@ -32,6 +37,8 @@ type Gnb struct {
 	ranControlPlaneIp string
 	ranDataPlaneIp    string
 
+	xnIp string
+
 	amfN2Port int
 	ranN2Port int
 	upfN3Port int
@@ -40,11 +47,10 @@ type Gnb struct {
 	ranControlPlanePort int
 	ranDataPlanePort    int
 
+	xnPort int
+
 	n2Conn *sctp.SCTPConn
 	n3Conn *net.UDPConn
-
-	ranControlPlaneListener *net.Listener
-	ranDataPlaneListener    *net.Listener
 
 	ngapPpid uint32
 
@@ -54,6 +60,13 @@ type Gnb struct {
 	plmnId ngapType.PLMNIdentity
 	tai    ngapType.TAI
 	snssai ngapType.SNSSAI
+
+	nrdc bool
+	XnInterfaceIE
+
+	ranControlPlaneListener *net.Listener
+	ranDataPlaneListener    *net.Listener
+	xnListener              *net.Listener
 
 	activeConns sync.Map
 	teidToConn  sync.Map
@@ -115,6 +128,7 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		ranN3Ip:           config.Gnb.RanN3Ip,
 		ranControlPlaneIp: config.Gnb.RanControlPlaneIp,
 		ranDataPlaneIp:    config.Gnb.RanDataPlaneIp,
+		xnIp:              config.Gnb.XnIp,
 
 		amfN2Port:           config.Gnb.AmfN2Port,
 		ranN2Port:           config.Gnb.RanN2Port,
@@ -122,6 +136,7 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		ranN3Port:           config.Gnb.RanN3Port,
 		ranControlPlanePort: config.Gnb.RanControlPlanePort,
 		ranDataPlanePort:    config.Gnb.RanDataPlanePort,
+		xnPort:              config.Gnb.XnPort,
 
 		ngapPpid: config.Gnb.NgapPpid,
 
@@ -131,6 +146,12 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		plmnId: plmnId,
 		tai:    tai,
 		snssai: snssai,
+
+		nrdc: config.Gnb.Nrdc,
+		XnInterfaceIE: XnInterfaceIE{
+			XnIp:   config.Gnb.XnInterface.XnIp,
+			XnPort: config.Gnb.XnInterface.XnPort,
+		},
 
 		ranUeNgapIdGenerator: NewRanUeNgapIdGenerator(),
 		teidGenerator:        NewTeidGenerator(),
@@ -162,21 +183,29 @@ func (g *Gnb) Start(ctx context.Context) error {
 		}
 		return err
 	}
+	g.startGtpProcessor(ctx)
 
-	if err := g.startGtpProcessor(ctx); err != nil {
-		g.RanLog.Errorf("Error starting GTP processor: %v", err)
-		close(g.gtpChannel)
-		if err := g.n3Conn.Close(); err != nil {
-			g.GtpLog.Errorf("Error closing N3 connection: %v", err)
+	if g.nrdc {
+		if err := g.startXnListener(); err != nil {
+			g.XnLog.Errorf("Error starting XN listener: %v", err)
+			close(g.gtpChannel)
+			if err := g.n3Conn.Close(); err != nil {
+				g.GtpLog.Errorf("Error closing N3 connection: %v", err)
+			}
+			if err := g.n2Conn.Close(); err != nil {
+				g.SctpLog.Errorf("Error closing N2 connection: %v", err)
+			}
+			return err
 		}
-		if err := g.n2Conn.Close(); err != nil {
-			g.SctpLog.Errorf("Error closing N2 connection: %v", err)
-		}
-		return err
 	}
 
 	if err := g.startRanControlPlaneListener(); err != nil {
 		g.RanLog.Errorf("Error starting ran control plane listener: %v", err)
+		if g.nrdc {
+			if err := (*g.xnListener).Close(); err != nil {
+				g.XnLog.Errorf("Error closing XN listener: %v", err)
+			}
+		}
 		close(g.gtpChannel)
 		if err := g.n3Conn.Close(); err != nil {
 			g.GtpLog.Errorf("Error closing N3 connection: %v", err)
@@ -192,6 +221,11 @@ func (g *Gnb) Start(ctx context.Context) error {
 		if err := (*g.ranControlPlaneListener).Close(); err != nil {
 			g.RanLog.Errorf("Error closing ran control plane listener: %v", err)
 		}
+		if g.nrdc {
+			if err := (*g.xnListener).Close(); err != nil {
+				g.XnLog.Errorf("Error closing XN listener: %v", err)
+			}
+		}
 		close(g.gtpChannel)
 		if err := g.n3Conn.Close(); err != nil {
 			g.GtpLog.Errorf("Error closing N3 connection: %v", err)
@@ -203,24 +237,38 @@ func (g *Gnb) Start(ctx context.Context) error {
 	}
 
 	go func() {
+		if !g.nrdc {
+			return
+		}
+
 		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				conn, err := (*g.ranControlPlaneListener).Accept()
-				if err != nil {
-					if errors.Is(err, net.ErrClosed) {
-						return
-					}
-					g.RanLog.Errorf("Error accepting UE connection: %v", err)
-					continue
+			conn, err := (*g.xnListener).Accept()
+			if err != nil {
+				if errors.Is(err, net.ErrClosed) {
+					return
 				}
-				g.RanLog.Infof("New UE connection accepted from: %v", conn.RemoteAddr())
-				ranUe := NewRanUe(conn, g.ranUeNgapIdGenerator)
-				g.activeConns.Store(ranUe, struct{}{})
-				go g.handleRanConnection(ctx, ranUe)
+				g.XnLog.Errorf("Error accepting XN connection: %v", err)
+				continue
 			}
+			g.XnLog.Infof("New XN connection accepted from: %v", conn.RemoteAddr())
+			go xnInterfaceProcessor(conn, g)
+		}
+	}()
+
+	go func() {
+		for {
+			conn, err := (*g.ranControlPlaneListener).Accept()
+			if err != nil {
+				if errors.Is(err, net.ErrClosed) {
+					return
+				}
+				g.RanLog.Errorf("Error accepting UE connection: %v", err)
+				continue
+			}
+			g.RanLog.Infof("New UE connection accepted from: %v", conn.RemoteAddr())
+			ranUe := NewRanUe(conn, g.ranUeNgapIdGenerator)
+			g.activeConns.Store(ranUe, struct{}{})
+			go g.handleRanConnection(ctx, ranUe)
 		}
 	}()
 
@@ -244,6 +292,14 @@ func (g *Gnb) Stop() {
 	}
 	g.RanLog.Debugln("gNB listener stopped")
 	g.RanLog.Traceln("gNB listener stopped at %s:%d", g.ranControlPlaneIp, g.ranControlPlanePort)
+
+	if g.nrdc {
+		if err := (*g.xnListener).Close(); err != nil {
+			g.XnLog.Errorf("Error closing XN listener: %v", err)
+		}
+		g.XnLog.Debugln("XN listener stopped")
+		g.XnLog.Traceln("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
+	}
 
 	var wg sync.WaitGroup
 	g.activeConns.Range(func(key, value interface{}) bool {
@@ -444,7 +500,7 @@ func (g *Gnb) releaseN1(ranUe *RanUe) error {
 	return nil
 }
 
-func (g *Gnb) startGtpProcessor(ctx context.Context) error {
+func (g *Gnb) startGtpProcessor(ctx context.Context) {
 	g.GtpLog.Infoln("Starting GTP processor")
 
 	g.gtpChannel = make(chan []byte)
@@ -456,6 +512,22 @@ func (g *Gnb) startGtpProcessor(ctx context.Context) error {
 	g.GtpLog.Debugln("Receive GTP packet from N3 connection started")
 
 	g.GtpLog.Infoln("GTP processor started")
+}
+
+func (g *Gnb) startXnListener() error {
+	g.XnLog.Infoln("Starting XN listener")
+
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", g.xnIp, g.xnPort))
+	if err != nil {
+		return err
+	}
+	g.xnListener = &listener
+
+	g.XnLog.Infoln("============= XN Info ==============")
+	g.XnLog.Infof("XN access address: %s:%d", g.xnIp, g.xnPort)
+	g.XnLog.Infoln("====================================")
+
+	g.XnLog.Infoln("XN listener started")
 	return nil
 }
 

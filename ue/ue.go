@@ -10,6 +10,7 @@ import (
 
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
+	"github.com/Alonza0314/free-ran-ue/util"
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/nas/nasType"
@@ -54,6 +55,17 @@ type pduSessionEstablishmentAccept struct {
 	sd      [3]uint8
 }
 
+type dcRanDataPlane struct {
+	ip   string
+	port int
+}
+
+type nrdc struct {
+	enable bool
+	dcRanDataPlane
+	qosFlow []string
+}
+
 type Ue struct {
 	ranControlPlaneIp string
 	ranDataPlaneIp    string
@@ -63,6 +75,7 @@ type Ue struct {
 
 	ranControlPlaneConn net.Conn
 	ranDataPlaneConn    net.Conn
+	dcRanDataPlaneConn  net.Conn
 
 	mcc  string
 	mnc  string
@@ -74,6 +87,8 @@ type Ue struct {
 	authenticationSubscription
 
 	pduSession
+
+	nrdc
 
 	ueTunnelDeviceName string
 	ueTunnelDevice     *water.Interface
@@ -153,6 +168,15 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 				Sst: int32(sstInt),
 				Sd:  config.Ue.PduSession.Snssai.Sd,
 			},
+		},
+
+		nrdc: nrdc{
+			enable: config.Ue.Nrdc.Enable,
+			dcRanDataPlane: dcRanDataPlane{
+				ip:   config.Ue.Nrdc.DcRanDataPlane.Ip,
+				port: config.Ue.Nrdc.DcRanDataPlane.Port,
+			},
+			qosFlow: config.Ue.Nrdc.QosFlow,
 		},
 
 		ueTunnelDeviceName: config.Ue.UeTunnelDevice,
@@ -265,10 +289,17 @@ func (u *Ue) connectToRanDataPlane() error {
 	if err != nil {
 		return err
 	}
-
+	u.ranDataPlaneConn = conn
 	u.RanLog.Debugln("Dial TCP to RAN data plane success")
 
-	u.ranDataPlaneConn = conn
+	if u.nrdc.enable {
+		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port))
+		if err != nil {
+			return err
+		}
+		u.dcRanDataPlaneConn = conn
+		u.RanLog.Debugf("Connected to DC RAN data plane: %s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port)
+	}
 
 	u.RanLog.Infof("Connected to RAN data plane: %s:%d", u.ranDataPlaneIp, u.ranDataPlanePort)
 	return nil
@@ -586,7 +617,7 @@ func (u *Ue) setupTunnelDevice() error {
 	u.TunLog.Debugln("Read from TUN started")
 
 	// go routing for read data from RAN
-	u.readFromRan = make(chan []byte)
+	u.readFromRan = make(chan []byte, 2)
 	go func() {
 		buffer := make([]byte, 4096)
 		for {
@@ -602,6 +633,23 @@ func (u *Ue) setupTunnelDevice() error {
 		}
 	}()
 	u.TunLog.Debugln("Read from RAN started")
+
+	if u.nrdc.enable {
+		go func() {
+			buffer := make([]byte, 4096)
+			for {
+				n, err := u.dcRanDataPlaneConn.Read(buffer)
+				if err != nil {
+					if errors.Is(err, net.ErrClosed) {
+						return
+					}
+					u.RanLog.Errorf("Error read from dc ran data plane: %+v", err)
+				}
+				u.readFromRan <- buffer[:n]
+			}
+		}()
+		u.TunLog.Debugln("Read from DC RAN data plane started")
+	}
 
 	u.TunLog.Infof("UE tunnel device setup as %s", u.ueTunnelDeviceName)
 	return nil
@@ -626,22 +674,36 @@ func (u *Ue) handleDataPlane(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case buffer := <-u.readFromTun:
-			n, err := u.ranDataPlaneConn.Write(buffer)
-			if err != nil {
-				if errors.Is(err, net.ErrClosed) {
-					return
+			if !u.nrdc.enable {
+				n, err := u.ranDataPlaneConn.Write(buffer)
+				if err != nil {
+					if errors.Is(err, net.ErrClosed) {
+						return
+					}
+					u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
 				}
-				u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
+				u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
+			} else {
+				if util.IsIpInQosFlow(buffer, u.nrdc.qosFlow) {
+					n, err := u.dcRanDataPlaneConn.Write(buffer)
+					if err != nil {
+						u.RanLog.Warnf("Error sent to dc ran data plane: %+v", err)
+					}
+					u.RanLog.Tracef("Sent %d bytes of data to DC RAN: %+v", n, buffer[:n])
+				} else {
+					n, err := u.ranDataPlaneConn.Write(buffer)
+					if err != nil {
+						u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
+					}
+					u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
+				}
 			}
-			u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
-			u.RanLog.Tracef("Sent %d bytes of data to RAN", n)
 		case buffer := <-u.readFromRan:
 			n, err := u.ueTunnelDevice.Write(buffer)
 			if err != nil {
 				u.TunLog.Warnf("Error write to ue tunnel device: %+v", err)
 			}
 			u.TunLog.Tracef("Wrote %d bytes of data to TUN: %+v", n, buffer[:n])
-			u.TunLog.Tracef("Wrote %d bytes of data to TUN", n)
 		}
 	}
 }

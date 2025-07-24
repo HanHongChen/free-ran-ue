@@ -25,6 +25,8 @@ type UeIE struct {
 
 	PduSession PduSessionIE `yaml:"pduSession"`
 
+	Nrdc NrdcIE `yaml:"nrdc"`
+
 	UeTunnelDevice string `yaml:"ueTunnelDevice"`
 }
 
@@ -53,4 +55,15 @@ type PduSessionIE struct {
 	PduSessionId uint8    `yaml:"pduSessionId"`
 	Dnn          string   `yaml:"dnn"`
 	Snssai       SnssaiIE `yaml:"snssai"`
+}
+
+type NrdcIE struct {
+	Enable         bool          `yaml:"enable"`
+	DcRanDataPlane DcDataPlaneIE `yaml:"dcRanDataPlane"`
+	QosFlow        []string      `yaml:"qosFlow"`
+}
+
+type DcDataPlaneIE struct {
+	Ip   string `yaml:"ip"`
+	Port int    `yaml:"port"`
 }

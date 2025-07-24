@@ -255,6 +255,12 @@ func (u *Ue) Stop() {
 		u.UeLog.Errorf("Error closing RAN connection: %v", err)
 	}
 
+	if u.nrdc.enable {
+		if err := u.dcRanDataPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing DC RAN connection: %v", err)
+		}
+	}
+
 	if err := u.ranControlPlaneConn.Close(); err != nil {
 		u.UeLog.Errorf("Error closing RAN connection: %v", err)
 	}

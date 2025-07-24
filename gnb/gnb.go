@@ -599,6 +599,7 @@ func (g *Gnb) startUeDataPlaneProcessor(ueDataPlaneConn net.Conn, ulTeid, dlTeid
 			if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
 				g.teidToConn.Delete(hex.EncodeToString(dlTeid))
 				g.GtpLog.Debugf("Deleted teid %s from teidToConn", hex.EncodeToString(dlTeid))
+				g.GtpLog.Infof("Connection from UE IP: %v closed", ueDataPlaneConn.RemoteAddr())
 				return
 			}
 			g.RanLog.Warnf("Error reading from UE connection: %v", err)

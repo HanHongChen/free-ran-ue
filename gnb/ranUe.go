@@ -1,0 +1,122 @@
+package gnb
+
+import (
+	"net"
+	"sync"
+
+	"github.com/free5gc/aper"
+	"github.com/free5gc/nas/nasType"
+)
+
+type RanUeNgapIdGenerator struct {
+	usedRanUeIds sync.Map
+}
+
+func NewRanUeNgapIdGenerator() *RanUeNgapIdGenerator {
+	return &RanUeNgapIdGenerator{
+		usedRanUeIds: sync.Map{},
+	}
+}
+
+func (g *RanUeNgapIdGenerator) AllocateRanUeId() int64 {
+	for i := 1; i <= 65535; i++ {
+		if _, exists := g.usedRanUeIds.Load(int64(i)); !exists {
+			g.usedRanUeIds.Store(int64(i), true)
+			return int64(i)
+		}
+	}
+
+	return -1
+}
+
+func (g *RanUeNgapIdGenerator) ReleaseRanUeId(ranUeId int64) {
+	g.usedRanUeIds.Delete(ranUeId)
+}
+
+type RanUe struct {
+	amfUeNgapId int64
+	ranUeNgapId int64
+
+	mobileIdentity5GS nasType.MobileIdentity5GS
+
+	ulTeid aper.OctetString
+	dlTeid aper.OctetString
+
+	n1Conn        net.Conn
+	dataPlaneConn net.Conn
+}
+
+func NewRanUe(n1Conn net.Conn, ranUeNgapIdGenerator *RanUeNgapIdGenerator) *RanUe {
+	ranUeId := ranUeNgapIdGenerator.AllocateRanUeId()
+	if ranUeId == -1 {
+		panic("Failed to allocate ranUeId")
+	}
+
+	return &RanUe{
+		amfUeNgapId: 1,
+		ranUeNgapId: ranUeId,
+
+		mobileIdentity5GS: nasType.MobileIdentity5GS{},
+
+		n1Conn: n1Conn,
+	}
+}
+
+func (r *RanUe) Release(ranUeNgapIdGenerator *RanUeNgapIdGenerator) {
+}
+
+func (r *RanUe) GetAmfUeId() int64 {
+	return r.amfUeNgapId
+}
+
+func (r *RanUe) GetRanUeId() int64 {
+	return r.ranUeNgapId
+}
+
+func (r *RanUe) GetMobileIdentity5GS() nasType.MobileIdentity5GS {
+	return r.mobileIdentity5GS
+}
+
+func (r *RanUe) GetMobileIdentitySUCI() string {
+	return r.mobileIdentity5GS.GetSUCI()
+}
+
+func (r *RanUe) GetUlTeid() aper.OctetString {
+	return r.ulTeid
+}
+
+func (r *RanUe) GetDlTeid() aper.OctetString {
+	return r.dlTeid
+}
+
+func (r *RanUe) GetN1Conn() net.Conn {
+	return r.n1Conn
+}
+
+func (r *RanUe) GetDataPlaneConn() net.Conn {
+	return r.dataPlaneConn
+}
+
+func (r *RanUe) SetAmfUeId(amfUeId int64) {
+	r.amfUeNgapId = amfUeId
+}
+
+func (r *RanUe) SetRanUeId(ranUeId int64) {
+	r.ranUeNgapId = ranUeId
+}
+
+func (r *RanUe) SetMobileIdentity5GS(mobileIdentity5GS nasType.MobileIdentity5GS) {
+	r.mobileIdentity5GS = mobileIdentity5GS
+}
+
+func (r *RanUe) SetUlTeid(ulTeid aper.OctetString) {
+	r.ulTeid = ulTeid
+}
+
+func (r *RanUe) SetDlTeid(dlTeid aper.OctetString) {
+	r.dlTeid = dlTeid
+}
+
+func (r *RanUe) SetDataPlaneConn(dataPlaneConn net.Conn) {
+	r.dataPlaneConn = dataPlaneConn
+}

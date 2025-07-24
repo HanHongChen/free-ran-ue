@@ -23,9 +23,9 @@ import (
 	"github.com/free5gc/sctp"
 )
 
-type XnInterfaceIE struct {
-	XnIp   string `yaml:"xnIp"`
-	XnPort int    `yaml:"xnPort"`
+type xnInterface struct {
+	xnIp   string
+	xnPort int
 }
 
 type Gnb struct {
@@ -62,7 +62,7 @@ type Gnb struct {
 	snssai ngapType.SNSSAI
 
 	nrdc bool
-	XnInterfaceIE
+	xnInterface
 
 	ranControlPlaneListener *net.Listener
 	ranDataPlaneListener    *net.Listener
@@ -148,9 +148,9 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		snssai: snssai,
 
 		nrdc: config.Gnb.Nrdc,
-		XnInterfaceIE: XnInterfaceIE{
-			XnIp:   config.Gnb.XnInterface.XnIp,
-			XnPort: config.Gnb.XnInterface.XnPort,
+		xnInterface: xnInterface{
+			xnIp:   config.Gnb.XnInterface.XnIp,
+			xnPort: config.Gnb.XnInterface.XnPort,
 		},
 
 		ranUeNgapIdGenerator: NewRanUeNgapIdGenerator(),

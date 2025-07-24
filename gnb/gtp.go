@@ -7,11 +7,59 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"sync"
 
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/free5gc/aper"
 )
+
+type TeidGenerator struct {
+	teids sync.Map
+}
+
+func NewTeidGenerator() *TeidGenerator {
+	return &TeidGenerator{
+		teids: sync.Map{},
+	}
+}
+
+func (t *TeidGenerator) AllocateTeid() aper.OctetString {
+	for i := 1; i <= 65535; i++ {
+		if _, exists := t.teids.Load(int64(i)); !exists {
+			t.teids.Store(int64(i), true)
+
+			teid, err := hex.DecodeString(t.formatAsString(int64(i)))
+			if err != nil {
+				panic(fmt.Errorf("error decode teid: %v", err))
+			}
+
+			return aper.OctetString(teid)
+		}
+	}
+
+	return aper.OctetString{}
+}
+
+func (t *TeidGenerator) ReleaseTeid(teid aper.OctetString) {
+	teidInt, err := hex.DecodeString(string(teid))
+	if err != nil {
+		panic(fmt.Errorf("error decode teid: %v", err))
+	}
+	t.teids.Delete(t.deFormatFromString(string(teidInt)))
+}
+
+func (t *TeidGenerator) formatAsString(teid int64) string {
+	return fmt.Sprintf("%08x", teid)
+}
+
+func (t *TeidGenerator) deFormatFromString(teid string) int64 {
+	teidInt, err := strconv.ParseInt(teid, 16, 64)
+	if err != nil {
+		panic(fmt.Errorf("error deformat teid: %v", err))
+	}
+	return teidInt
+}
 
 // get packet with GTP header from gtpChannel and forward to N3 connection
 func forwardGtpPacketToN3Conn(ctx context.Context, n3Conn *net.UDPConn, gtpChannel chan []byte, gnbLogger *logger.GnbLogger) {

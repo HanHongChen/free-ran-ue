@@ -37,7 +37,6 @@ type GnbIE struct {
 	Snssai SnssaiIE `yaml:"snssai"`
 
 	Nrdc bool `yaml:"nrdc"`
-
 	XnInterface XnInterfaceIE `yaml:"xnInterface"`
 }
 

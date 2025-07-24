@@ -18,7 +18,7 @@ func xnInterfaceProcessor(conn net.Conn, g *Gnb) {
 		return
 	}
 	g.XnLog.Tracef("Received %d bytes of XN packet: %+v", n, buffer[:n])
-	g.XnLog.Tracef("Received %d bytes of XN packet", n)
+	g.XnLog.Debugln("Receive XN packet")
 
 	ngapPduSessionResourceSetupRequest, err := ngap.Decoder(buffer[:n])
 	if err != nil {
@@ -33,6 +33,7 @@ func xnInterfaceProcessor(conn net.Conn, g *Gnb) {
 
 	switch ngapPduSessionResourceSetupRequest.InitiatingMessage.ProcedureCode.Value {
 	case ngapType.ProcedureCodePDUSessionResourceSetup:
+		g.XnLog.Debugln("Processing NGAP PDU Session Resource Setup Request")
 		xnPduSessionResourceSetupRequestProcessor(g, conn, ngapPduSessionResourceSetupRequest)
 	default:
 		g.XnLog.Warnf("Unknown NGAP PDU Session Resource Setup Request Procedure Code: %v", ngapPduSessionResourceSetupRequest.InitiatingMessage.ProcedureCode.Value)
@@ -49,7 +50,7 @@ func xnPduSessionResourceSetupRequestProcessor(g *Gnb, conn net.Conn, ngapPduSes
 		case ngapType.ProtocolIEIDRANUENGAPID:
 		case ngapType.ProtocolIEIDPDUSessionResourceSetupListSUReq:
 			for _, pduSessionResourceSetupItem := range ie.Value.PDUSessionResourceSetupListSUReq.List {
-				if err := aper.UnmarshalWithParams(pduSessionResourceSetupItem.PDUSessionResourceSetupRequestTransfer, pduSessionResourceSetupRequestTransfer, "valueExt"); err != nil {
+				if err := aper.UnmarshalWithParams(pduSessionResourceSetupItem.PDUSessionResourceSetupRequestTransfer, &pduSessionResourceSetupRequestTransfer, "valueExt"); err != nil {
 					g.XnLog.Warnf("Error unmarshal pdu session resource setup request transfer: %v", err)
 					return
 				}
@@ -60,7 +61,7 @@ func xnPduSessionResourceSetupRequestProcessor(g *Gnb, conn net.Conn, ngapPduSes
 	}
 
 	xnUe := NewXnUe(g.teidGenerator.AllocateTeid(), conn)
-	g.teidToConn.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe)
+	g.XnLog.Debugf("Allocated DLTEID for XnUe: %s", hex.EncodeToString(xnUe.GetDlTeid()))
 
 	for _, ie := range pduSessionResourceSetupRequestTransfer.ProtocolIEs.List {
 		switch ie.Id.Value {
@@ -111,6 +112,8 @@ func xnPduSessionResourceSetupRequestProcessor(g *Gnb, conn net.Conn, ngapPduSes
 	}
 	xnUe.SetDataPlaneConn(ueDataPlaneConn)
 	g.XnLog.Infof("Accepted UE data plane connection from: %v", ueDataPlaneConn.RemoteAddr())
+	g.teidToConn.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe.GetDataPlaneConn())
+	g.XnLog.Debugf("Stored UE data plane connection with teid %s to teidToConn", hex.EncodeToString(xnUe.GetDlTeid()))
 
 	go g.startUeDataPlaneProcessor(ueDataPlaneConn, xnUe.GetUlTeid(), xnUe.GetDlTeid())
 }

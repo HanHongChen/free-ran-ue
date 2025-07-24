@@ -284,21 +284,21 @@ func (g *Gnb) Stop() {
 		return
 	}
 	g.RanLog.Debugln("ran data plane listener stopped")
-	g.RanLog.Traceln("ran data plane listener stopped at %s:%d", g.ranDataPlaneIp, g.ranDataPlanePort)
+	g.RanLog.Tracef("ran data plane listener stopped at %s:%d", g.ranDataPlaneIp, g.ranDataPlanePort)
 
 	if err := (*g.ranControlPlaneListener).Close(); err != nil {
 		g.RanLog.Errorf("Error stopping gNB: %v", err)
 		return
 	}
 	g.RanLog.Debugln("gNB listener stopped")
-	g.RanLog.Traceln("gNB listener stopped at %s:%d", g.ranControlPlaneIp, g.ranControlPlanePort)
+	g.RanLog.Tracef("gNB listener stopped at %s:%d", g.ranControlPlaneIp, g.ranControlPlanePort)
 
 	if g.nrdc {
 		if err := (*g.xnListener).Close(); err != nil {
 			g.XnLog.Errorf("Error closing XN listener: %v", err)
 		}
 		g.XnLog.Debugln("XN listener stopped")
-		g.XnLog.Traceln("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
+		g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
 	}
 
 	var wg sync.WaitGroup
@@ -325,14 +325,14 @@ func (g *Gnb) Stop() {
 		g.RanLog.Errorf("Error stopping N3 connection: %v", err)
 		return
 	}
-	g.GtpLog.Traceln("N3 connection closed at %s:%d", g.ranN3Ip, g.ranN3Port)
+	g.GtpLog.Tracef("N3 connection closed at %s:%d", g.ranN3Ip, g.ranN3Port)
 	g.GtpLog.Debugln("N3 connection closed")
 
 	if err := g.n2Conn.Close(); err != nil {
 		g.SctpLog.Errorf("Error stopping N2 connection: %v", err)
 		return
 	}
-	g.SctpLog.Traceln("N2 connection closed at %s:%d", g.ranN2Ip, g.ranN2Port)
+	g.SctpLog.Tracef("N2 connection closed at %s:%d", g.ranN2Ip, g.ranN2Port)
 	g.SctpLog.Debugln("N2 connection closed")
 
 	g.RanLog.Infoln("GNB stopped")
@@ -910,7 +910,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 
 	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
 	if g.nrdc {
-		if qosFlowPerTNLInformationItem, err = g.xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSetupRequestRaw); err != nil {
+		if qosFlowPerTNLInformationItem, err = g.xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSetupRequestRaw[:n]); err != nil {
 			g.XnLog.Warnf("Error xn pdu session resource setup request transfer: %v", err)
 		}
 	}
@@ -1048,14 +1048,15 @@ func (g *Gnb) processUeDeRegistration(ranUe *RanUe) error {
 }
 
 func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSetupRequestRaw []byte) (ngapType.QosFlowPerTNLInformationItem, error) {
-	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
-
 	g.XnLog.Infoln("Processing XN PDU Session Resource Setup Request Transfer")
 
-	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnIp, g.xnPort))
+	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
+
+	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnIp, g.xnInterface.xnPort))
 	if err != nil {
 		return qosFlowPerTNLInformationItem, fmt.Errorf("error dial xn: %v", err)
 	}
+	g.XnLog.Debugf("Dial XN at %s:%d", g.xnIp, g.xnPort)
 
 	n, err := xnConn.Write(ngapPduSessionResourceSetupRequestRaw)
 	if err != nil {
@@ -1064,17 +1065,11 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSet
 	g.XnLog.Tracef("Sent %d bytes of NGAP PDU Session Resource Setup Request to XN", n)
 	g.XnLog.Debugln("Send NGAP PDU Session Resource Setup Request to XN")
 
-	buffer := make([]byte, 4096)
-	n, err = xnConn.Read(buffer)
-	if err != nil {
-		return qosFlowPerTNLInformationItem, fmt.Errorf("error read ngap pdu session resource setup response from xn: %v", err)
-	}
-	g.XnLog.Tracef("Received %d bytes of NGAP PDU Session Resource Setup Response from XN", n)
-	g.XnLog.Debugln("Receive NGAP PDU Session Resource Setup Response from XN")
 
 	if err = xnConn.SetReadDeadline(time.Now().Add(time.Second * 5)); err != nil {
 		return qosFlowPerTNLInformationItem, fmt.Errorf("error set read deadline: %v", err)
 	}
+	buffer := make([]byte, 4096)
 	n, err = xnConn.Read(buffer)
 	if err != nil {
 		return qosFlowPerTNLInformationItem, fmt.Errorf("error read ngap pdu session resource setup response from xn: %v", err)

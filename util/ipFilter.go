@@ -4,7 +4,7 @@ import (
 	"net"
 )
 
-func IsIpInQosFlow(rawPacket []byte, qosFlow []string) bool {
+func IsIpInSpecifiedFlow(rawPacket []byte, specifiedFlow []string) bool {
 	if len(rawPacket) < 20 {
 		return false
 	}
@@ -20,7 +20,7 @@ func IsIpInQosFlow(rawPacket []byte, qosFlow []string) bool {
 	}
 
 	destIP := net.IPv4(rawPacket[16], rawPacket[17], rawPacket[18], rawPacket[19])
-	for _, cidr := range qosFlow {
+	for _, cidr := range specifiedFlow {
 		if cidr == "" {
 			continue
 		}

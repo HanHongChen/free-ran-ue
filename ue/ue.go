@@ -63,7 +63,7 @@ type dcRanDataPlane struct {
 type nrdc struct {
 	enable bool
 	dcRanDataPlane
-	qosFlow []string
+	specifiedFlow []string
 }
 
 type Ue struct {
@@ -176,7 +176,7 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 				ip:   config.Ue.Nrdc.DcRanDataPlane.Ip,
 				port: config.Ue.Nrdc.DcRanDataPlane.Port,
 			},
-			qosFlow: config.Ue.Nrdc.QosFlow,
+			specifiedFlow: config.Ue.Nrdc.SpecifiedFlow,
 		},
 
 		ueTunnelDeviceName: config.Ue.UeTunnelDevice,
@@ -690,7 +690,7 @@ func (u *Ue) handleDataPlane(ctx context.Context) {
 				}
 				u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
 			} else {
-				if util.IsIpInQosFlow(buffer, u.nrdc.qosFlow) {
+				if util.IsIpInSpecifiedFlow(buffer, u.nrdc.specifiedFlow) {
 					n, err := u.dcRanDataPlaneConn.Write(buffer)
 					if err != nil {
 						u.RanLog.Warnf("Error sent to dc ran data plane: %+v", err)

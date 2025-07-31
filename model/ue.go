@@ -60,7 +60,7 @@ type PduSessionIE struct {
 type NrdcIE struct {
 	Enable         bool          `yaml:"enable"`
 	DcRanDataPlane DcDataPlaneIE `yaml:"dcRanDataPlane"`
-	QosFlow        []string      `yaml:"qosFlow"`
+	SpecifiedFlow  []string      `yaml:"specifiedFlow"`
 }
 
 type DcDataPlaneIE struct {

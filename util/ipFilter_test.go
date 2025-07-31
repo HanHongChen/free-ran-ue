@@ -10,7 +10,7 @@ import (
 var testCases = []struct {
 	name      string
 	rawPacket []byte
-	qosFlow   []string
+	specifiedFlow   []string
 	expected  bool
 }{
 	{
@@ -21,7 +21,7 @@ var testCases = []struct {
 			0x00, 0x00, 0x7f, 0x00, 0x00,
 			0x01, 0x01, 0x01, 0x01, 0x01,
 		},
-		qosFlow:  []string{"1.1.1.1/32"},
+		specifiedFlow:  []string{"1.1.1.1/32"},
 		expected: true,
 	},
 	{
@@ -32,7 +32,7 @@ var testCases = []struct {
 			0x00, 0x00, 0x7f, 0x00, 0x00,
 			0x01, 0x01, 0x01, 0x01, 0x01,
 		},
-		qosFlow:  []string{"1.1.1.2/24"},
+		specifiedFlow:  []string{"1.1.1.2/24"},
 		expected: true,
 	},
 	{
@@ -43,7 +43,7 @@ var testCases = []struct {
 			0x00, 0x00, 0x7f, 0x00, 0x00,
 			0x01, 0x08, 0x08, 0x08, 0x08,
 		},
-		qosFlow:  []string{"1.1.1.1/32"},
+		specifiedFlow:  []string{"1.1.1.1/32"},
 		expected: false,
 	},
 }
@@ -51,7 +51,7 @@ var testCases = []struct {
 func TestIsIpInQosFlow(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			result := util.IsIpInQosFlow(testCase.rawPacket, testCase.qosFlow)
+			result := util.IsIpInSpecifiedFlow(testCase.rawPacket, testCase.specifiedFlow)
 			assert.Equal(t, testCase.expected, result)
 		})
 	}

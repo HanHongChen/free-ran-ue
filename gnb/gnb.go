@@ -491,7 +491,7 @@ func (g *Gnb) setupN1(ranUe *RanUe) error {
 }
 
 func (g *Gnb) releaseN1(ranUe *RanUe) error {
-	g.RanLog.Infoln("Releasing N1")
+	g.RanLog.Infoln("Waiting for UE to release N1")
 
 	if err := g.processUeDeRegistration(ranUe); err != nil {
 		return fmt.Errorf("error processing UE deregistration: %v", err)
@@ -948,7 +948,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 }
 
 func (g *Gnb) processUeDeRegistration(ranUe *RanUe) error {
-	g.RanLog.Infoln("Processing UE deregistration")
+	g.RanLog.Infoln("Waiting for UE to deregister")
 
 	// receive ue deregistration request from UE and send to AMF
 	ueDeRegistrationRequest := make([]byte, 1024)

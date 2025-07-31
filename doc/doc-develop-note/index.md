@@ -3,6 +3,12 @@
 > [!Important]
 > Beleive myself that I can do everything.
 
+## 20250731
+
+I rename the QoS flow as specified flow due to the dual connection does not need to be **QoS**.
+
+Also with implement the iperf namespace for testing throughput.
+
 ## 20250724 Static NR-DC
 
 I refactor the RAN UE management in gNB and also fix the magic number issue at `AMFUENGAPID` and `RANUENGAPID`.

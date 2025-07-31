@@ -42,7 +42,7 @@ ue:
       ip: "10.0.3.1"
       port: 31414
     specifiedFlow:
-      - "1.1.1.1/32"
+      - "10.1.0.3/32"
 
   ueTunnelDevice: "ueTun0"
 

@@ -8,51 +8,51 @@ build:
 
 # Basic namespace
 ns-up:
-	./free-ran-ue-namespace.sh up
+	./namespace-script/free-ran-ue-namespace.sh up
 
 ns-down:
-	./free-ran-ue-namespace.sh down
+	./namespace-script/free-ran-ue-namespace.sh down
 
 ns-ran:
-	./free-ran-ue-namespace.sh ran-ns
+	./namespace-script/free-ran-ue-namespace.sh ran-ns
 
 ns-ue:
-	./free-ran-ue-namespace.sh ue-ns
+	./namespace-script/free-ran-ue-namespace.sh ue-ns
 
 # DC namespace
 dc-ns-up:
-	./free-ran-ue-dc-namespace.sh up
+	./namespace-script/free-ran-ue-dc-namespace.sh up
 
 dc-ns-down:
-	./free-ran-ue-dc-namespace.sh down
+	./namespace-script/free-ran-ue-dc-namespace.sh down
 
 dc-ns-mran:
-	./free-ran-ue-dc-namespace.sh mran-ns
+	./namespace-script/free-ran-ue-dc-namespace.sh mran-ns
 
 dc-ns-sran:
-	./free-ran-ue-dc-namespace.sh sran-ns
+	./namespace-script/free-ran-ue-dc-namespace.sh sran-ns
 
 dc-ns-ue:
-	./free-ran-ue-dc-namespace.sh ue-ns
+	./namespace-script/free-ran-ue-dc-namespace.sh ue-ns
 
 # DC Iperf namespace
 dci-ns-up:
-	./free-ran-ue-dc-iperf-namespace.sh up
+	./namespace-script/free-ran-ue-dc-iperf-namespace.sh up
 
 dci-ns-down:
-	./free-ran-ue-dc-iperf-namespace.sh down
+	./namespace-script/free-ran-ue-dc-iperf-namespace.sh down
 
 dci-ns-mran:
-	./free-ran-ue-dc-iperf-namespace.sh mran-ns
+	./namespace-script/free-ran-ue-dc-iperf-namespace.sh mran-ns
 
 dci-ns-sran:
-	./free-ran-ue-dc-iperf-namespace.sh sran-ns
+	./namespace-script/free-ran-ue-dc-iperf-namespace.sh sran-ns
 
 dci-ns-ue:
-	./free-ran-ue-dc-iperf-namespace.sh ue-ns
+	./namespace-script/free-ran-ue-dc-iperf-namespace.sh ue-ns
 
 dci-ns-iperf-a:
-	./free-ran-ue-dc-iperf-namespace.sh iperf-a
+	./namespace-script/free-ran-ue-dc-iperf-namespace.sh iperf-a
 
 dci-ns-iperf-b:
-	./free-ran-ue-dc-iperf-namespace.sh iperf-b
+	./namespace-script/free-ran-ue-dc-iperf-namespace.sh iperf-b

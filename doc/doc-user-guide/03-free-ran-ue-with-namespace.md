@@ -42,13 +42,13 @@ source ~/.bashrc
 2. Bring up namespaces (under `free-ran-ue`)
 
     ```bash
-    ./free-ran-ue-namespace.sh up
+    make ns-up
     ```
 
     After using, there is `down` command to clean up the namespaces:
 
     ```bash
-    ./free-ran-ue-namespace.sh down
+    make ns-down
     ```
 
 ## C. Configure free5GC
@@ -116,7 +116,7 @@ The configuration file `config/gnb.yaml` has already been set up with the enviro
 1. Enter the RAN-namespace (under `free-ran-ue`)
 
     ```bash
-    ./free-ran-ue-namespace.sh ran-ns
+    make ns-ran
     ```
 
 2. Start gNB
@@ -132,7 +132,7 @@ The configuration file `config/ue.yaml` has already been set up with the environ
 1. Enter the UE-namespace (under `free-ran-ue`)
 
     ```bash
-    ./free-ran-ue-namespace.sh ue-ns
+    make ns-ue
     ```
 
 2. Start UE
@@ -146,7 +146,7 @@ The configuration file `config/ue.yaml` has already been set up with the environ
 1. Enter the UE-namespace (under `free-ran-ue`)
 
     ```bash
-    ./free-ran-ue-namespace.sh ue-ns
+    make ns-ue
     ```
 
 2. Check the `ueTun0` interface

@@ -3,6 +3,10 @@
 > [!Important]
 > Beleive myself that I can do everything.
 
+## 20250807
+
+Today, free5GC correct the invalid imsi value. I also fix it in UE's NAS build test case.
+
 ## 20250731
 
 I rename the QoS flow as specified flow due to the dual connection does not need to be **QoS**.

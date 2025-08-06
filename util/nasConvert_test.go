@@ -14,8 +14,8 @@ var testSupiCases = []struct {
 	expectedBytes  []byte
 }{
 	{
-		name:           "imsi-2089300007487",
-		supi:           "2089300007487",
+		name:           "imsi-208930000007487",
+		supi:           "208930000007487",
 		expectedLength: 13,
 		expectedBytes:  []byte{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	},

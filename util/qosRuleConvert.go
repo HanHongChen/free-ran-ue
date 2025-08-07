@@ -9,7 +9,10 @@ import (
 
 func GetQosRule(ruleBytes []byte, logger *logger.UeLogger) []string {
 	var rules nasType.QoSRules
-	rules.UnmarshalBinary(ruleBytes)
+	if err := rules.UnmarshalBinary(ruleBytes); err != nil {
+		logger.PduLog.Warnf("unmarshal qos rules failed: %+v", err)
+		return nil
+	}
 
 	qosRules := make([]string, 0)
 

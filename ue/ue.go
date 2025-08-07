@@ -573,7 +573,8 @@ func (u *Ue) extractUeInformationFromNasPduSessionEstablishmentAccept(nasPduSess
 		u.PduLog.Infof("PDU session UE IP: %s", u.pduSessionEstablishmentAccept.ueIp)
 
 		u.pduSessionEstablishmentAccept.qosRule = pduSessionEstablishmentAccept.AuthorizedQosRules.GetQosRule()
-		u.PduLog.Infof("PDU session QoS rule: %+v", u.pduSessionEstablishmentAccept.qosRule)
+		u.nrdc.specifiedFlow = util.GetQosRule(u.pduSessionEstablishmentAccept.qosRule, u.UeLogger)
+		u.PduLog.Infof("PDU session QoS rule: %+v", u.nrdc.specifiedFlow)
 
 		u.pduSessionEstablishmentAccept.dnn = pduSessionEstablishmentAccept.GetDNN()
 		u.PduLog.Infof("PDU session DNN: %s", u.pduSessionEstablishmentAccept.dnn)

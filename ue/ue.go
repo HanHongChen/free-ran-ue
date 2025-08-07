@@ -176,7 +176,7 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 				ip:   config.Ue.Nrdc.DcRanDataPlane.Ip,
 				port: config.Ue.Nrdc.DcRanDataPlane.Port,
 			},
-			specifiedFlow: config.Ue.Nrdc.SpecifiedFlow,
+			specifiedFlow: make([]string, 0),
 		},
 
 		ueTunnelDeviceName: config.Ue.UeTunnelDevice,
@@ -573,7 +573,7 @@ func (u *Ue) extractUeInformationFromNasPduSessionEstablishmentAccept(nasPduSess
 		u.PduLog.Infof("PDU session UE IP: %s", u.pduSessionEstablishmentAccept.ueIp)
 
 		u.pduSessionEstablishmentAccept.qosRule = pduSessionEstablishmentAccept.AuthorizedQosRules.GetQosRule()
-		u.nrdc.specifiedFlow = util.GetQosRule(u.pduSessionEstablishmentAccept.qosRule, u.UeLogger)
+		u.nrdc.specifiedFlow = append(u.nrdc.specifiedFlow, util.GetQosRule(u.pduSessionEstablishmentAccept.qosRule, u.UeLogger)...)
 		u.PduLog.Infof("PDU session QoS rule: %+v", u.nrdc.specifiedFlow)
 
 		u.pduSessionEstablishmentAccept.dnn = pduSessionEstablishmentAccept.GetDNN()

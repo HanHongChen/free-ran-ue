@@ -8,29 +8,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (r *Console) handleConsoleLogin(c *gin.Context) {
-	r.LoginLog.Infoln("Attempting to login")
+func (cs *console) handleConsoleLogin(c *gin.Context) {
+	cs.LoginLog.Infoln("Attempting to login")
 
 	var loginRequest model.ConsoleLoginRequest
 	if err := c.ShouldBindJSON(&loginRequest); err != nil {
-		r.LoginLog.Warnf("Failed to bind login request: %v", err)
+		cs.LoginLog.Warnf("Failed to bind login request: %v", err)
 		c.JSON(http.StatusBadRequest, model.ConsoleLoginResponse{
 			Message: "Invalid request format",
 		})
 		return
 	}
 
-	if loginRequest.Username != r.username || loginRequest.Password != r.password {
-		r.LoginLog.Warnf("Invalid credentials")
+	if loginRequest.Username != cs.username || loginRequest.Password != cs.password {
+		cs.LoginLog.Warnf("Invalid credentials")
 		c.JSON(http.StatusUnauthorized, model.ConsoleLoginResponse{
 			Message: "Invalid credentials",
 		})
 		return
 	}
 
-	token, err := util.CreateJWT(r.jwt.secret, c.ClientIP(), r.jwt.expiresIn, nil)
+	token, err := util.CreateJWT(cs.jwt.secret, c.ClientIP(), cs.jwt.expiresIn, nil)
 	if err != nil {
-		r.LoginLog.Errorf("Failed to create JWT: %v", err)
+		cs.LoginLog.Errorf("Failed to create JWT: %v", err)
 		c.JSON(http.StatusInternalServerError, model.ConsoleLoginResponse{
 			Message: "Failed to create JWT",
 		})
@@ -42,15 +42,15 @@ func (r *Console) handleConsoleLogin(c *gin.Context) {
 		Token:   token,
 	})
 
-	r.LoginLog.Infoln("Login successful")
+	cs.LoginLog.Infoln("Login successful")
 }
 
-func (r *Console) handleConsoleLogout(c *gin.Context) {
-	r.LogoutLog.Infoln("Attempting to logout")
+func (cs *console) handleConsoleLogout(c *gin.Context) {
+	cs.LogoutLog.Infoln("Attempting to logout")
 
 	c.JSON(http.StatusOK, model.ConsoleLogoutResponse{
 		Message: "Logout successful",
 	})
 
-	r.LogoutLog.Infoln("Logout successful")
+	cs.LogoutLog.Infoln("Logout successful")
 }

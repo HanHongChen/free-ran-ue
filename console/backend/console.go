@@ -3,6 +3,8 @@ package backend
 import (
 	"context"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -17,7 +19,7 @@ type jwt struct {
 	expiresIn time.Duration
 }
 
-type Console struct {
+type console struct {
 	router *gin.Engine
 	routes util.Routes
 
@@ -33,8 +35,8 @@ type Console struct {
 	*logger.ConsoleLogger
 }
 
-func NewConsole(config *model.ConsoleConfig, logger *logger.ConsoleLogger) *Console {
-	r := &Console{
+func NewConsole(config *model.ConsoleConfig, logger *logger.ConsoleLogger) *console {
+	c := &console{
 		router: nil,
 		routes: nil,
 
@@ -51,55 +53,75 @@ func NewConsole(config *model.ConsoleConfig, logger *logger.ConsoleLogger) *Cons
 		ConsoleLogger: logger,
 	}
 
-	r.routes = r.initRoutes()
-	r.router = util.NewGinRouter(util.CONSOLE_API_PREFIX, r.routes)
-	return r
+	c.routes = c.initRoutes()
+	c.router = util.NewGinRouter(util.CONSOLE_API_PREFIX, c.routes)
+
+	c.router.NoRoute(c.returnPages())
+	return c
 }
 
-func (r *Console) Start() {
-	r.ConsoleLog.Infoln("Starting console")
+func (c *console) Start() {
+	c.ConsoleLog.Infoln("Starting console")
 
-	r.server = &http.Server{
-		Addr:    ":" + strconv.Itoa(r.port),
-		Handler: r.router,
+	c.server = &http.Server{
+		Addr:    ":" + strconv.Itoa(c.port),
+		Handler: c.router,
 	}
 
 	go func() {
-		if err := r.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			r.ConsoleLog.Errorf("Failed to start console: %v", err)
+		if err := c.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			c.ConsoleLog.Errorf("Failed to start console: %v", err)
 		}
 	}()
 	time.Sleep(1 * time.Second)
 
-	r.ConsoleLog.Infoln("Console started")
+	c.ConsoleLog.Infoln("Console started")
 }
 
-func (r *Console) Stop() {
-	r.ConsoleLog.Infoln("Stopping console")
+func (c *console) Stop() {
+	c.ConsoleLog.Infoln("Stopping console")
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
-	if err := r.server.Shutdown(shutdownCtx); err != nil {
-		r.ConsoleLog.Errorf("Failed to stop console: %v", err)
+	if err := c.server.Shutdown(shutdownCtx); err != nil {
+		c.ConsoleLog.Errorf("Failed to stop console: %v", err)
 	} else {
-		r.ConsoleLog.Infoln("Console stopped successfully")
+		c.ConsoleLog.Infoln("Console stopped successfully")
 	}
 }
 
-func (r *Console) initRoutes() util.Routes {
+func (c *console) returnPages() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		if method == http.MethodGet {
+
+			destPath := filepath.Join("build/console", c.Request.URL.Path)
+			if _, err := os.Stat(destPath); err == nil {
+				c.File(filepath.Clean(destPath))
+				return
+			}
+
+			c.File(filepath.Clean("build/console/index.html"))
+		} else {
+			c.Next()
+		}
+	}
+}
+
+func (c *console) initRoutes() util.Routes {
 	return util.Routes{
 		{
 			Name:        "Console Login",
 			Method:      http.MethodPost,
 			Pattern:     "/login",
-			HandlerFunc: r.handleConsoleLogin,
+			HandlerFunc: c.handleConsoleLogin,
 		},
 		{
 			Name:        "Console Logout",
 			Method:      http.MethodDelete,
 			Pattern:     "/logout",
-			HandlerFunc: r.handleConsoleLogout,
+			HandlerFunc: c.handleConsoleLogout,
 		},
 	}
 }

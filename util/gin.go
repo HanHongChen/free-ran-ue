@@ -9,8 +9,9 @@ import (
 type API_PREFIX string
 
 const (
-	GNB_API_PREFIX API_PREFIX = "/api/gnb"
-	UE_API_PREFIX  API_PREFIX = "/api/ue"
+	GNB_API_PREFIX     API_PREFIX = "/api/gnb"
+	UE_API_PREFIX      API_PREFIX = "/api/ue"
+	CONSOLE_API_PREFIX API_PREFIX = "/api/console"
 )
 
 type Route struct {

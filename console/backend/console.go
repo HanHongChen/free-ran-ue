@@ -60,68 +60,68 @@ func NewConsole(config *model.ConsoleConfig, logger *logger.ConsoleLogger) *cons
 	return c
 }
 
-func (c *console) Start() {
-	c.ConsoleLog.Infoln("Starting console")
+func (cs *console) Start() {
+	cs.ConsoleLog.Infoln("Starting console")
 
-	c.server = &http.Server{
-		Addr:    ":" + strconv.Itoa(c.port),
-		Handler: c.router,
+	cs.server = &http.Server{
+		Addr:    ":" + strconv.Itoa(cs.port),
+		Handler: cs.router,
 	}
 
 	go func() {
-		if err := c.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			c.ConsoleLog.Errorf("Failed to start console: %v", err)
+		if err := cs.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			cs.ConsoleLog.Errorf("Failed to start console: %v", err)
 		}
 	}()
 	time.Sleep(1 * time.Second)
 
-	c.ConsoleLog.Infoln("Console started")
+	cs.ConsoleLog.Infoln("Console started")
 }
 
-func (c *console) Stop() {
-	c.ConsoleLog.Infoln("Stopping console")
+func (cs *console) Stop() {
+	cs.ConsoleLog.Infoln("Stopping console")
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
-	if err := c.server.Shutdown(shutdownCtx); err != nil {
-		c.ConsoleLog.Errorf("Failed to stop console: %v", err)
+	if err := cs.server.Shutdown(shutdownCtx); err != nil {
+		cs.ConsoleLog.Errorf("Failed to stop console: %v", err)
 	} else {
-		c.ConsoleLog.Infoln("Console stopped successfully")
+		cs.ConsoleLog.Infoln("Console stopped successfully")
 	}
 }
 
-func (c *console) returnPages() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		method := c.Request.Method
+func (cs *console) returnPages() gin.HandlerFunc {
+	return func(cs *gin.Context) {
+		method := cs.Request.Method
 		if method == http.MethodGet {
 
-			destPath := filepath.Join("build/console", c.Request.URL.Path)
+			destPath := filepath.Join("build/console", cs.Request.URL.Path)
 			if _, err := os.Stat(destPath); err == nil {
-				c.File(filepath.Clean(destPath))
+				cs.File(filepath.Clean(destPath))
 				return
 			}
 
-			c.File(filepath.Clean("build/console/index.html"))
+			cs.File(filepath.Clean("build/console/index.html"))
 		} else {
-			c.Next()
+			cs.Next()
 		}
 	}
 }
 
-func (c *console) initRoutes() util.Routes {
+func (cs *console) initRoutes() util.Routes {
 	return util.Routes{
 		{
 			Name:        "Console Login",
 			Method:      http.MethodPost,
 			Pattern:     "/login",
-			HandlerFunc: c.handleConsoleLogin,
+			HandlerFunc: cs.handleConsoleLogin,
 		},
 		{
 			Name:        "Console Logout",
 			Method:      http.MethodDelete,
 			Pattern:     "/logout",
-			HandlerFunc: c.handleConsoleLogout,
+			HandlerFunc: cs.handleConsoleLogout,
 		},
 	}
 }

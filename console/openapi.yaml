@@ -1,0 +1,117 @@
+openapi: 3.0.0
+info:
+  title: free-ran-ue Console API
+  version: '1.0.0'
+  description: API documentation for free-ran-ue Console
+
+servers:
+  - url: http://{base_url}
+    variables:
+      base_url:
+        default: '127.0.0.1:40104'
+        description: API server base URL
+
+paths:
+  /api/console/login:
+    post:
+      summary: User Login
+      description: Authenticate user and return JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: "admin"
+                password:
+                  type: string
+                  example: "free-ran-ue"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful"
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          description: Invalid request format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid request format"
+                  token:
+                    type: string
+                    example: ""
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid credentials"
+                  token:
+                    type: string
+                    example: ""
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Failed to create JWT"
+                  token:
+                    type: string
+                    example: ""
+
+  /api/console/logout:
+    delete:
+      summary: User Logout
+      description: Logout current user
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

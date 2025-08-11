@@ -1,0 +1,16 @@
+.gitignore
+.npmignore
+.openapi-generator-ignore
+api.ts
+base.ts
+common.ts
+configuration.ts
+docs/ApiConsoleLoginPost200Response.md
+docs/ApiConsoleLoginPost400Response.md
+docs/ApiConsoleLoginPost401Response.md
+docs/ApiConsoleLoginPost500Response.md
+docs/ApiConsoleLoginPostRequest.md
+docs/ApiConsoleLogoutDelete200Response.md
+docs/AuthenticationApi.md
+git_push.sh
+index.ts

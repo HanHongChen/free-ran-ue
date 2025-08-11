@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import styles from './css/errorBox.module.css'
+import styles from './errorBox.module.css'
 
 interface ErrorMessage {
   id: string

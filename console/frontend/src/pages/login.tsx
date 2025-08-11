@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import styles from './css/login.module.css'
 import logoImg from '../assets/free-ran-ue.jpg'
 import { authApi } from '../apiCfg'
-import ErrorBox from '../components/errorBox'
+import ErrorBox from '../components/errorBox/errorBox'
 import { useErrors } from '../hooks/useErrors'
 
 export default function Login() {

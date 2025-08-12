@@ -106,6 +106,186 @@ paths:
                     type: string
                     example: "Logout successful"
 
+  /api/console/authenticate:
+    post:
+      summary: Authenticate Token
+      description: Validate JWT token
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authenticate successful"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No authentication header"
+
+  /api/console/gnb/registration:
+    post:
+      summary: Register gNB
+      description: Register a new gNB with specified IP and port
+      tags:
+        - gNB
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ip
+                - port
+              properties:
+                ip:
+                  type: string
+                  example: "10.0.1.2"
+                port:
+                  type: integer
+                  example: 40104
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Registration successful"
+                  gnbInfo:
+                    type: object
+                    properties:
+                      gnbId:
+                        type: string
+                        example: "000314"
+                      gnbName:
+                        type: string
+                        example: "gNB"
+                      plmnId:
+                        type: string
+                        example: "20893"
+                      snssai:
+                        type: object
+                        properties:
+                          sst:
+                            type: string
+                            example: "1"
+                          sd:
+                            type: string
+                            example: "010203"
+        '400':
+          description: Invalid request format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Failed to bind JSON"
+                  gnbInfo:
+                    type: object
+                    properties:
+                      gnbId:
+                        type: string
+                        example: ""
+                      gnbName:
+                        type: string
+                        example: ""
+                      plmnId:
+                        type: string
+                        example: ""
+                      snssai:
+                        type: object
+                        properties:
+                          sst:
+                            type: string
+                            example: ""
+                          sd:
+                            type: string
+                            example: ""
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No authentication header"
+                  gnbInfo:
+                    type: object
+                    properties:
+                      gnbId:
+                        type: string
+                        example: ""
+                      gnbName:
+                        type: string
+                        example: ""
+                      plmnId:
+                        type: string
+                        example: ""
+                      snssai:
+                        type: object
+                        properties:
+                          sst:
+                            type: string
+                            example: ""
+                          sd:
+                            type: string
+                            example: ""
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Failed to send request: failed to send request: <nil>"
+                  gnbInfo:
+                    type: object
+                    properties:
+                      gnbId:
+                        type: string
+                        example: ""
+                      gnbName:
+                        type: string
+                        example: ""
+                      plmnId:
+                        type: string
+                        example: ""
+                      snssai:
+                        type: object
+                        properties:
+                          sst:
+                            type: string
+                            example: ""
+                          sd:
+                            type: string
+                            example: ""
+
 components:
   securitySchemes:
     BearerAuth:

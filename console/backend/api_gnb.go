@@ -42,9 +42,9 @@ func (cs *console) handleConsoleGnbRegistration(c *gin.Context) {
 
 	response, err := util.SendHttpRequest(uri, API_GNB_REGISTRATION_METHOD, nil, nil)
 	if err != nil {
-		cs.GnbLog.Warnf("Failed to send request: %v", err)
+		cs.GnbLog.Warnln(err)
 		c.JSON(http.StatusInternalServerError, model.ConsoleGnbRegistrationResponse{
-			Message: "Failed to send request: " + err.Error(),
+			Message: err.Error(),
 		})
 		return
 	}

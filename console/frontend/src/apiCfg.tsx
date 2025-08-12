@@ -1,14 +1,15 @@
-import { AuthenticationApi } from './api'
+import { AuthenticationApi, GNBApi } from './api'
 import axios from 'axios'
 
-const getBaseUrl = () => {
+const getConsoleUrl = () => {
     const { protocol, hostname } = window.location
     return `${protocol}//${hostname}:40104`
 }
 
 const apiConfig = {
-    basePath: getBaseUrl(),
+    basePath: getConsoleUrl(),
     isJsonMime: () => false,
 }
 
-export const authApi = new AuthenticationApi(apiConfig, undefined, axios)
+export const consoleApi = new AuthenticationApi(apiConfig, undefined, axios)
+export const gnbApi = new GNBApi(apiConfig, undefined, axios)

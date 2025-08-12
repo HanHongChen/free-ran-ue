@@ -4,8 +4,54 @@ All URIs are relative to *http://127.0.0.1:40104*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**apiConsoleAuthenticatePost**](#apiconsoleauthenticatepost) | **POST** /api/console/authenticate | Authenticate Token|
 |[**apiConsoleLoginPost**](#apiconsoleloginpost) | **POST** /api/console/login | User Login|
 |[**apiConsoleLogoutDelete**](#apiconsolelogoutdelete) | **DELETE** /api/console/logout | User Logout|
+
+# **apiConsoleAuthenticatePost**
+> ApiConsoleAuthenticatePost200Response apiConsoleAuthenticatePost()
+
+Validate JWT token
+
+### Example
+
+```typescript
+import {
+    AuthenticationApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new AuthenticationApi(configuration);
+
+const { status, data } = await apiInstance.apiConsoleAuthenticatePost();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ApiConsoleAuthenticatePost200Response**
+
+### Authorization
+
+[BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Authentication successful |  -  |
+|**401** | Authentication failed |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **apiConsoleLoginPost**
 > ApiConsoleLoginPost200Response apiConsoleLoginPost(apiConsoleLoginPostRequest)

@@ -4,10 +4,12 @@ import NotFound from './pages/not-found'
 import Dashboard from './pages/dashboard'
 import Gnb from './pages/gnb'
 import Ue from './pages/ue'
+import { GnbProvider } from './context/GnbContext'
 
 export default function AppRoutes() {
   return (
-    <Routes>
+    <GnbProvider>
+      <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
 
@@ -17,7 +19,8 @@ export default function AppRoutes() {
 
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
-    </Routes>
+          </Routes>
+    </GnbProvider>
   )
 }
 

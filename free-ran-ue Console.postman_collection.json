@@ -1,13 +1,120 @@
 {
 	"info": {
-		"_postman_id": "4b6f6ae2-c0ca-4c31-9b1d-12ece74d4a6a",
+		"_postman_id": "e73414d7-0a81-43e5-a47e-e37667e5e7c4",
 		"name": "free-ran-ue Console",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
 		"_exporter_id": "38955132"
 	},
 	"item": [
 		{
-			"name": "UserLogin",
+			"name": "Authenticate",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5ODk5NjEsImlhdCI6MTc1NDk4NjM2MSwic3ViIjoiMTIzLjE5Mi44My4yMDMifQ.r6P-bprQKmM9Fi9UEM0Gp5Wc7ZH8ZLR7P3rWamut-ba",
+						"type": "text"
+					}
+				],
+				"url": "http://{{base_url}}/api/console/authenticate"
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5ODk5NjEsImlhdCI6MTc1NDk4NjM2MSwic3ViIjoiMTIzLjE5Mi44My4yMDMifQ.r6P-bprQKmM9Fi9UEM0Gp5Wc7ZH8ZLR7P3rWamut-bU",
+								"type": "text"
+							}
+						],
+						"url": "http://{{base_url}}/api/console/authenticate"
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Headers",
+							"value": "Content-Type, Authorization"
+						},
+						{
+							"key": "Access-Control-Allow-Methods",
+							"value": "GET, POST, PUT, DELETE, OPTIONS"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 12 Aug 2025 08:15:41 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "37"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"message\": \"Authenticate successful\"\n}"
+				},
+				{
+					"name": "401",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5ODk5NjEsImlhdCI6MTc1NDk4NjM2MSwic3ViIjoiMTIzLjE5Mi44My4yMDMifQ.r6P-bprQKmM9Fi9UEM0Gp5Wc7ZH8ZLR7P3rWamut-ba",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": "http://{{base_url}}/api/console/authenticate"
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Headers",
+							"value": "Content-Type, Authorization"
+						},
+						{
+							"key": "Access-Control-Allow-Methods",
+							"value": "GET, POST, PUT, DELETE, OPTIONS"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 12 Aug 2025 08:17:06 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "38"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"message\": \"No authentication header\"\n}"
+				}
+			]
+		},
+		{
+			"name": "ConsoleLogin",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -218,7 +325,7 @@
 			]
 		},
 		{
-			"name": "UserLogout",
+			"name": "ConsoleLogout",
 			"request": {
 				"method": "DELETE",
 				"header": [],
@@ -281,6 +388,257 @@
 					],
 					"cookie": [],
 					"body": "{\n    \"message\": \"Logout successful\"\n}"
+				}
+			]
+		},
+		{
+			"name": "ConsoleGnbRegistration",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "http://{{base_url}}/api/console/gnb/registration"
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5OTczNTEsImlhdCI6MTc1NDk5Mzc1MSwic3ViIjoiMTIzLjE5Mi44My4yMDMifQ.L0GK42jyV2qNrZpQov0t3sxsk9xO5JZ-VkzjMPswUwM",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ip\": \"10.0.1.2\",\n    \"port\": 40104\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://{{base_url}}/api/console/gnb/registration"
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "Access-Control-Allow-Headers",
+							"value": "Content-Type, Authorization"
+						},
+						{
+							"key": "Access-Control-Allow-Methods",
+							"value": "GET, POST, PUT, DELETE, OPTIONS"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 12 Aug 2025 10:22:31 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "134"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"message\": \"Registration successful\",\n    \"gnbInfo\": {\n        \"gnbId\": \"000314\",\n        \"gnbName\": \"gNB\",\n        \"plmnId\": \"20893\",\n        \"snssai\": {\n            \"sst\": \"1\",\n            \"sd\": \"010203\"\n        }\n    }\n}"
+				},
+				{
+					"name": "400",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5OTczNTEsImlhdCI6MTc1NDk5Mzc1MSwic3ViIjoiMTIzLjE5Mi44My4yMDMifQ.L0GK42jyV2qNrZpQov0t3sxsk9xO5JZ-VkzjMPswUwM",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ip\": \"10.0.1.2\",\n    \"port\": \"40104\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://{{base_url}}/api/console/gnb/registration"
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "Access-Control-Allow-Headers",
+							"value": "Content-Type, Authorization"
+						},
+						{
+							"key": "Access-Control-Allow-Methods",
+							"value": "GET, POST, PUT, DELETE, OPTIONS"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 12 Aug 2025 10:24:32 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "109"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"message\": \"Failed to bind JSON\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        }\n    }\n}"
+				},
+				{
+					"name": "401",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5OTczNTEsImlhdCI6MTc1NDk5Mzc1MSwic3ViIjoiMTIzLjE5Mi44My4yMDMifQ.L0GK42jyV2qNrZpQov0t3sxsk9xO5JZ-VkzjMPswUwM",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ip\": \"10.0.1.2\",\n    \"port\": 40104\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://{{base_url}}/api/console/gnb/registration"
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "Access-Control-Allow-Headers",
+							"value": "Content-Type, Authorization"
+						},
+						{
+							"key": "Access-Control-Allow-Methods",
+							"value": "GET, POST, PUT, DELETE, OPTIONS"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 12 Aug 2025 10:23:44 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "114"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"message\": \"No authentication header\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        }\n    }\n}"
+				},
+				{
+					"name": "500",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5OTczNTEsImlhdCI6MTc1NDk5Mzc1MSwic3ViIjoiMTIzLjE5Mi44My4yMDMifQ.L0GK42jyV2qNrZpQov0t3sxsk9xO5JZ-VkzjMPswUwM",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ip\": \"10.0.1.2\",\n    \"port\": 40104\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://{{base_url}}/api/console/gnb/registration"
+					},
+					"status": "Internal Server Error",
+					"code": 500,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "Access-Control-Allow-Headers",
+							"value": "Content-Type, Authorization"
+						},
+						{
+							"key": "Access-Control-Allow-Methods",
+							"value": "GET, POST, PUT, DELETE, OPTIONS"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "*"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 12 Aug 2025 10:25:26 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "153"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"message\": \"Failed to send request: failed to send request: <nil>\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        }\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "GnbRegistration",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://{{gnb_url}}/api/gnb/registration"
+			},
+			"response": [
+				{
+					"name": "200",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": "http://{{gnb_url}}/api/gnb/registration"
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "Text",
+					"header": [],
+					"cookie": [],
+					"body": "{\n    \"message\": \"Registration successful\",\n    \"gnbInfo\": {\n        \"gnbId\": \"000314\",\n        \"gnbName\": \"gNB\",\n        \"plmnId\": \"20893\",\n        \"snssai\": {\n            \"sst\": \"1\",\n            \"sd\": \"010203\"\n        }\n    }\n}"
 				}
 			]
 		}

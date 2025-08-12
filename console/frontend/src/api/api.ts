@@ -26,6 +26,227 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerM
 /**
  * 
  * @export
+ * @interface ApiConsoleAuthenticatePost200Response
+ */
+export interface ApiConsoleAuthenticatePost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleAuthenticatePost200Response
+     */
+    'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleAuthenticatePost401Response
+ */
+export interface ApiConsoleAuthenticatePost401Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleAuthenticatePost401Response
+     */
+    'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPost200Response
+ */
+export interface ApiConsoleGnbRegistrationPost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost200Response
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {ApiConsoleGnbRegistrationPost200ResponseGnbInfo}
+     * @memberof ApiConsoleGnbRegistrationPost200Response
+     */
+    'gnbInfo'?: ApiConsoleGnbRegistrationPost200ResponseGnbInfo;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPost200ResponseGnbInfo
+ */
+export interface ApiConsoleGnbRegistrationPost200ResponseGnbInfo {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost200ResponseGnbInfo
+     */
+    'gnbId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost200ResponseGnbInfo
+     */
+    'gnbName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost200ResponseGnbInfo
+     */
+    'plmnId'?: string;
+    /**
+     * 
+     * @type {ApiConsoleGnbRegistrationPost200ResponseGnbInfoSnssai}
+     * @memberof ApiConsoleGnbRegistrationPost200ResponseGnbInfo
+     */
+    'snssai'?: ApiConsoleGnbRegistrationPost200ResponseGnbInfoSnssai;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPost200ResponseGnbInfoSnssai
+ */
+export interface ApiConsoleGnbRegistrationPost200ResponseGnbInfoSnssai {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost200ResponseGnbInfoSnssai
+     */
+    'sst'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost200ResponseGnbInfoSnssai
+     */
+    'sd'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPost400Response
+ */
+export interface ApiConsoleGnbRegistrationPost400Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost400Response
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {ApiConsoleGnbRegistrationPost400ResponseGnbInfo}
+     * @memberof ApiConsoleGnbRegistrationPost400Response
+     */
+    'gnbInfo'?: ApiConsoleGnbRegistrationPost400ResponseGnbInfo;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPost400ResponseGnbInfo
+ */
+export interface ApiConsoleGnbRegistrationPost400ResponseGnbInfo {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost400ResponseGnbInfo
+     */
+    'gnbId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost400ResponseGnbInfo
+     */
+    'gnbName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost400ResponseGnbInfo
+     */
+    'plmnId'?: string;
+    /**
+     * 
+     * @type {ApiConsoleGnbRegistrationPost400ResponseGnbInfoSnssai}
+     * @memberof ApiConsoleGnbRegistrationPost400ResponseGnbInfo
+     */
+    'snssai'?: ApiConsoleGnbRegistrationPost400ResponseGnbInfoSnssai;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPost400ResponseGnbInfoSnssai
+ */
+export interface ApiConsoleGnbRegistrationPost400ResponseGnbInfoSnssai {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost400ResponseGnbInfoSnssai
+     */
+    'sst'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost400ResponseGnbInfoSnssai
+     */
+    'sd'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPost401Response
+ */
+export interface ApiConsoleGnbRegistrationPost401Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost401Response
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {ApiConsoleGnbRegistrationPost400ResponseGnbInfo}
+     * @memberof ApiConsoleGnbRegistrationPost401Response
+     */
+    'gnbInfo'?: ApiConsoleGnbRegistrationPost400ResponseGnbInfo;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPost500Response
+ */
+export interface ApiConsoleGnbRegistrationPost500Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPost500Response
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {ApiConsoleGnbRegistrationPost400ResponseGnbInfo}
+     * @memberof ApiConsoleGnbRegistrationPost500Response
+     */
+    'gnbInfo'?: ApiConsoleGnbRegistrationPost400ResponseGnbInfo;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbRegistrationPostRequest
+ */
+export interface ApiConsoleGnbRegistrationPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbRegistrationPostRequest
+     */
+    'ip': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiConsoleGnbRegistrationPostRequest
+     */
+    'port': number;
+}
+/**
+ * 
+ * @export
  * @interface ApiConsoleLoginPost200Response
  */
 export interface ApiConsoleLoginPost200Response {
@@ -139,6 +360,40 @@ export interface ApiConsoleLogoutDelete200Response {
 export const AuthenticationApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
+         * Validate JWT token
+         * @summary Authenticate Token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiConsoleAuthenticatePost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/console/authenticate`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Authenticate user and return JWT token
          * @summary User Login
          * @param {ApiConsoleLoginPostRequest} apiConsoleLoginPostRequest 
@@ -223,6 +478,18 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = AuthenticationApiAxiosParamCreator(configuration)
     return {
         /**
+         * Validate JWT token
+         * @summary Authenticate Token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiConsoleAuthenticatePost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiConsoleAuthenticatePost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiConsoleAuthenticatePost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.apiConsoleAuthenticatePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Authenticate user and return JWT token
          * @summary User Login
          * @param {ApiConsoleLoginPostRequest} apiConsoleLoginPostRequest 
@@ -258,6 +525,15 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
     const localVarFp = AuthenticationApiFp(configuration)
     return {
         /**
+         * Validate JWT token
+         * @summary Authenticate Token
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiConsoleAuthenticatePost(options?: RawAxiosRequestConfig): AxiosPromise<ApiConsoleAuthenticatePost200Response> {
+            return localVarFp.apiConsoleAuthenticatePost(options).then((request) => request(axios, basePath));
+        },
+        /**
          * Authenticate user and return JWT token
          * @summary User Login
          * @param {ApiConsoleLoginPostRequest} apiConsoleLoginPostRequest 
@@ -287,6 +563,17 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
  */
 export class AuthenticationApi extends BaseAPI {
     /**
+     * Validate JWT token
+     * @summary Authenticate Token
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AuthenticationApi
+     */
+    public apiConsoleAuthenticatePost(options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).apiConsoleAuthenticatePost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * Authenticate user and return JWT token
      * @summary User Login
      * @param {ApiConsoleLoginPostRequest} apiConsoleLoginPostRequest 
@@ -307,6 +594,120 @@ export class AuthenticationApi extends BaseAPI {
      */
     public apiConsoleLogoutDelete(options?: RawAxiosRequestConfig) {
         return AuthenticationApiFp(this.configuration).apiConsoleLogoutDelete(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * GNBApi - axios parameter creator
+ * @export
+ */
+export const GNBApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * Register a new gNB with specified IP and port
+         * @summary Register gNB
+         * @param {ApiConsoleGnbRegistrationPostRequest} apiConsoleGnbRegistrationPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiConsoleGnbRegistrationPost: async (apiConsoleGnbRegistrationPostRequest: ApiConsoleGnbRegistrationPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiConsoleGnbRegistrationPostRequest' is not null or undefined
+            assertParamExists('apiConsoleGnbRegistrationPost', 'apiConsoleGnbRegistrationPostRequest', apiConsoleGnbRegistrationPostRequest)
+            const localVarPath = `/api/console/gnb/registration`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiConsoleGnbRegistrationPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * GNBApi - functional programming interface
+ * @export
+ */
+export const GNBApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = GNBApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * Register a new gNB with specified IP and port
+         * @summary Register gNB
+         * @param {ApiConsoleGnbRegistrationPostRequest} apiConsoleGnbRegistrationPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiConsoleGnbRegistrationPost(apiConsoleGnbRegistrationPostRequest: ApiConsoleGnbRegistrationPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiConsoleGnbRegistrationPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiConsoleGnbRegistrationPost(apiConsoleGnbRegistrationPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GNBApi.apiConsoleGnbRegistrationPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * GNBApi - factory interface
+ * @export
+ */
+export const GNBApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = GNBApiFp(configuration)
+    return {
+        /**
+         * Register a new gNB with specified IP and port
+         * @summary Register gNB
+         * @param {ApiConsoleGnbRegistrationPostRequest} apiConsoleGnbRegistrationPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiConsoleGnbRegistrationPost(apiConsoleGnbRegistrationPostRequest: ApiConsoleGnbRegistrationPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiConsoleGnbRegistrationPost200Response> {
+            return localVarFp.apiConsoleGnbRegistrationPost(apiConsoleGnbRegistrationPostRequest, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * GNBApi - object-oriented interface
+ * @export
+ * @class GNBApi
+ * @extends {BaseAPI}
+ */
+export class GNBApi extends BaseAPI {
+    /**
+     * Register a new gNB with specified IP and port
+     * @summary Register gNB
+     * @param {ApiConsoleGnbRegistrationPostRequest} apiConsoleGnbRegistrationPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GNBApi
+     */
+    public apiConsoleGnbRegistrationPost(apiConsoleGnbRegistrationPostRequest: ApiConsoleGnbRegistrationPostRequest, options?: RawAxiosRequestConfig) {
+        return GNBApiFp(this.configuration).apiConsoleGnbRegistrationPost(apiConsoleGnbRegistrationPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

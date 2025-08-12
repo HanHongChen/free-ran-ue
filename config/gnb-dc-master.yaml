@@ -44,7 +44,7 @@ gnb:
     xnPort: 31415
 
   api:
-    ip: "10.0.1.1"
+    ip: "10.0.1.2"
     port: 40104
 
 logger:

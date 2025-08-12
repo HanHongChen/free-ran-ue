@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './css/login.module.css'
 import logoImg from '../assets/free-ran-ue.jpg'
-import { authApi } from '../apiCfg'
+import { consoleApi } from '../apiCfg'
 import ErrorBox from '../components/errorBox/errorBox'
 import { useErrors } from '../hooks/useErrors'
 
@@ -16,7 +16,7 @@ export default function Login() {
     event.preventDefault()
 
     try {
-      const response = await authApi.apiConsoleLoginPost({
+      const response = await consoleApi.apiConsoleLoginPost({
         username,
         password
       })

@@ -126,5 +126,11 @@ func (cs *console) initRoutes() util.Routes {
 			Pattern:     "/authenticate",
 			HandlerFunc: cs.handleAuthenticate,
 		},
+		{
+			Name:        "Console GNB Registration",
+			Method:      http.MethodPost,
+			Pattern:     "/gnb/registration",
+			HandlerFunc: cs.handleConsoleGnbRegistration,
+		},
 	}
 }

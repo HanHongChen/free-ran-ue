@@ -1158,18 +1158,18 @@ func (g *Gnb) initApiRoutes() util.Routes {
 			Name:        "Console Registration",
 			Method:      http.MethodGet,
 			Pattern:     "/registration",
-			HandlerFunc: g.handleConsoleRegistration,
+			HandlerFunc: g.handleConsoleGnbRegistration,
 		},
 	}
 }
 
-func (g *Gnb) handleConsoleRegistration(c *gin.Context) {
+func (g *Gnb) handleConsoleGnbRegistration(c *gin.Context) {
 	g.ApiLog.Infoln("Handling console registration")
 
 	plmnId := util.PlmnIdToModels(g.plmnId)
 	snssai := util.SNssaiToModels(g.snssai)
 
-	c.JSON(http.StatusOK, consoleModel.GnbConsoleRegistrationResponse{
+	c.JSON(http.StatusOK, consoleModel.ConsoleGnbRegistrationResponse{
 		Message: "Registration successful",
 		GnbInfo: consoleModel.GnbInfo{
 			GnbId:   hex.EncodeToString(g.gnbId),

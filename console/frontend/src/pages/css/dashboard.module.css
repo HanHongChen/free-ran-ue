@@ -29,3 +29,20 @@
   font-weight: 600;
   letter-spacing: -0.025em;
 }
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 100%;
+}
+
+.statsCard {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.statsCard:hover {
+  transform: translateY(-2px);
+}

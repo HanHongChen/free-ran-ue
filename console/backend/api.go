@@ -54,3 +54,30 @@ func (cs *console) handleConsoleLogout(c *gin.Context) {
 
 	cs.LogoutLog.Infoln("Logout successful")
 }
+
+func (cs *console) handleAuthenticate(c *gin.Context) {
+	cs.AuthLog.Infoln("Attempting to authenticate")
+
+	authenticateHeader := c.GetHeader("Authorization")
+	if authenticateHeader == "" {
+		cs.AuthLog.Warnln("No authentication header")
+		c.JSON(http.StatusUnauthorized, model.AuthenticateResponse{
+			Message: "No authentication header",
+		})
+		return
+	}
+
+	if _, err := util.ValidateJWT(authenticateHeader, cs.jwt.secret); err != nil {
+		cs.AuthLog.Warnf("Failed to validate JWT: %v", err)
+		c.JSON(http.StatusUnauthorized, model.AuthenticateResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, model.AuthenticateResponse{
+		Message: "Authenticate successful",
+	})
+
+	cs.AuthLog.Infoln("Authenticate successful")
+}

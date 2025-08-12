@@ -13,6 +13,7 @@ type ConsoleLogger struct {
 	ConsoleLog loggergoModel.LoggerInterface
 	LoginLog   loggergoModel.LoggerInterface
 	LogoutLog  loggergoModel.LoggerInterface
+	AuthLog    loggergoModel.LoggerInterface
 }
 
 func NewConsoleLogger(level loggergoUtil.LogLevelString, filePath string, debugMode bool) ConsoleLogger {
@@ -26,5 +27,6 @@ func NewConsoleLogger(level loggergoUtil.LogLevelString, filePath string, debugM
 		ConsoleLog: logger.WithTags(CSL_TAG, CONSOLE_TAG),
 		LoginLog:   logger.WithTags(CSL_TAG, LOGIN_TAG),
 		LogoutLog:  logger.WithTags(CSL_TAG, LOGOUT_TAG),
+		AuthLog:    logger.WithTags(CSL_TAG, AUTH_TAG),
 	}
 }

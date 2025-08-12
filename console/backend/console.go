@@ -123,5 +123,11 @@ func (cs *console) initRoutes() util.Routes {
 			Pattern:     "/logout",
 			HandlerFunc: cs.handleConsoleLogout,
 		},
+		{
+			Name:        "Authenticate",
+			Method:      http.MethodPost,
+			Pattern:     "/authenticate",
+			HandlerFunc: cs.handleAuthenticate,
+		},
 	}
 }

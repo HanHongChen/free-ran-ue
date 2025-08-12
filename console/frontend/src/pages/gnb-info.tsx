@@ -9,7 +9,6 @@ export default function GnbInfo() {
   const navigate = useNavigate()
   const { gnbList } = useGnb()
 
-  // 查找对应的 gNB 信息
   const gnbInfo = gnbList.find(gnb => gnb.gnbInfo?.gnbId === gnbId)?.gnbInfo
 
   if (!gnbInfo) {

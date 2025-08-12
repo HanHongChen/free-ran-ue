@@ -21,7 +21,6 @@ type jwt struct {
 
 type console struct {
 	router *gin.Engine
-	routes util.Routes
 
 	server *http.Server
 
@@ -38,7 +37,6 @@ type console struct {
 func NewConsole(config *model.ConsoleConfig, logger *logger.ConsoleLogger) *console {
 	c := &console{
 		router: nil,
-		routes: nil,
 
 		username: config.Console.Username,
 		password: config.Console.Password,
@@ -53,8 +51,7 @@ func NewConsole(config *model.ConsoleConfig, logger *logger.ConsoleLogger) *cons
 		ConsoleLogger: logger,
 	}
 
-	c.routes = c.initRoutes()
-	c.router = util.NewGinRouter(util.CONSOLE_API_PREFIX, c.routes)
+	c.router = util.NewGinRouter(util.CONSOLE_API_PREFIX, c.initRoutes())
 
 	c.router.NoRoute(c.returnPages())
 	return c
@@ -73,7 +70,7 @@ func (cs *console) Start() {
 			cs.ConsoleLog.Errorf("Failed to start console: %v", err)
 		}
 	}()
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	cs.ConsoleLog.Infoln("Console started")
 }

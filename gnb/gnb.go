@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
+	consoleModel "github.com/Alonza0314/free-ran-ue/console/model"
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/util"
@@ -21,11 +23,20 @@ import (
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/sctp"
+	"github.com/gin-gonic/gin"
 )
 
 type xnInterface struct {
 	xnIp   string
 	xnPort int
+}
+
+type api struct {
+	ip   string
+	port int
+
+	router *gin.Engine
+	server *http.Server
 }
 
 type Gnb struct {
@@ -75,6 +86,8 @@ type Gnb struct {
 
 	ranUeNgapIdGenerator *RanUeNgapIdGenerator
 	teidGenerator        *TeidGenerator
+
+	api
 
 	*logger.GnbLogger
 }
@@ -155,6 +168,14 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 
 		ranUeNgapIdGenerator: NewRanUeNgapIdGenerator(),
 		teidGenerator:        NewTeidGenerator(),
+
+		api: api{
+			ip:   config.Gnb.Api.Ip,
+			port: config.Gnb.Api.Port,
+
+			router: nil,
+			server: nil,
+		},
 
 		GnbLogger: gnbLogger,
 	}
@@ -272,12 +293,16 @@ func (g *Gnb) Start(ctx context.Context) error {
 		}
 	}()
 
+	g.startApiServer()
+
 	g.RanLog.Infoln("GNB started")
 	return nil
 }
 
 func (g *Gnb) Stop() {
 	g.RanLog.Infoln("Stopping GNB")
+
+	g.stopApiServer()
 
 	if err := (*g.ranDataPlaneListener).Close(); err != nil {
 		g.RanLog.Errorf("Error stopping ran data plane listener: %v", err)
@@ -1066,7 +1091,6 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSet
 	g.XnLog.Tracef("Sent %d bytes of NGAP PDU Session Resource Setup Request to XN", n)
 	g.XnLog.Debugln("Send NGAP PDU Session Resource Setup Request to XN")
 
-
 	if err = xnConn.SetReadDeadline(time.Now().Add(time.Second * 5)); err != nil {
 		return qosFlowPerTNLInformationItem, fmt.Errorf("error set read deadline: %v", err)
 	}
@@ -1088,4 +1112,77 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSet
 	}
 
 	return qosFlowPerTNLInformationItem, nil
+}
+
+func (g *Gnb) startApiServer() {
+	g.ApiLog.Infoln("Starting API server")
+
+	g.api.router = util.NewGinRouter(util.GNB_API_PREFIX, g.initApiRoutes())
+
+	g.api.server = &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", g.api.ip, g.api.port),
+		Handler: g.api.router,
+	}
+
+	go func() {
+		if err := g.api.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			g.ApiLog.Errorf("Failed to start API server: %v", err)
+		}
+	}()
+
+	time.Sleep(500 * time.Millisecond)
+
+	g.ApiLog.Infoln("============= API Info =============")
+	g.ApiLog.Infof("API access address: %s:%d", g.api.ip, g.api.port)
+	g.ApiLog.Infoln("====================================")
+
+	g.ApiLog.Infoln("API server started")
+}
+
+func (g *Gnb) stopApiServer() {
+	g.ApiLog.Infoln("Stopping API server")
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	if err := g.api.server.Shutdown(shutdownCtx); err != nil {
+		g.ApiLog.Errorf("Failed to stop API server: %v", err)
+	} else {
+		g.ApiLog.Infoln("API server stopped successfully")
+	}
+}
+
+func (g *Gnb) initApiRoutes() util.Routes {
+	return util.Routes{
+		{
+			Name:        "Console Registration",
+			Method:      http.MethodGet,
+			Pattern:     "/registration",
+			HandlerFunc: g.handleConsoleRegistration,
+		},
+	}
+}
+
+func (g *Gnb) handleConsoleRegistration(c *gin.Context) {
+	g.ApiLog.Infoln("Handling console registration")
+
+	plmnId := util.PlmnIdToModels(g.plmnId)
+	snssai := util.SNssaiToModels(g.snssai)
+
+	c.JSON(http.StatusOK, consoleModel.GnbConsoleRegistrationResponse{
+		Message: "Registration successful",
+		GnbInfo: consoleModel.GnbInfo{
+			GnbId:   hex.EncodeToString(g.gnbId),
+			GnbName: g.gnbName,
+
+			PlmnId: plmnId.Mcc + plmnId.Mnc,
+
+			Snssai: consoleModel.SnssaiIE{
+				Sst: strconv.Itoa(int(snssai.Sst)),
+				Sd:  snssai.Sd,
+			},
+		},
+	})
+
+	g.ApiLog.Infoln("Console registration successful")
 }

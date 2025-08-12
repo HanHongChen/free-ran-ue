@@ -23,4 +23,6 @@ const (
 	LOGIN_TAG   = "LOGIN"
 	LOGOUT_TAG  = "LOGOUT"
 	AUTH_TAG    = "AUTH"
+
+	API_TAG = "API"
 )

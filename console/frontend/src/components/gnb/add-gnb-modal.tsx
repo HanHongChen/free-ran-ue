@@ -5,6 +5,7 @@ import { useErrors } from '../../hooks/useErrors'
 import ErrorBox from '../errorBox/errorBox'
 import { gnbApi } from '../../apiCfg'
 import { useGnb } from '../../context/gnbContext'
+import { useNavigate } from 'react-router-dom'
 
 interface AddGnbModalProps {
   isOpen: boolean
@@ -12,6 +13,7 @@ interface AddGnbModalProps {
 }
 
 export default function AddGnbModal({ isOpen, onClose }: AddGnbModalProps) {
+  const navigate = useNavigate()
   const { errors, addError, removeError } = useErrors()
   const { addGnb } = useGnb()
   const [formData, setFormData] = useState({
@@ -53,6 +55,11 @@ export default function AddGnbModal({ isOpen, onClose }: AddGnbModalProps) {
       onClose()
     } catch (error: any) {
       addError(error.response?.data?.message || 'Failed to add gNB')
+      if (error.response?.status === 401) {
+        setTimeout(() => {
+          navigate('/login')
+        }, 2000)
+      }
     }
   }
 

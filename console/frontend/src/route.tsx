@@ -3,8 +3,9 @@ import Login from './pages/login'
 import NotFound from './pages/not-found'
 import Dashboard from './pages/dashboard'
 import Gnb from './pages/gnb'
+import GnbInfo from './pages/gnb-info'
 import Ue from './pages/ue'
-import { GnbProvider } from './context/GnbContext'
+import { GnbProvider } from './context/gnbContext'
 
 export default function AppRoutes() {
   return (
@@ -15,6 +16,7 @@ export default function AppRoutes() {
 
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="gnb" element={<Gnb />} />
+      <Route path="gnb/:gnbId" element={<GnbInfo />} />
       <Route path="ue" element={<Ue />} />
 
       <Route path="/404" element={<NotFound />} />

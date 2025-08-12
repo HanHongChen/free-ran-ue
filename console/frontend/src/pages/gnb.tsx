@@ -1,14 +1,15 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import styles from './css/gnb.module.css'
 import Sidebar from '../components/sidebar/sidebar'
 import Button from '../components/button/button'
 import AddGnbModal from '../components/gnb/add-gnb-modal'
-import { useGnb } from '../context/GnbContext'
+import { useGnb } from '../context/gnbContext'
 
 export default function Gnb() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const { gnbList, removeGnb } = useGnb()
+  const navigate = useNavigate()
 
   const handleAddGnb = async () => {
     setIsAddModalOpen(true)
@@ -47,7 +48,7 @@ export default function Gnb() {
                   <td>
                     <button 
                       className={`${styles.actionButton} ${styles.infoButton}`}
-                      onClick={() => console.log('View info:', gnb.gnbInfo)}
+                      onClick={() => navigate(`/gnb/${gnb.gnbInfo?.gnbId}`)}
                     >
                       View Info
                     </button>

@@ -4,7 +4,7 @@ import styles from '../modal/modal.module.css'
 import { useErrors } from '../../hooks/useErrors'
 import ErrorBox from '../errorBox/errorBox'
 import { gnbApi } from '../../apiCfg'
-import { useGnb } from '../../context/GnbContext'
+import { useGnb } from '../../context/gnbContext'
 
 interface AddGnbModalProps {
   isOpen: boolean

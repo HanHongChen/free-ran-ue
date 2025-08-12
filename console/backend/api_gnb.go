@@ -12,17 +12,8 @@ import (
 func (cs *console) handleConsoleGnbRegistration(c *gin.Context) {
 	cs.GnbLog.Infoln("Attempting to register gNB")
 
-	authenticateHeader := c.GetHeader("Authorization")
-	if authenticateHeader == "" {
-		cs.AuthLog.Warnln("No authentication header")
-		c.JSON(http.StatusUnauthorized, model.ConsoleGnbRegistrationResponse{
-			Message: "No authentication header",
-		})
-		return
-	}
-
-	if _, err := util.ValidateJWT(authenticateHeader, cs.jwt.secret); err != nil {
-		cs.AuthLog.Warnf("Failed to validate JWT: %v", err)
+	if err := authticate(c, cs.jwt.secret); err != nil {
+		cs.AuthLog.Warnln(err)
 		c.JSON(http.StatusUnauthorized, model.ConsoleGnbRegistrationResponse{
 			Message: err.Error(),
 		})

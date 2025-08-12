@@ -16,6 +16,8 @@ var testSendHttpRequestCases = []struct {
 	headers          map[string]string
 	data             []byte
 	expectedResponse map[string]interface{}
+	expectedStatus   int
+	expectedHeaders  map[string]string
 	expectedError    bool
 }{
 	{
@@ -24,6 +26,8 @@ var testSendHttpRequestCases = []struct {
 		headers:          map[string]string{},
 		data:             []byte{},
 		expectedResponse: map[string]interface{}{"message": "test response"},
+		expectedStatus:   http.StatusOK,
+		expectedHeaders:  map[string]string{"Content-Type": "application/json; charset=utf-8"},
 		expectedError:    false,
 	},
 	{
@@ -32,6 +36,8 @@ var testSendHttpRequestCases = []struct {
 		headers:          map[string]string{"Content-Type": "application/json"},
 		data:             []byte(`{"message": "test request"}`),
 		expectedResponse: map[string]interface{}{"message": "test response"},
+		expectedStatus:   http.StatusOK,
+		expectedHeaders:  map[string]string{"Content-Type": "application/json; charset=utf-8"},
 		expectedError:    false,
 	},
 }
@@ -66,12 +72,22 @@ func TestSendHttpRequest(t *testing.T) {
 		t.Run(testCase.method+" "+testCase.uri, func(t *testing.T) {
 			response, err := SendHttpRequest(testCase.uri, testCase.method, testCase.headers, testCase.data)
 			if (err != nil) != testCase.expectedError {
-				t.Errorf("expected error: %v, got: %v", testCase.expectedError, err)
+				t.Fatalf("expected error: %v, got: %v", testCase.expectedError, err)
 			}
 
 			if !testCase.expectedError {
+				if response.StatusCode != testCase.expectedStatus {
+					t.Errorf("expected status code: %v, got: %v", testCase.expectedStatus, response.StatusCode)
+				}
+
+				for key, expectedValue := range testCase.expectedHeaders {
+					if actualValue := response.Headers.Get(key); actualValue != expectedValue {
+						t.Errorf("expected header %s: %v, got: %v", key, expectedValue, actualValue)
+					}
+				}
+
 				var actualResponse map[string]interface{}
-				if err := json.Unmarshal(response, &actualResponse); err != nil {
+				if err := json.Unmarshal(response.Body, &actualResponse); err != nil {
 					t.Errorf("failed to unmarshal response: %v", err)
 				}
 

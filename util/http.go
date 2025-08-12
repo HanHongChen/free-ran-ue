@@ -7,7 +7,13 @@ import (
 	"net/http"
 )
 
-func SendHttpRequest(uri string, method string, headers map[string]string, data []byte) ([]byte, error) {
+type HttpResponse struct {
+	StatusCode int
+	Body       []byte
+	Headers    http.Header
+}
+
+func SendHttpRequest(uri string, method string, headers map[string]string, data []byte) (*HttpResponse, error) {
 	req, err := http.NewRequest(method, uri, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
@@ -29,9 +35,9 @@ func SendHttpRequest(uri string, method string, headers map[string]string, data 
 		return nil, fmt.Errorf("failed to read response: %v", err)
 	}
 
-	if string(body) == "" {
-		return nil, fmt.Errorf("received empty response from server")
-	}
-
-	return body, nil
+	return &HttpResponse{
+		StatusCode: resp.StatusCode,
+		Body:       body,
+		Headers:    resp.Header,
+	}, nil
 }

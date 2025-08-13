@@ -79,7 +79,7 @@ type Gnb struct {
 	ranDataPlaneListener    *net.Listener
 	xnListener              *net.Listener
 
-	activeConns sync.Map
+	ranUeConns sync.Map
 	teidToConn  sync.Map
 
 	gtpChannel chan []byte
@@ -288,7 +288,7 @@ func (g *Gnb) Start(ctx context.Context) error {
 			}
 			g.RanLog.Infof("New UE connection accepted from: %v", conn.RemoteAddr())
 			ranUe := NewRanUe(conn, g.ranUeNgapIdGenerator)
-			g.activeConns.Store(ranUe, struct{}{})
+			g.ranUeConns.Store(ranUe, struct{}{})
 			go g.handleRanConnection(ctx, ranUe)
 		}
 	}()
@@ -327,7 +327,7 @@ func (g *Gnb) Stop() {
 	}
 
 	var wg sync.WaitGroup
-	g.activeConns.Range(func(key, value interface{}) bool {
+	g.ranUeConns.Range(func(key, value interface{}) bool {
 		wg.Add(1)
 		go func(ranUe *RanUe) {
 			defer wg.Done()
@@ -597,7 +597,7 @@ func (g *Gnb) handleRanConnection(ctx context.Context, ranUe *RanUe) {
 			g.RanLog.Errorf("Error closing UE connection: %v", err)
 		}
 		g.RanLog.Infof("Closed UE connection from: %v", ranUe.GetN1Conn().RemoteAddr())
-		g.activeConns.Delete(ranUe)
+		g.ranUeConns.Delete(ranUe)
 	}()
 
 	if err := g.setupN1(ranUe); err != nil {

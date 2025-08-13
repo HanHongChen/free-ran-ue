@@ -51,7 +51,7 @@ export default function AddGnbModal({ isOpen, onClose }: AddGnbModalProps) {
         }
       })
 
-      addGnb(result.data)
+      addGnb(result.data, { ip: formData.ip, port: portNumber })
       onClose()
     } catch (error: any) {
       addError(error.response?.data?.message || 'Failed to add gNB')

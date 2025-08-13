@@ -392,11 +392,26 @@
 			]
 		},
 		{
-			"name": "ConsoleGnbRegistration",
+			"name": "ConsoleGnbInfo",
 			"request": {
 				"method": "POST",
-				"header": [],
-				"url": "http://{{base_url}}/api/console/gnb/registration"
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUwNzE1MDQsImlhdCI6MTc1NTA2NzkwNCwic3ViIjoiMTIzLjE5Mi44My4yMDMifQ.qvIfTDsWgKPV4nkYlPzZE9QNVgWw7i4Yqrsr-ZHYlrU",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ip\": \"10.0.1.2\",\n    \"port\": 40104\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{base_url}}/api/console/gnb/info"
 			},
 			"response": [
 				{
@@ -419,7 +434,7 @@
 								}
 							}
 						},
-						"url": "http://{{base_url}}/api/console/gnb/registration"
+						"url": "http://{{base_url}}/api/console/gnb/info"
 					},
 					"status": "OK",
 					"code": 200,
@@ -473,7 +488,7 @@
 								}
 							}
 						},
-						"url": "http://{{base_url}}/api/console/gnb/registration"
+						"url": "http://{{base_url}}/api/console/gnb/info"
 					},
 					"status": "Bad Request",
 					"code": 400,
@@ -528,7 +543,7 @@
 								}
 							}
 						},
-						"url": "http://{{base_url}}/api/console/gnb/registration"
+						"url": "http://{{base_url}}/api/console/gnb/info"
 					},
 					"status": "Unauthorized",
 					"code": 401,
@@ -582,7 +597,7 @@
 								}
 							}
 						},
-						"url": "http://{{base_url}}/api/console/gnb/registration"
+						"url": "http://{{base_url}}/api/console/gnb/info"
 					},
 					"status": "Internal Server Error",
 					"code": 500,
@@ -619,11 +634,11 @@
 			]
 		},
 		{
-			"name": "GnbRegistration",
+			"name": "GnbInfo",
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": "http://{{gnb_url}}/api/gnb/registration"
+				"url": "http://{{gnb_url}}/api/gnb/info"
 			},
 			"response": [
 				{
@@ -631,7 +646,7 @@
 					"originalRequest": {
 						"method": "GET",
 						"header": [],
-						"url": "http://{{gnb_url}}/api/gnb/registration"
+						"url": "http://{{gnb_url}}/api/gnb/info"
 					},
 					"status": "OK",
 					"code": 200,
@@ -668,6 +683,11 @@
 	"variable": [
 		{
 			"key": "base_url",
+			"value": "127.0.0.1:40104",
+			"type": "string"
+		},
+		{
+			"key": "gnb_url",
 			"value": "127.0.0.1:40104",
 			"type": "string"
 		}

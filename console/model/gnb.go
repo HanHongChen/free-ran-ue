@@ -1,11 +1,11 @@
 package model
 
-type ConsoleGnbRegistrationRequest struct {
+type ConsoleGnbInfoRequest struct {
 	Ip   string `json:"ip"`
 	Port int    `json:"port"`
 }
 
-type ConsoleGnbRegistrationResponse struct {
+type ConsoleGnbInfoResponse struct {
 	Message string  `json:"message"`
 	GnbInfo GnbInfo `json:"gnbInfo"`
 }

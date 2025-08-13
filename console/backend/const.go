@@ -9,6 +9,6 @@ import (
 const (
 	APPLICATION_JSON = "application/json"
 
-	API_GNB_REGISTRATION        = util.GNB_API_PREFIX + "/registration"
-	API_GNB_REGISTRATION_METHOD = http.MethodGet
+	API_GNB_INFO        = util.GNB_API_PREFIX + "/info"
+	API_GNB_INFO_METHOD = http.MethodGet
 )

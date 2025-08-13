@@ -1,20 +1,20 @@
 import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 
-import type { ApiConsoleGnbRegistrationPost200Response } from '../api'
+import type { ApiConsoleGnbInfoPost200Response } from '../api'
 
 interface GnbConnection {
   ip: string
   port: number
 }
 
-interface GnbWithConnection extends ApiConsoleGnbRegistrationPost200Response {
+interface GnbWithConnection extends ApiConsoleGnbInfoPost200Response {
   connection?: GnbConnection
 }
 
 interface GnbContextType {
   gnbList: GnbWithConnection[]
-  addGnb: (gnb: ApiConsoleGnbRegistrationPost200Response, connection: GnbConnection) => void
+  addGnb: (gnb: ApiConsoleGnbInfoPost200Response, connection: GnbConnection) => void
   removeGnb: (gnbId: string) => void
 }
 
@@ -23,7 +23,7 @@ const GnbContext = createContext<GnbContextType | undefined>(undefined)
 export function GnbProvider({ children }: { children: ReactNode }) {
   const [gnbList, setGnbList] = useState<GnbWithConnection[]>([])
 
-  const addGnb = (gnb: ApiConsoleGnbRegistrationPost200Response, connection: GnbConnection) => {
+  const addGnb = (gnb: ApiConsoleGnbInfoPost200Response, connection: GnbConnection) => {
     setGnbList(prev => [...prev, { ...gnb, connection }])
   }
 

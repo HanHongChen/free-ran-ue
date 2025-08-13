@@ -136,10 +136,10 @@ paths:
                     type: string
                     example: "No authentication header"
 
-  /api/console/gnb/registration:
+  /api/console/gnb/info:
     post:
-      summary: Register gNB
-      description: Register a new gNB with specified IP and port
+      summary: Get gNB Info
+      description: Get gNB information with specified IP and port
       tags:
         - gNB
       security:
@@ -162,7 +162,7 @@ paths:
                   example: 40104
       responses:
         '200':
-          description: Registration successful
+          description: Get gNB info successful
           content:
             application/json:
               schema:
@@ -170,7 +170,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Registration successful"
+                    example: "Get gNB info successful"
                   gnbInfo:
                     type: object
                     properties:

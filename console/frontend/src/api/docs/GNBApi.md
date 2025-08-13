@@ -4,12 +4,12 @@ All URIs are relative to *http://127.0.0.1:40104*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**apiConsoleGnbRegistrationPost**](#apiconsolegnbregistrationpost) | **POST** /api/console/gnb/registration | Register gNB|
+|[**apiConsoleGnbInfoPost**](#apiconsolegnbinfopost) | **POST** /api/console/gnb/info | Get gNB Info|
 
-# **apiConsoleGnbRegistrationPost**
-> ApiConsoleGnbRegistrationPost200Response apiConsoleGnbRegistrationPost(apiConsoleGnbRegistrationPostRequest)
+# **apiConsoleGnbInfoPost**
+> ApiConsoleGnbInfoPost200Response apiConsoleGnbInfoPost(apiConsoleGnbInfoPostRequest)
 
-Register a new gNB with specified IP and port
+Get gNB information with specified IP and port
 
 ### Example
 
@@ -17,16 +17,16 @@ Register a new gNB with specified IP and port
 import {
     GNBApi,
     Configuration,
-    ApiConsoleGnbRegistrationPostRequest
+    ApiConsoleGnbInfoPostRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new GNBApi(configuration);
 
-let apiConsoleGnbRegistrationPostRequest: ApiConsoleGnbRegistrationPostRequest; //
+let apiConsoleGnbInfoPostRequest: ApiConsoleGnbInfoPostRequest; //
 
-const { status, data } = await apiInstance.apiConsoleGnbRegistrationPost(
-    apiConsoleGnbRegistrationPostRequest
+const { status, data } = await apiInstance.apiConsoleGnbInfoPost(
+    apiConsoleGnbInfoPostRequest
 );
 ```
 
@@ -34,12 +34,12 @@ const { status, data } = await apiInstance.apiConsoleGnbRegistrationPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiConsoleGnbRegistrationPostRequest** | **ApiConsoleGnbRegistrationPostRequest**|  | |
+| **apiConsoleGnbInfoPostRequest** | **ApiConsoleGnbInfoPostRequest**|  | |
 
 
 ### Return type
 
-**ApiConsoleGnbRegistrationPost200Response**
+**ApiConsoleGnbInfoPost200Response**
 
 ### Authorization
 
@@ -54,7 +54,7 @@ const { status, data } = await apiInstance.apiConsoleGnbRegistrationPost(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Registration successful |  -  |
+|**200** | Get gNB info successful |  -  |
 |**400** | Invalid request format |  -  |
 |**401** | Authentication failed |  -  |
 |**500** | Internal server error |  -  |

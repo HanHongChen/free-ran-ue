@@ -42,7 +42,7 @@ export default function AddGnbModal({ isOpen, onClose }: AddGnbModalProps) {
         return
       }
 
-      const result = await gnbApi.apiConsoleGnbRegistrationPost({
+      const result = await gnbApi.apiConsoleGnbInfoPost({
         ip: formData.ip,
         port: portNumber
       }, {

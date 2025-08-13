@@ -20,15 +20,26 @@ interface GnbContextType {
 
 const GnbContext = createContext<GnbContextType | undefined>(undefined)
 
+const GNB_STORAGE_KEY = 'gnbList'
+
+function loadGnbList(): GnbWithConnection[] {
+  const stored = localStorage.getItem(GNB_STORAGE_KEY)
+  return stored ? JSON.parse(stored) : []
+}
+
 export function GnbProvider({ children }: { children: ReactNode }) {
-  const [gnbList, setGnbList] = useState<GnbWithConnection[]>([])
+  const [gnbList, setGnbList] = useState<GnbWithConnection[]>(loadGnbList())
 
   const addGnb = (gnb: ApiConsoleGnbInfoPost200Response, connection: GnbConnection) => {
-    setGnbList(prev => [...prev, { ...gnb, connection }])
+    const newList = [...gnbList, { ...gnb, connection }]
+    setGnbList(newList)
+    localStorage.setItem(GNB_STORAGE_KEY, JSON.stringify(newList))
   }
 
   const removeGnb = (gnbId: string) => {
-    setGnbList(prev => prev.filter(gnb => gnb.gnbInfo?.gnbId !== gnbId))
+    const newList = gnbList.filter(gnb => gnb.gnbInfo?.gnbId !== gnbId)
+    setGnbList(newList)
+    localStorage.setItem(GNB_STORAGE_KEY, JSON.stringify(newList))
   }
 
   return (

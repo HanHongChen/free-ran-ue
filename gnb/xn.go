@@ -116,7 +116,8 @@ func xnPduSessionResourceSetupRequestProcessor(g *Gnb, conn net.Conn, imsi strin
 		}
 	}
 
-	xnUe := NewXnUe(g.teidGenerator.AllocateTeid(), conn)
+	xnUe := NewXnUe(imsi, g.teidGenerator.AllocateTeid(), conn)
+	g.xnUeConns.Store(xnUe, struct{}{})
 	g.XnLog.Debugf("Allocated DLTEID for XnUe: %s", hex.EncodeToString(xnUe.GetDlTeid()))
 
 	for _, ie := range pduSessionResourceSetupRequestTransfer.ProtocolIEs.List {
@@ -178,5 +179,5 @@ func xnPduSessionResourceSetupRequestProcessor(g *Gnb, conn net.Conn, imsi strin
 	g.teidToConn.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe.GetDataPlaneConn())
 	g.XnLog.Debugf("Stored UE data plane connection with teid %s to teidToConn", hex.EncodeToString(xnUe.GetDlTeid()))
 
-	go g.startUeDataPlaneProcessor(ueDataPlaneConn, xnUe.GetUlTeid(), xnUe.GetDlTeid())
+	go g.startUeDataPlaneProcessor(ueDataPlaneConn, xnUe.GetUlTeid(), xnUe.GetDlTeid(), true, imsi)
 }

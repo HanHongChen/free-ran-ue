@@ -104,6 +104,12 @@ export interface ApiConsoleGnbInfoPost200ResponseGnbInfo {
      * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
      */
     'ranUeList'?: Array<ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner>;
+    /**
+     * 
+     * @type {Array<ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner>}
+     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
+     */
+    'xnUeList'?: Array<ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner>;
 }
 /**
  * 
@@ -142,6 +148,19 @@ export interface ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai {
      * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai
      */
     'sd'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner
+ */
+export interface ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner
+     */
+    'imsi'?: string;
 }
 /**
  * 

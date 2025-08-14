@@ -19,6 +19,7 @@ type GnbInfo struct {
 	Snssai SnssaiIE `json:"snssai"`
 
 	RanUeList []RanUeInfo `json:"ranUeList"`
+	XnUeList  []XnUeInfo  `json:"xnUeList"`
 }
 
 type SnssaiIE struct {
@@ -29,4 +30,8 @@ type SnssaiIE struct {
 type RanUeInfo struct {
 	Imsi          string `json:"imsi"`
 	NrdcIndicator bool   `json:"nrdcIndicator"`
+}
+
+type XnUeInfo struct {
+	Imsi string `json:"imsi"`
 }

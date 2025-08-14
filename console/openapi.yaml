@@ -199,10 +199,17 @@ paths:
                           properties:
                             imsi:
                               type: string
-                              example: "208930000000003"
+                              example: "imsi-208930000000001"
                             nrdcIndicator:
                               type: boolean
-                              example: false
+                              example: true
+                      xnUeList:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            imsi:
+                              type: string
         '400':
           description: Invalid request format
           content:

@@ -7,19 +7,27 @@ import (
 )
 
 type XnUe struct {
+	imsi string
+
 	ulTeid aper.OctetString
 	dlTeid aper.OctetString
 
 	dataPlaneConn net.Conn
 }
 
-func NewXnUe(dlTeid aper.OctetString, dataPlaneConn net.Conn) *XnUe {
+func NewXnUe(imsi string, dlTeid aper.OctetString, dataPlaneConn net.Conn) *XnUe {
 	return &XnUe{
+		imsi: imsi,
+
 		ulTeid: aper.OctetString{},
 		dlTeid: dlTeid,
 
 		dataPlaneConn: dataPlaneConn,
 	}
+}
+
+func (x *XnUe) GetImsi() string {
+	return x.imsi
 }
 
 func (x *XnUe) GetUlTeid() aper.OctetString {

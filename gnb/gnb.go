@@ -80,6 +80,7 @@ type Gnb struct {
 	xnListener              *net.Listener
 
 	ranUeConns sync.Map
+	xnUeConns  sync.Map
 	teidToConn sync.Map
 
 	gtpChannel chan []byte
@@ -165,6 +166,10 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 			xnIp:   config.Gnb.XnInterface.XnIp,
 			xnPort: config.Gnb.XnInterface.XnPort,
 		},
+
+		ranUeConns: sync.Map{},
+		xnUeConns:  sync.Map{},
+		teidToConn: sync.Map{},
 
 		ranUeNgapIdGenerator: NewRanUeNgapIdGenerator(),
 		teidGenerator:        NewTeidGenerator(),
@@ -331,6 +336,20 @@ func (g *Gnb) Stop() {
 	}
 
 	var wg sync.WaitGroup
+	g.xnUeConns.Range(func(key, value interface{}) bool {
+		wg.Add(1)
+		go func(xnUe *XnUe) {
+			defer wg.Done()
+			if xnUe, ok := key.(*XnUe); ok {
+				g.XnLog.Tracef("XN UE %v still in connection", xnUe.GetDataPlaneConn().RemoteAddr())
+				if err := xnUe.GetDataPlaneConn().Close(); err != nil {
+					g.XnLog.Errorf("Error closing XN UE connection: %v", err)
+				}
+			}
+			g.XnLog.Debugf("Closed XN UE connection from: %v", xnUe.GetDataPlaneConn().RemoteAddr())
+		}(key.(*XnUe))
+		return true
+	})
 	g.ranUeConns.Range(func(key, value interface{}) bool {
 		wg.Add(1)
 		go func(ranUe *RanUe) {
@@ -611,7 +630,7 @@ func (g *Gnb) handleRanConnection(ctx context.Context, ranUe *RanUe) {
 	g.GtpLog.Debugf("DL TEID: %s, UL TEID: %s", hex.EncodeToString(ranUe.GetDlTeid()), hex.EncodeToString(ranUe.GetUlTeid()))
 
 	// handle data plane from UE
-	go g.startUeDataPlaneProcessor(ranUe.GetDataPlaneConn(), ranUe.GetUlTeid(), ranUe.GetDlTeid())
+	go g.startUeDataPlaneProcessor(ranUe.GetDataPlaneConn(), ranUe.GetUlTeid(), ranUe.GetDlTeid(), false, ranUe.GetMobileIdentityIMSI())
 
 	if err := g.releaseN1(ranUe); err != nil {
 		g.RanLog.Errorf("Error releasing N1: %v", err)
@@ -620,7 +639,7 @@ func (g *Gnb) handleRanConnection(ctx context.Context, ranUe *RanUe) {
 	g.RanLog.Infof("UE %s N1 released", ranUe.GetMobileIdentityIMSI())
 }
 
-func (g *Gnb) startUeDataPlaneProcessor(ueDataPlaneConn net.Conn, ulTeid, dlTeid aper.OctetString) {
+func (g *Gnb) startUeDataPlaneProcessor(ueDataPlaneConn net.Conn, ulTeid, dlTeid aper.OctetString, isXnUe bool, imsi string) {
 	buffer := make([]byte, 4096)
 	for {
 		n, err := ueDataPlaneConn.Read(buffer)
@@ -629,6 +648,11 @@ func (g *Gnb) startUeDataPlaneProcessor(ueDataPlaneConn net.Conn, ulTeid, dlTeid
 				g.teidToConn.Delete(hex.EncodeToString(dlTeid))
 				g.GtpLog.Debugf("Deleted teid %s from teidToConn", hex.EncodeToString(dlTeid))
 				g.GtpLog.Infof("Connection from UE IP: %v closed", ueDataPlaneConn.RemoteAddr())
+
+				if isXnUe {
+					g.xnUeConns.Delete(imsi)
+					g.XnLog.Debugf("Deleted XN UE %s from xnUeConns", imsi)
+				}
 				return
 			}
 			g.RanLog.Warnf("Error reading from UE connection: %v", err)
@@ -1196,6 +1220,15 @@ func (g *Gnb) handleConsoleGnbInfo(c *gin.Context) {
 		return true
 	})
 
+	xnUeList := []consoleModel.XnUeInfo{}
+	g.xnUeConns.Range(func(key, value any) bool {
+		xnUe := key.(*XnUe)
+		xnUeList = append(xnUeList, consoleModel.XnUeInfo{
+			Imsi: xnUe.GetImsi(),
+		})
+		return true
+	})
+
 	c.JSON(http.StatusOK, consoleModel.ConsoleGnbInfoResponse{
 		Message: "Get gNB info successful",
 		GnbInfo: consoleModel.GnbInfo{
@@ -1210,6 +1243,7 @@ func (g *Gnb) handleConsoleGnbInfo(c *gin.Context) {
 			},
 
 			RanUeList: ranUeList,
+			XnUeList:  xnUeList,
 		},
 	})
 

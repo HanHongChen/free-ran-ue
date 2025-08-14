@@ -96,6 +96,28 @@ export default function GnbInfo() {
             </table>
           </div>
         </div>
+
+        <div className={styles.infoCard}>
+          <h2 className={styles.title}>XN UE List</h2>
+          <div className={styles.ueList}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>UE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gnbInfo.xnUeList?.map((ue, index) => (
+                  <tr key={ue.imsi}>
+                    <td>{index + 1}</td>
+                    <td>{ue.imsi}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   )

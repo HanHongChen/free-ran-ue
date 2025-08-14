@@ -9,6 +9,7 @@ Name | Type | Description | Notes
 **gnbName** | **string** |  | [optional] [default to undefined]
 **plmnId** | **string** |  | [optional] [default to undefined]
 **snssai** | [**ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai**](ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai.md) |  | [optional] [default to undefined]
+**ranUeList** | [**Array&lt;ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner&gt;**](ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner.md) |  | [optional] [default to undefined]
 
 ## Example
 
@@ -20,6 +21,7 @@ const instance: ApiConsoleGnbInfoPost200ResponseGnbInfo = {
     gnbName,
     plmnId,
     snssai,
+    ranUeList,
 };
 ```
 

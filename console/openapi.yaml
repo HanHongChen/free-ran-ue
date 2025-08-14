@@ -192,6 +192,17 @@ paths:
                           sd:
                             type: string
                             example: "010203"
+                      ranUeList:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            imsi:
+                              type: string
+                              example: "208930000000003"
+                            nrdcIndicator:
+                              type: boolean
+                              example: false
         '400':
           description: Invalid request format
           content:

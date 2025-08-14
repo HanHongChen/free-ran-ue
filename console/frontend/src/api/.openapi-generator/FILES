@@ -8,6 +8,7 @@ docs/ApiConsoleAuthenticatePost200Response.md
 docs/ApiConsoleAuthenticatePost401Response.md
 docs/ApiConsoleGnbInfoPost200Response.md
 docs/ApiConsoleGnbInfoPost200ResponseGnbInfo.md
+docs/ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner.md
 docs/ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai.md
 docs/ApiConsoleGnbInfoPost400Response.md
 docs/ApiConsoleGnbInfoPost400ResponseGnbInfo.md

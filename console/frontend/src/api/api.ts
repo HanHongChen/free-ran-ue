@@ -98,6 +98,31 @@ export interface ApiConsoleGnbInfoPost200ResponseGnbInfo {
      * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
      */
     'snssai'?: ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai;
+    /**
+     * 
+     * @type {Array<ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner>}
+     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
+     */
+    'ranUeList'?: Array<ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner>;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner
+ */
+export interface ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner
+     */
+    'imsi'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner
+     */
+    'nrdcIndicator'?: boolean;
 }
 /**
  * 

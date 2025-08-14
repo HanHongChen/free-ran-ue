@@ -466,7 +466,7 @@
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"message\": \"Registration successful\",\n    \"gnbInfo\": {\n        \"gnbId\": \"000314\",\n        \"gnbName\": \"gNB\",\n        \"plmnId\": \"20893\",\n        \"snssai\": {\n            \"sst\": \"1\",\n            \"sd\": \"010203\"\n        }\n    }\n}"
+					"body": "{\n    \"message\": \"Get gNB info successful\",\n    \"gnbInfo\": {\n        \"gnbId\": \"000314\",\n        \"gnbName\": \"gNB\",\n        \"plmnId\": \"20893\",\n        \"snssai\": {\n            \"sst\": \"1\",\n            \"sd\": \"010203\"\n        },\n        \"ranUeList\": [\n            {\n                \"imsi\": \"imsi-208930000000001\",\n                \"nrdcIndicator\": false\n            }\n        ]\n    }\n}"
 				},
 				{
 					"name": "400",
@@ -520,7 +520,7 @@
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"message\": \"Failed to bind JSON\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        }\n    }\n}"
+					"body": "{\n    \"message\": \"Failed to bind JSON\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        },\n        \"ranUeList\": null\n    }\n}"
 				},
 				{
 					"name": "401",
@@ -575,7 +575,7 @@
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"message\": \"No authentication header\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        }\n    }\n}"
+					"body": "{\n    \"message\": \"No authentication header\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        },\n        \"ranUeList\": null\n    }\n}"
 				},
 				{
 					"name": "500",
@@ -629,7 +629,7 @@
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"message\": \"Failed to send request: failed to send request: <nil>\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        }\n    }\n}"
+					"body": "{\n    \"message\": \"Failed to send request: failed to send request: <nil>\",\n    \"gnbInfo\": {\n        \"gnbId\": \"\",\n        \"gnbName\": \"\",\n        \"plmnId\": \"\",\n        \"snssai\": {\n            \"sst\": \"\",\n            \"sd\": \"\"\n        },\n        \"ranUeList\": null\n    }\n}"
 				}
 			]
 		},
@@ -653,7 +653,7 @@
 					"_postman_previewlanguage": "Text",
 					"header": [],
 					"cookie": [],
-					"body": "{\n    \"message\": \"Registration successful\",\n    \"gnbInfo\": {\n        \"gnbId\": \"000314\",\n        \"gnbName\": \"gNB\",\n        \"plmnId\": \"20893\",\n        \"snssai\": {\n            \"sst\": \"1\",\n            \"sd\": \"010203\"\n        }\n    }\n}"
+					"body": "{\n    \"message\": \"Get gNB info successful\",\n    \"gnbInfo\": {\n        \"gnbId\": \"000314\",\n        \"gnbName\": \"gNB\",\n        \"plmnId\": \"20893\",\n        \"snssai\": {\n            \"sst\": \"1\",\n            \"sd\": \"010203\"\n        },\n        \"ranUeList\": [\n            {\n                \"imsi\": \"imsi-208930000000001\",\n                \"nrdcIndicator\": false\n            }\n        ]\n    }\n}"
 				}
 			]
 		}

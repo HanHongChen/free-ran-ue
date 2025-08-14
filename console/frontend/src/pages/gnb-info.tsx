@@ -3,6 +3,7 @@ import styles from './css/gnb-info.module.css'
 import { useGnb } from '../context/gnbContext'
 import Button from '../components/button/button'
 import Sidebar from '../components/sidebar/sidebar'
+import Switch from '../components/switch/switch'
 
 export default function GnbInfo() {
   const { gnbId } = useParams()
@@ -63,6 +64,36 @@ export default function GnbInfo() {
               <div>SST: {gnbInfo.snssai?.sst || 'N/A'}</div>
               <div>SD: {gnbInfo.snssai?.sd || 'N/A'}</div>
             </div>
+          </div>
+        </div>
+
+        <div className={styles.infoCard}>
+          <h2 className={styles.title}>RAN UE List</h2>
+          <div className={styles.ueList}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>UE</th>
+                  <th>DC-status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gnbInfo.ranUeList?.map((ue, index) => (
+                  <tr key={ue.imsi}>
+                    <td>{index + 1}</td>
+                    <td>{ue.imsi}</td>
+                    <td>
+                      <Switch
+                        checked={ue.nrdcIndicator || false}
+                        onChange={() => {
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

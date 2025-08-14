@@ -51,7 +51,11 @@ export default function AddGnbModal({ isOpen, onClose }: AddGnbModalProps) {
         }
       })
 
-      addGnb(result.data, { ip: formData.ip, port: portNumber })
+      const { exists } = addGnb(result.data, { ip: formData.ip, port: portNumber })
+      if (exists) {
+        addError('gNB already exists, information updated')
+      }
+
       onClose()
     } catch (error: any) {
       addError(error.response?.data?.message || 'Failed to add gNB')

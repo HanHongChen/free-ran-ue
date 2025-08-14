@@ -17,9 +17,16 @@ type GnbInfo struct {
 	PlmnId string `json:"plmnId"`
 
 	Snssai SnssaiIE `json:"snssai"`
+
+	RanUeList []RanUeInfo `json:"ranUeList"`
 }
 
 type SnssaiIE struct {
 	Sst string `json:"sst"`
 	Sd  string `json:"sd"`
+}
+
+type RanUeInfo struct {
+	Imsi          string `json:"imsi"`
+	NrdcIndicator bool   `json:"nrdcIndicator"`
 }

@@ -1,6 +1,7 @@
 package gnb
 
 import (
+	"fmt"
 	"net"
 	"sync"
 
@@ -44,6 +45,9 @@ type RanUe struct {
 
 	n1Conn        net.Conn
 	dataPlaneConn net.Conn
+
+	nrdcIndicator    bool
+	nrdcIndicatorMtx sync.Mutex
 }
 
 func NewRanUe(n1Conn net.Conn, ranUeNgapIdGenerator *RanUeNgapIdGenerator) *RanUe {
@@ -59,6 +63,9 @@ func NewRanUe(n1Conn net.Conn, ranUeNgapIdGenerator *RanUeNgapIdGenerator) *RanU
 		mobileIdentity5GS: nasType.MobileIdentity5GS{},
 
 		n1Conn: n1Conn,
+
+		nrdcIndicator:    false,
+		nrdcIndicatorMtx: sync.Mutex{},
 	}
 }
 
@@ -79,6 +86,11 @@ func (r *RanUe) GetMobileIdentity5GS() nasType.MobileIdentity5GS {
 
 func (r *RanUe) GetMobileIdentitySUCI() string {
 	return r.mobileIdentity5GS.GetSUCI()
+}
+
+func (r *RanUe) GetMobileIdentityIMSI() string {
+	suci := r.GetMobileIdentitySUCI()
+	return fmt.Sprintf("imsi-%s%s%s", suci[7:10], suci[11:13], suci[20:])
 }
 
 func (r *RanUe) GetUlTeid() aper.OctetString {
@@ -119,4 +131,22 @@ func (r *RanUe) SetDlTeid(dlTeid aper.OctetString) {
 
 func (r *RanUe) SetDataPlaneConn(dataPlaneConn net.Conn) {
 	r.dataPlaneConn = dataPlaneConn
+}
+
+func (r *RanUe) IsNrdcActivated() bool {
+	r.nrdcIndicatorMtx.Lock()
+	defer r.nrdcIndicatorMtx.Unlock()
+	return r.nrdcIndicator
+}
+
+func (r *RanUe) ActivateNrdc() {
+	r.nrdcIndicatorMtx.Lock()
+	defer r.nrdcIndicatorMtx.Unlock()
+	r.nrdcIndicator = true
+}
+
+func (r *RanUe) DeactivateNrdc() {
+	r.nrdcIndicatorMtx.Lock()
+	defer r.nrdcIndicatorMtx.Unlock()
+	r.nrdcIndicator = false
 }

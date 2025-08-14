@@ -80,7 +80,7 @@ type Gnb struct {
 	xnListener              *net.Listener
 
 	ranUeConns sync.Map
-	teidToConn  sync.Map
+	teidToConn sync.Map
 
 	gtpChannel chan []byte
 
@@ -288,6 +288,10 @@ func (g *Gnb) Start(ctx context.Context) error {
 			}
 			g.RanLog.Infof("New UE connection accepted from: %v", conn.RemoteAddr())
 			ranUe := NewRanUe(conn, g.ranUeNgapIdGenerator)
+			if g.nrdc {
+				ranUe.ActivateNrdc()
+			}
+
 			g.ranUeConns.Store(ranUe, struct{}{})
 			go g.handleRanConnection(ctx, ranUe)
 		}
@@ -935,7 +939,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	}
 
 	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
-	if g.nrdc {
+	if ranUe.IsNrdcActivated() {
 		if qosFlowPerTNLInformationItem, err = g.xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSetupRequestRaw[:n]); err != nil {
 			g.XnLog.Warnf("Error xn pdu session resource setup request transfer: %v", err)
 		}
@@ -1169,6 +1173,16 @@ func (g *Gnb) handleConsoleGnbInfo(c *gin.Context) {
 	plmnId := util.PlmnIdToModels(g.plmnId)
 	snssai := util.SNssaiToModels(g.snssai)
 
+	ranUeList := []consoleModel.RanUeInfo{}
+	g.ranUeConns.Range(func(key, value any) bool {
+		ranUe := key.(*RanUe)
+		ranUeList = append(ranUeList, consoleModel.RanUeInfo{
+			Imsi:          ranUe.GetMobileIdentityIMSI(),
+			NrdcIndicator: ranUe.IsNrdcActivated(),
+		})
+		return true
+	})
+
 	c.JSON(http.StatusOK, consoleModel.ConsoleGnbInfoResponse{
 		Message: "Get gNB info successful",
 		GnbInfo: consoleModel.GnbInfo{
@@ -1181,6 +1195,8 @@ func (g *Gnb) handleConsoleGnbInfo(c *gin.Context) {
 				Sst: strconv.Itoa(int(snssai.Sst)),
 				Sd:  snssai.Sd,
 			},
+
+			RanUeList: ranUeList,
 		},
 	})
 

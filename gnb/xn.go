@@ -1,7 +1,9 @@
 package gnb
 
 import (
+	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"net"
 
 	"github.com/free5gc/aper"
@@ -9,6 +11,52 @@ import (
 	"github.com/free5gc/ngap/ngapConvert"
 	"github.com/free5gc/ngap/ngapType"
 )
+
+type XnPdu struct {
+	ImsiLength uint16
+	Imsi       string
+	Data       []byte
+}
+
+func NewXnPdu(imsi string, data []byte) *XnPdu {
+	return &XnPdu{
+		ImsiLength: 0,
+		Imsi:       imsi,
+		Data:       data,
+	}
+}
+
+func (x *XnPdu) Marshal() ([]byte, error) {
+	imsiBytes := []byte(x.Imsi)
+
+	buffer := make([]byte, 2)
+	binary.BigEndian.PutUint16(buffer, uint16(len(imsiBytes)))
+
+	buffer = append(buffer, imsiBytes...)
+	buffer = append(buffer, x.Data...)
+
+	return buffer, nil
+}
+
+func (x *XnPdu) Unmarshal(data []byte) error {
+	if len(data) < 2 {
+		return fmt.Errorf("data too short")
+	}
+
+	x.ImsiLength = binary.BigEndian.Uint16(data[:2])
+	data = data[2:]
+
+	if len(data) < int(x.ImsiLength) {
+		return fmt.Errorf("data too short")
+	}
+
+	x.Imsi = string(data[:x.ImsiLength])
+	data = data[x.ImsiLength:]
+
+	x.Data = data
+
+	return nil
+}
 
 func xnInterfaceProcessor(conn net.Conn, g *Gnb) {
 	buffer := make([]byte, 4096)
@@ -20,7 +68,15 @@ func xnInterfaceProcessor(conn net.Conn, g *Gnb) {
 	g.XnLog.Tracef("Received %d bytes of XN packet: %+v", n, buffer[:n])
 	g.XnLog.Debugln("Receive XN packet")
 
-	ngapPduSessionResourceSetupRequest, err := ngap.Decoder(buffer[:n])
+	xnPdu := XnPdu{}
+	if err := xnPdu.Unmarshal(buffer[:n]); err != nil {
+		g.XnLog.Errorf("Error unmarshal xn pdu: %v", err)
+		return
+	}
+	g.XnLog.Tracef("Received XN PDU: %+v", xnPdu)
+	g.XnLog.Debugln("Receive XN PDU")
+
+	ngapPduSessionResourceSetupRequest, err := ngap.Decoder(xnPdu.Data)
 	if err != nil {
 		g.XnLog.Warnf("Error decoding NGAP PDU Session Resource Setup Request: %v", err)
 		return
@@ -34,14 +90,14 @@ func xnInterfaceProcessor(conn net.Conn, g *Gnb) {
 	switch ngapPduSessionResourceSetupRequest.InitiatingMessage.ProcedureCode.Value {
 	case ngapType.ProcedureCodePDUSessionResourceSetup:
 		g.XnLog.Debugln("Processing NGAP PDU Session Resource Setup Request")
-		xnPduSessionResourceSetupRequestProcessor(g, conn, ngapPduSessionResourceSetupRequest)
+		xnPduSessionResourceSetupRequestProcessor(g, conn, xnPdu.Imsi, ngapPduSessionResourceSetupRequest)
 	default:
 		g.XnLog.Warnf("Unknown NGAP PDU Session Resource Setup Request Procedure Code: %v", ngapPduSessionResourceSetupRequest.InitiatingMessage.ProcedureCode.Value)
 		return
 	}
 }
 
-func xnPduSessionResourceSetupRequestProcessor(g *Gnb, conn net.Conn, ngapPduSessionResourceSetupRequest *ngapType.NGAPPDU) {
+func xnPduSessionResourceSetupRequestProcessor(g *Gnb, conn net.Conn, imsi string, ngapPduSessionResourceSetupRequest *ngapType.NGAPPDU) {
 	var pduSessionResourceSetupRequestTransfer ngapType.PDUSessionResourceSetupRequestTransfer
 
 	for _, ie := range ngapPduSessionResourceSetupRequest.InitiatingMessage.Value.PDUSessionResourceSetupRequest.ProtocolIEs.List {
@@ -97,7 +153,14 @@ func xnPduSessionResourceSetupRequestProcessor(g *Gnb, conn net.Conn, ngapPduSes
 		return
 	}
 
-	n, err := conn.Write(dcQosFlowPerTNLInformationMarshal)
+	xnPdu := NewXnPdu(imsi, dcQosFlowPerTNLInformationMarshal)
+	xnPduBytes, err := xnPdu.Marshal()
+	if err != nil {
+		g.XnLog.Warnf("Error marshal xn pdu: %v", err)
+		return
+	}
+
+	n, err := conn.Write(xnPduBytes)
 	if err != nil {
 		g.XnLog.Warnf("Error write dc qos flow per tnl information: %v", err)
 		return

@@ -80,16 +80,8 @@ func (r *RanUe) GetRanUeId() int64 {
 	return r.ranUeNgapId
 }
 
-func (r *RanUe) GetMobileIdentity5GS() nasType.MobileIdentity5GS {
-	return r.mobileIdentity5GS
-}
-
-func (r *RanUe) GetMobileIdentitySUCI() string {
-	return r.mobileIdentity5GS.GetSUCI()
-}
-
 func (r *RanUe) GetMobileIdentityIMSI() string {
-	suci := r.GetMobileIdentitySUCI()
+	suci := r.mobileIdentity5GS.GetSUCI()
 	return fmt.Sprintf("imsi-%s%s%s", suci[7:10], suci[11:13], suci[20:])
 }
 

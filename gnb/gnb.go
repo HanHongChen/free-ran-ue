@@ -513,9 +513,9 @@ func (g *Gnb) setupN1(ranUe *RanUe) error {
 		}
 	}
 	g.teidToConn.Store(hex.EncodeToString(ranUe.GetDlTeid()), ueDataPlaneConn)
-	g.GtpLog.Debugf("Stored UE %s data plane connection with teid %s to teidToConn", ranUe.GetMobileIdentitySUCI(), hex.EncodeToString(ranUe.GetDlTeid()))
+	g.GtpLog.Debugf("Stored UE %s data plane connection with teid %s to teidToConn", ranUe.GetMobileIdentityIMSI(), hex.EncodeToString(ranUe.GetDlTeid()))
 
-	g.RanLog.Infof("UE %s N1 setup complete", ranUe.GetMobileIdentitySUCI())
+	g.RanLog.Infof("UE %s N1 setup complete", ranUe.GetMobileIdentityIMSI())
 	return nil
 }
 
@@ -617,7 +617,7 @@ func (g *Gnb) handleRanConnection(ctx context.Context, ranUe *RanUe) {
 		g.RanLog.Errorf("Error releasing N1: %v", err)
 		return
 	}
-	g.RanLog.Infof("UE %s N1 released", ranUe.GetMobileIdentitySUCI())
+	g.RanLog.Infof("UE %s N1 released", ranUe.GetMobileIdentityIMSI())
 }
 
 func (g *Gnb) startUeDataPlaneProcessor(ueDataPlaneConn net.Conn, ulTeid, dlTeid aper.OctetString) {
@@ -658,7 +658,7 @@ func (g *Gnb) processUeInitialization(ranUe *RanUe) error {
 		return fmt.Errorf("error decode ue registration request from UE: %v", err)
 	}
 	ranUe.SetMobileIdentity5GS(nasMessage.GmmMessage.RegistrationRequest.MobileIdentity5GS)
-	g.NasLog.Debugf("Receive UE %s registration request from UE", ranUe.GetMobileIdentitySUCI())
+	g.NasLog.Debugf("Receive UE %s registration request from UE", ranUe.GetMobileIdentityIMSI())
 
 	ueInitialMessage, err := getInitialUeMessage(ranUe.GetRanUeId(), ueRegistrationRequest, g.plmnId, g.tai)
 	if err != nil {
@@ -871,12 +871,12 @@ func (g *Gnb) processUeInitialization(ranUe *RanUe) error {
 	g.NgapLog.Tracef("UE Configuration Update Command: %+v", ueConfigurationUpdateCommand)
 	g.NgapLog.Debugln("Receive UE Configuration Update Command from AMF")
 
-	g.RanLog.Infof("UE %s initialized", ranUe.GetMobileIdentitySUCI())
+	g.RanLog.Infof("UE %s initialized", ranUe.GetMobileIdentityIMSI())
 	return nil
 }
 
 func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceSetupRequestTransfer *ngapType.PDUSessionResourceSetupRequestTransfer) error {
-	g.NgapLog.Infof("Processing UE %s PDU session establishment", ranUe.GetMobileIdentitySUCI())
+	g.NgapLog.Infof("Processing UE %s PDU session establishment", ranUe.GetMobileIdentityIMSI())
 
 	// receive pdu session establishment request from UE and send to AMF
 	pduSessionEstablishmentRequest := make([]byte, 1024)
@@ -940,7 +940,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 
 	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
 	if ranUe.IsNrdcActivated() {
-		if qosFlowPerTNLInformationItem, err = g.xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSetupRequestRaw[:n]); err != nil {
+		if qosFlowPerTNLInformationItem, err = g.xnPduSessionResourceSetupRequestTransfer(ranUe.GetMobileIdentityIMSI(), ngapPduSessionResourceSetupRequestRaw[:n]); err != nil {
 			g.XnLog.Warnf("Error xn pdu session resource setup request transfer: %v", err)
 		}
 	}
@@ -972,7 +972,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	g.NgapLog.Tracef("Sent %d bytes of pdu session resource setup response to AMF", n)
 	g.NgapLog.Debugln("Send PDU Session Resource Setup Response to AMF")
 
-	g.NgapLog.Infof("UE %s PDU session establishment completed", ranUe.GetMobileIdentitySUCI())
+	g.NgapLog.Infof("UE %s PDU session establishment completed", ranUe.GetMobileIdentityIMSI())
 	return nil
 }
 
@@ -1077,7 +1077,7 @@ func (g *Gnb) processUeDeRegistration(ranUe *RanUe) error {
 	return nil
 }
 
-func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSetupRequestRaw []byte) (ngapType.QosFlowPerTNLInformationItem, error) {
+func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(imsi string, ngapPduSessionResourceSetupRequestRaw []byte) (ngapType.QosFlowPerTNLInformationItem, error) {
 	g.XnLog.Infoln("Processing XN PDU Session Resource Setup Request Transfer")
 
 	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
@@ -1088,7 +1088,13 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSet
 	}
 	g.XnLog.Debugf("Dial XN at %s:%d", g.xnIp, g.xnPort)
 
-	n, err := xnConn.Write(ngapPduSessionResourceSetupRequestRaw)
+	xnPdu := NewXnPdu(imsi, ngapPduSessionResourceSetupRequestRaw)
+	xnPduBytes, err := xnPdu.Marshal()
+	if err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error marshal xn pdu: %v", err)
+	}
+
+	n, err := xnConn.Write(xnPduBytes)
 	if err != nil {
 		return qosFlowPerTNLInformationItem, fmt.Errorf("error send ngap pdu session resource setup request to xn: %v", err)
 	}
@@ -1106,7 +1112,14 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(ngapPduSessionResourceSet
 	g.XnLog.Tracef("Received %d bytes of NGAP PDU Session Resource Setup Response from XN", n)
 	g.XnLog.Debugln("Receive NGAP PDU Session Resource Setup Response from XN")
 
-	if err := aper.UnmarshalWithParams(buffer[:n], &qosFlowPerTNLInformationItem, "valueExt"); err != nil {
+	xnPdu = &XnPdu{}
+	if err := xnPdu.Unmarshal(buffer[:n]); err != nil {
+		return qosFlowPerTNLInformationItem, fmt.Errorf("error unmarshal xn pdu: %v", err)
+	}
+	g.XnLog.Tracef("Received XN PDU: %+v", xnPdu)
+	g.XnLog.Debugln("Receive XN PDU")
+
+	if err := aper.UnmarshalWithParams(xnPdu.Data, &qosFlowPerTNLInformationItem, "valueExt"); err != nil {
 		return qosFlowPerTNLInformationItem, fmt.Errorf("error unmarshal qos flow per tnl information item: %v", err)
 	}
 	g.XnLog.Tracef("Get QoS Flow per TNL Information Item: %+v", qosFlowPerTNLInformationItem)

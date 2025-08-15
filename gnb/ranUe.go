@@ -11,15 +11,20 @@ import (
 
 type RanUeNgapIdGenerator struct {
 	usedRanUeIds sync.Map
+	mtx          sync.Mutex
 }
 
 func NewRanUeNgapIdGenerator() *RanUeNgapIdGenerator {
 	return &RanUeNgapIdGenerator{
 		usedRanUeIds: sync.Map{},
+		mtx:          sync.Mutex{},
 	}
 }
 
 func (g *RanUeNgapIdGenerator) AllocateRanUeId() int64 {
+	g.mtx.Lock()
+	defer g.mtx.Unlock()
+
 	for i := 1; i <= 65535; i++ {
 		if _, exists := g.usedRanUeIds.Load(int64(i)); !exists {
 			g.usedRanUeIds.Store(int64(i), true)
@@ -31,6 +36,9 @@ func (g *RanUeNgapIdGenerator) AllocateRanUeId() int64 {
 }
 
 func (g *RanUeNgapIdGenerator) ReleaseRanUeId(ranUeId int64) {
+	g.mtx.Lock()
+	defer g.mtx.Unlock()
+
 	g.usedRanUeIds.Delete(ranUeId)
 }
 
@@ -69,7 +77,9 @@ func NewRanUe(n1Conn net.Conn, ranUeNgapIdGenerator *RanUeNgapIdGenerator) *RanU
 	}
 }
 
-func (r *RanUe) Release(ranUeNgapIdGenerator *RanUeNgapIdGenerator) {
+func (r *RanUe) Release(ranUeNgapIdGenerator *RanUeNgapIdGenerator, teidGenerator *TeidGenerator) {
+	ranUeNgapIdGenerator.ReleaseRanUeId(r.ranUeNgapId)
+	teidGenerator.ReleaseTeid(r.dlTeid)
 }
 
 func (r *RanUe) GetAmfUeId() int64 {

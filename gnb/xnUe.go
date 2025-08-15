@@ -26,6 +26,10 @@ func NewXnUe(imsi string, dlTeid aper.OctetString, dataPlaneConn net.Conn) *XnUe
 	}
 }
 
+func (x *XnUe) Release(teidGenerator *TeidGenerator) {
+	teidGenerator.ReleaseTeid(x.dlTeid)
+}
+
 func (x *XnUe) GetImsi() string {
 	return x.imsi
 }

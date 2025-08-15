@@ -620,6 +620,7 @@ func (g *Gnb) handleRanConnection(ctx context.Context, ranUe *RanUe) {
 			g.RanLog.Errorf("Error closing UE connection: %v", err)
 		}
 		g.RanLog.Infof("Closed UE connection from: %v", ranUe.GetN1Conn().RemoteAddr())
+		ranUe.Release(g.ranUeNgapIdGenerator, g.teidGenerator)
 		g.ranUeConns.Delete(ranUe)
 	}()
 
@@ -650,7 +651,14 @@ func (g *Gnb) startUeDataPlaneProcessor(ueDataPlaneConn net.Conn, ulTeid, dlTeid
 				g.GtpLog.Infof("Connection from UE IP: %v closed", ueDataPlaneConn.RemoteAddr())
 
 				if isXnUe {
-					g.xnUeConns.Delete(imsi)
+					g.xnUeConns.Range(func(key, value interface{}) bool {
+						if key.(*XnUe).GetImsi() == imsi {
+							key.(*XnUe).Release(g.teidGenerator)
+							g.xnUeConns.Delete(key)
+							g.XnLog.Debugf("Deleted XN UE %s from xnUeConns", imsi)
+						}
+						return true
+					})
 					g.XnLog.Debugf("Deleted XN UE %s from xnUeConns", imsi)
 				}
 				return

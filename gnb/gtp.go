@@ -14,6 +14,17 @@ import (
 	"github.com/free5gc/aper"
 )
 
+const (
+	IS_NEXT_EXTENSION_HEADER = 0x04
+	IS_SEQUENCE_NUMBER       = 0x02
+	IS_N_PDU_NUMBER          = 0x01
+
+	NEXT_EXTENSION_HEADER_TYPE_NO_MORE_EXTENSION_HEADERS = 0x00
+
+	NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER        = 0x85
+	NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER_LENGTH = 2
+)
+
 type TeidGenerator struct {
 	teids sync.Map
 }
@@ -144,27 +155,38 @@ func forwardPacketToUe(gtpPacket []byte, teidToConn *sync.Map, gnbLogger *logger
 func parseGtpPacket(gtpPacket []byte) (string, []byte, error) {
 	basicHeader, headerLength := gtpPacket[:8], 8
 
-	pduSessionType, pduSessionLength := byte(0x85), 2
+	isNextExtensionHeader, isSequenceNumber, isNPDUNumber := false, false, false
 
-	if basicHeader[0]&0x02 != 0 {
+	if basicHeader[0]&IS_NEXT_EXTENSION_HEADER != 0 {
+		isNextExtensionHeader = true
+	}
+
+	if basicHeader[0]&IS_SEQUENCE_NUMBER != 0 {
+		isSequenceNumber = true
+	}
+
+	if basicHeader[0]&IS_N_PDU_NUMBER != 0 {
+		isNPDUNumber = true
+	}
+
+	if isNextExtensionHeader || isSequenceNumber || isNPDUNumber {
 		headerLength += 3
 	}
 
-	for {
-		if gtpPacket[headerLength] == 0x00 {
-			headerLength += 1
-			break
-		} else {
-			switch gtpPacket[headerLength] {
-			case pduSessionType:
-				extensionHeaderLength := gtpPacket[headerLength+1]
-				headerLength += 2
-				headerLength += int(extensionHeaderLength) * pduSessionLength
-			default:
-				return "", nil, fmt.Errorf("unknown GTP extension header type: %d", gtpPacket[headerLength])
-			}
-		}
+	if !isNextExtensionHeader {
+		return hex.EncodeToString(basicHeader[4:]), gtpPacket[headerLength:], nil
 	}
 
-	return hex.EncodeToString(basicHeader[4:]), gtpPacket[headerLength:], nil
+	for {
+		switch gtpPacket[headerLength] {
+		case NEXT_EXTENSION_HEADER_TYPE_NO_MORE_EXTENSION_HEADERS:
+			headerLength += 1
+			return hex.EncodeToString(basicHeader[4:]), gtpPacket[headerLength:], nil
+		case NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER:
+			extensionHeaderLength := gtpPacket[headerLength+1]
+			headerLength += 2 + int(extensionHeaderLength)*NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER_LENGTH
+		default:
+			return "", nil, fmt.Errorf("unknown GTP extension header type: %d", gtpPacket[headerLength])
+		}
+	}
 }

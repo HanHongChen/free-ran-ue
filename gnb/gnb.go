@@ -72,7 +72,8 @@ type Gnb struct {
 	tai    ngapType.TAI
 	snssai ngapType.SNSSAI
 
-	nrdc bool
+	staticNrdc bool
+
 	xnInterface
 
 	ranControlPlaneListener *net.Listener
@@ -161,7 +162,7 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		tai:    tai,
 		snssai: snssai,
 
-		nrdc: config.Gnb.Nrdc,
+		staticNrdc: config.Gnb.StaticNrdc,
 		xnInterface: xnInterface{
 			xnIp:   config.Gnb.XnInterface.XnIp,
 			xnPort: config.Gnb.XnInterface.XnPort,
@@ -211,27 +212,25 @@ func (g *Gnb) Start(ctx context.Context) error {
 	}
 	g.startGtpProcessor(ctx)
 
-	if g.nrdc {
-		if err := g.startXnListener(); err != nil {
-			g.XnLog.Errorf("Error starting XN listener: %v", err)
-			close(g.gtpChannel)
-			if err := g.n3Conn.Close(); err != nil {
-				g.GtpLog.Errorf("Error closing N3 connection: %v", err)
-			}
-			if err := g.n2Conn.Close(); err != nil {
-				g.SctpLog.Errorf("Error closing N2 connection: %v", err)
-			}
-			return err
+	if err := g.startXnListener(); err != nil {
+		g.XnLog.Errorf("Error starting XN listener: %v", err)
+		close(g.gtpChannel)
+		if err := g.n3Conn.Close(); err != nil {
+			g.GtpLog.Errorf("Error closing N3 connection: %v", err)
 		}
+		if err := g.n2Conn.Close(); err != nil {
+			g.SctpLog.Errorf("Error closing N2 connection: %v", err)
+		}
+		return err
 	}
 
 	if err := g.startRanControlPlaneListener(); err != nil {
 		g.RanLog.Errorf("Error starting ran control plane listener: %v", err)
-		if g.nrdc {
-			if err := (*g.xnListener).Close(); err != nil {
-				g.XnLog.Errorf("Error closing XN listener: %v", err)
-			}
+
+		if err := (*g.xnListener).Close(); err != nil {
+			g.XnLog.Errorf("Error closing XN listener: %v", err)
 		}
+
 		close(g.gtpChannel)
 		if err := g.n3Conn.Close(); err != nil {
 			g.GtpLog.Errorf("Error closing N3 connection: %v", err)
@@ -247,10 +246,8 @@ func (g *Gnb) Start(ctx context.Context) error {
 		if err := (*g.ranControlPlaneListener).Close(); err != nil {
 			g.RanLog.Errorf("Error closing ran control plane listener: %v", err)
 		}
-		if g.nrdc {
-			if err := (*g.xnListener).Close(); err != nil {
-				g.XnLog.Errorf("Error closing XN listener: %v", err)
-			}
+		if err := (*g.xnListener).Close(); err != nil {
+			g.XnLog.Errorf("Error closing XN listener: %v", err)
 		}
 		close(g.gtpChannel)
 		if err := g.n3Conn.Close(); err != nil {
@@ -263,10 +260,6 @@ func (g *Gnb) Start(ctx context.Context) error {
 	}
 
 	go func() {
-		if !g.nrdc {
-			return
-		}
-
 		for {
 			conn, err := (*g.xnListener).Accept()
 			if err != nil {
@@ -293,7 +286,7 @@ func (g *Gnb) Start(ctx context.Context) error {
 			}
 			g.RanLog.Infof("New UE connection accepted from: %v", conn.RemoteAddr())
 			ranUe := NewRanUe(conn, g.ranUeNgapIdGenerator)
-			if g.nrdc {
+			if g.staticNrdc {
 				ranUe.ActivateNrdc()
 			}
 
@@ -327,13 +320,11 @@ func (g *Gnb) Stop() {
 	g.RanLog.Debugln("gNB listener stopped")
 	g.RanLog.Tracef("gNB listener stopped at %s:%d", g.ranControlPlaneIp, g.ranControlPlanePort)
 
-	if g.nrdc {
-		if err := (*g.xnListener).Close(); err != nil {
-			g.XnLog.Errorf("Error closing XN listener: %v", err)
-		}
-		g.XnLog.Debugln("XN listener stopped")
-		g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
+	if err := (*g.xnListener).Close(); err != nil {
+		g.XnLog.Errorf("Error closing XN listener: %v", err)
 	}
+	g.XnLog.Debugln("XN listener stopped")
+	g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
 
 	var wg sync.WaitGroup
 	g.xnUeConns.Range(func(key, value interface{}) bool {
@@ -985,7 +976,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	g.NasLog.Debugln("Send NAS PDU Session Establishment Accept to UE")
 
 	// send ngap pdu session resource setup response to AMF
-	ngapPduSessionResourceSetupResponseTransfer, err := getPduSessionResourceSetupResponseTransfer(ranUe.GetDlTeid(), g.ranN3Ip, 1, g.nrdc, qosFlowPerTNLInformationItem)
+	ngapPduSessionResourceSetupResponseTransfer, err := getPduSessionResourceSetupResponseTransfer(ranUe.GetDlTeid(), g.ranN3Ip, 1, g.staticNrdc, qosFlowPerTNLInformationItem)
 	if err != nil {
 		return fmt.Errorf("error get pdu session resource setup response transfer: %v", err)
 	}

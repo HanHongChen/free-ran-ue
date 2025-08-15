@@ -36,7 +36,7 @@ type GnbIE struct {
 	Tai    TaiIE    `yaml:"tai"`
 	Snssai SnssaiIE `yaml:"snssai"`
 
-	Nrdc        bool          `yaml:"nrdc"`
+	StaticNrdc   bool          `yaml:"staticNrdc"`
 	XnInterface XnInterfaceIE `yaml:"xnInterface"`
 
 	Api ApiIE `yaml:"api"`

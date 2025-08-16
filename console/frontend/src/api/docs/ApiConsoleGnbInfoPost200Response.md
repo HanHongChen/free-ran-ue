@@ -6,7 +6,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **message** | **string** |  | [optional] [default to undefined]
-**gnbInfo** | [**ApiConsoleGnbInfoPost200ResponseGnbInfo**](ApiConsoleGnbInfoPost200ResponseGnbInfo.md) |  | [optional] [default to undefined]
+**gnbInfo** | [**GnbInfo**](GnbInfo.md) |  | [optional] [default to undefined]
 
 ## Example
 

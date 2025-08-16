@@ -1,4 +1,4 @@
-# ApiConsoleGnbInfoPost401Response
+# ApiConsoleGnbUeNrdcPost200Response
 
 
 ## Properties
@@ -6,16 +6,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **message** | **string** |  | [optional] [default to undefined]
-**gnbInfo** | [**EmptyGnbInfo**](EmptyGnbInfo.md) |  | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { ApiConsoleGnbInfoPost401Response } from './api';
+import { ApiConsoleGnbUeNrdcPost200Response } from './api';
 
-const instance: ApiConsoleGnbInfoPost401Response = {
+const instance: ApiConsoleGnbUeNrdcPost200Response = {
     message,
-    gnbInfo,
 };
 ```
 

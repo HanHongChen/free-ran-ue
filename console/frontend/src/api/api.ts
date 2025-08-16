@@ -63,104 +63,10 @@ export interface ApiConsoleGnbInfoPost200Response {
     'message'?: string;
     /**
      * 
-     * @type {ApiConsoleGnbInfoPost200ResponseGnbInfo}
+     * @type {GnbInfo}
      * @memberof ApiConsoleGnbInfoPost200Response
      */
-    'gnbInfo'?: ApiConsoleGnbInfoPost200ResponseGnbInfo;
-}
-/**
- * 
- * @export
- * @interface ApiConsoleGnbInfoPost200ResponseGnbInfo
- */
-export interface ApiConsoleGnbInfoPost200ResponseGnbInfo {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
-     */
-    'gnbId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
-     */
-    'gnbName'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
-     */
-    'plmnId'?: string;
-    /**
-     * 
-     * @type {ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
-     */
-    'snssai'?: ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai;
-    /**
-     * 
-     * @type {Array<ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner>}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
-     */
-    'ranUeList'?: Array<ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner>;
-    /**
-     * 
-     * @type {Array<ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner>}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfo
-     */
-    'xnUeList'?: Array<ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner>;
-}
-/**
- * 
- * @export
- * @interface ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner
- */
-export interface ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner
-     */
-    'imsi'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoRanUeListInner
-     */
-    'nrdcIndicator'?: boolean;
-}
-/**
- * 
- * @export
- * @interface ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai
- */
-export interface ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai
-     */
-    'sst'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoSnssai
-     */
-    'sd'?: string;
-}
-/**
- * 
- * @export
- * @interface ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner
- */
-export interface ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost200ResponseGnbInfoXnUeListInner
-     */
-    'imsi'?: string;
+    'gnbInfo'?: GnbInfo;
 }
 /**
  * 
@@ -176,60 +82,10 @@ export interface ApiConsoleGnbInfoPost400Response {
     'message'?: string;
     /**
      * 
-     * @type {ApiConsoleGnbInfoPost400ResponseGnbInfo}
+     * @type {EmptyGnbInfo}
      * @memberof ApiConsoleGnbInfoPost400Response
      */
-    'gnbInfo'?: ApiConsoleGnbInfoPost400ResponseGnbInfo;
-}
-/**
- * 
- * @export
- * @interface ApiConsoleGnbInfoPost400ResponseGnbInfo
- */
-export interface ApiConsoleGnbInfoPost400ResponseGnbInfo {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost400ResponseGnbInfo
-     */
-    'gnbId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost400ResponseGnbInfo
-     */
-    'gnbName'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost400ResponseGnbInfo
-     */
-    'plmnId'?: string;
-    /**
-     * 
-     * @type {ApiConsoleGnbInfoPost400ResponseGnbInfoSnssai}
-     * @memberof ApiConsoleGnbInfoPost400ResponseGnbInfo
-     */
-    'snssai'?: ApiConsoleGnbInfoPost400ResponseGnbInfoSnssai;
-}
-/**
- * 
- * @export
- * @interface ApiConsoleGnbInfoPost400ResponseGnbInfoSnssai
- */
-export interface ApiConsoleGnbInfoPost400ResponseGnbInfoSnssai {
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost400ResponseGnbInfoSnssai
-     */
-    'sst'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiConsoleGnbInfoPost400ResponseGnbInfoSnssai
-     */
-    'sd'?: string;
+    'gnbInfo'?: EmptyGnbInfo;
 }
 /**
  * 
@@ -245,10 +101,10 @@ export interface ApiConsoleGnbInfoPost401Response {
     'message'?: string;
     /**
      * 
-     * @type {ApiConsoleGnbInfoPost400ResponseGnbInfo}
+     * @type {EmptyGnbInfo}
      * @memberof ApiConsoleGnbInfoPost401Response
      */
-    'gnbInfo'?: ApiConsoleGnbInfoPost400ResponseGnbInfo;
+    'gnbInfo'?: EmptyGnbInfo;
 }
 /**
  * 
@@ -264,10 +120,10 @@ export interface ApiConsoleGnbInfoPost500Response {
     'message'?: string;
     /**
      * 
-     * @type {ApiConsoleGnbInfoPost400ResponseGnbInfo}
+     * @type {EmptyGnbInfo}
      * @memberof ApiConsoleGnbInfoPost500Response
      */
-    'gnbInfo'?: ApiConsoleGnbInfoPost400ResponseGnbInfo;
+    'gnbInfo'?: EmptyGnbInfo;
 }
 /**
  * 
@@ -287,6 +143,96 @@ export interface ApiConsoleGnbInfoPostRequest {
      * @memberof ApiConsoleGnbInfoPostRequest
      */
     'port': number;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbUeNrdcPost200Response
+ */
+export interface ApiConsoleGnbUeNrdcPost200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbUeNrdcPost200Response
+     */
+    'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbUeNrdcPost400Response
+ */
+export interface ApiConsoleGnbUeNrdcPost400Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbUeNrdcPost400Response
+     */
+    'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbUeNrdcPost401Response
+ */
+export interface ApiConsoleGnbUeNrdcPost401Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbUeNrdcPost401Response
+     */
+    'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbUeNrdcPost404Response
+ */
+export interface ApiConsoleGnbUeNrdcPost404Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbUeNrdcPost404Response
+     */
+    'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbUeNrdcPost500Response
+ */
+export interface ApiConsoleGnbUeNrdcPost500Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbUeNrdcPost500Response
+     */
+    'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ApiConsoleGnbUeNrdcPostRequest
+ */
+export interface ApiConsoleGnbUeNrdcPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbUeNrdcPostRequest
+     */
+    'ip': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiConsoleGnbUeNrdcPostRequest
+     */
+    'port': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiConsoleGnbUeNrdcPostRequest
+     */
+    'imsi': string;
 }
 /**
  * 
@@ -395,6 +341,162 @@ export interface ApiConsoleLogoutDelete200Response {
      * @memberof ApiConsoleLogoutDelete200Response
      */
     'message'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface EmptyGnbInfo
+ */
+export interface EmptyGnbInfo {
+    /**
+     * 
+     * @type {string}
+     * @memberof EmptyGnbInfo
+     */
+    'gnbId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EmptyGnbInfo
+     */
+    'gnbName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EmptyGnbInfo
+     */
+    'plmnId'?: string;
+    /**
+     * 
+     * @type {EmptyGnbInfoSnssai}
+     * @memberof EmptyGnbInfo
+     */
+    'snssai'?: EmptyGnbInfoSnssai;
+    /**
+     * 
+     * @type {Array<RanUe>}
+     * @memberof EmptyGnbInfo
+     */
+    'ranUeList'?: Array<RanUe>;
+    /**
+     * 
+     * @type {Array<XnUe>}
+     * @memberof EmptyGnbInfo
+     */
+    'xnUeList'?: Array<XnUe>;
+}
+/**
+ * 
+ * @export
+ * @interface EmptyGnbInfoSnssai
+ */
+export interface EmptyGnbInfoSnssai {
+    /**
+     * 
+     * @type {string}
+     * @memberof EmptyGnbInfoSnssai
+     */
+    'sst'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EmptyGnbInfoSnssai
+     */
+    'sd'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface GnbInfo
+ */
+export interface GnbInfo {
+    /**
+     * 
+     * @type {string}
+     * @memberof GnbInfo
+     */
+    'gnbId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GnbInfo
+     */
+    'gnbName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GnbInfo
+     */
+    'plmnId'?: string;
+    /**
+     * 
+     * @type {Snssai}
+     * @memberof GnbInfo
+     */
+    'snssai'?: Snssai;
+    /**
+     * 
+     * @type {Array<RanUe>}
+     * @memberof GnbInfo
+     */
+    'ranUeList'?: Array<RanUe>;
+    /**
+     * 
+     * @type {Array<XnUe>}
+     * @memberof GnbInfo
+     */
+    'xnUeList'?: Array<XnUe>;
+}
+/**
+ * 
+ * @export
+ * @interface RanUe
+ */
+export interface RanUe {
+    /**
+     * 
+     * @type {string}
+     * @memberof RanUe
+     */
+    'imsi'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof RanUe
+     */
+    'nrdcIndicator'?: boolean;
+}
+/**
+ * 
+ * @export
+ * @interface Snssai
+ */
+export interface Snssai {
+    /**
+     * 
+     * @type {string}
+     * @memberof Snssai
+     */
+    'sst'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Snssai
+     */
+    'sd'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface XnUe
+ */
+export interface XnUe {
+    /**
+     * 
+     * @type {string}
+     * @memberof XnUe
+     */
+    'imsi'?: string;
 }
 
 /**
@@ -689,6 +791,46 @@ export const GNBApiAxiosParamCreator = function (configuration?: Configuration) 
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * Modify the NRDC status of a specific UE
+         * @summary Modify UE NRDC Status
+         * @param {ApiConsoleGnbUeNrdcPostRequest} apiConsoleGnbUeNrdcPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiConsoleGnbUeNrdcPost: async (apiConsoleGnbUeNrdcPostRequest: ApiConsoleGnbUeNrdcPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiConsoleGnbUeNrdcPostRequest' is not null or undefined
+            assertParamExists('apiConsoleGnbUeNrdcPost', 'apiConsoleGnbUeNrdcPostRequest', apiConsoleGnbUeNrdcPostRequest)
+            const localVarPath = `/api/console/gnb/ue/nrdc`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiConsoleGnbUeNrdcPostRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -712,6 +854,19 @@ export const GNBApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['GNBApi.apiConsoleGnbInfoPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * Modify the NRDC status of a specific UE
+         * @summary Modify UE NRDC Status
+         * @param {ApiConsoleGnbUeNrdcPostRequest} apiConsoleGnbUeNrdcPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiConsoleGnbUeNrdcPost(apiConsoleGnbUeNrdcPostRequest: ApiConsoleGnbUeNrdcPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiConsoleGnbUeNrdcPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiConsoleGnbUeNrdcPost(apiConsoleGnbUeNrdcPostRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GNBApi.apiConsoleGnbUeNrdcPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -731,6 +886,16 @@ export const GNBApiFactory = function (configuration?: Configuration, basePath?:
          */
         apiConsoleGnbInfoPost(apiConsoleGnbInfoPostRequest: ApiConsoleGnbInfoPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiConsoleGnbInfoPost200Response> {
             return localVarFp.apiConsoleGnbInfoPost(apiConsoleGnbInfoPostRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Modify the NRDC status of a specific UE
+         * @summary Modify UE NRDC Status
+         * @param {ApiConsoleGnbUeNrdcPostRequest} apiConsoleGnbUeNrdcPostRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiConsoleGnbUeNrdcPost(apiConsoleGnbUeNrdcPostRequest: ApiConsoleGnbUeNrdcPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiConsoleGnbUeNrdcPost200Response> {
+            return localVarFp.apiConsoleGnbUeNrdcPost(apiConsoleGnbUeNrdcPostRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -752,6 +917,18 @@ export class GNBApi extends BaseAPI {
      */
     public apiConsoleGnbInfoPost(apiConsoleGnbInfoPostRequest: ApiConsoleGnbInfoPostRequest, options?: RawAxiosRequestConfig) {
         return GNBApiFp(this.configuration).apiConsoleGnbInfoPost(apiConsoleGnbInfoPostRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Modify the NRDC status of a specific UE
+     * @summary Modify UE NRDC Status
+     * @param {ApiConsoleGnbUeNrdcPostRequest} apiConsoleGnbUeNrdcPostRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GNBApi
+     */
+    public apiConsoleGnbUeNrdcPost(apiConsoleGnbUeNrdcPostRequest: ApiConsoleGnbUeNrdcPostRequest, options?: RawAxiosRequestConfig) {
+        return GNBApiFp(this.configuration).apiConsoleGnbUeNrdcPost(apiConsoleGnbUeNrdcPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

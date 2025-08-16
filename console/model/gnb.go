@@ -35,3 +35,13 @@ type RanUeInfo struct {
 type XnUeInfo struct {
 	Imsi string `json:"imsi"`
 }
+
+type ConsoleGnbUeNrdcModifyRequest struct {
+	Ip   string `json:"ip"`
+	Port int    `json:"port"`
+	Imsi string `json:"imsi"`
+}
+
+type ConsoleGnbUeNrdcModifyResponse struct {
+	Message string `json:"message"`
+}

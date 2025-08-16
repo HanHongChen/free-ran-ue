@@ -11,4 +11,7 @@ const (
 
 	API_GNB_INFO        = util.GNB_API_PREFIX + "/info"
 	API_GNB_INFO_METHOD = http.MethodGet
+
+	API_GNB_UE_NRDC_MODIFY        = util.GNB_API_PREFIX + "/ue/nrdc"
+	API_GNB_UE_NRDC_MODIFY_METHOD = http.MethodPost
 )

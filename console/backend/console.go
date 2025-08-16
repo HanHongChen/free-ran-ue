@@ -132,5 +132,11 @@ func (cs *console) initRoutes() util.Routes {
 			Pattern:     "/gnb/info",
 			HandlerFunc: cs.handleConsoleGnbInfo,
 		},
+		{
+			Name:        "Console GNB UE NRDC Modify",
+			Method:      http.MethodPost,
+			Pattern:     "/gnb/ue/nrdc",
+			HandlerFunc: cs.handleConsoleGnbUeNrdcModify,
+		},
 	}
 }

@@ -30,7 +30,7 @@ func (x *XnUe) Release(teidGenerator *TeidGenerator) {
 	teidGenerator.ReleaseTeid(x.dlTeid)
 }
 
-func (x *XnUe) GetImsi() string {
+func (x *XnUe) GetIMSI() string {
 	return x.imsi
 }
 

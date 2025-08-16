@@ -38,6 +38,7 @@ gnb:
     sst: "1"
     sd: "010203"
 
+  staticNrdc: false
   xnInterface:
     xnIp: "10.0.1.2"
     xnPort: 31415

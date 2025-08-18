@@ -16,6 +16,7 @@ interface GnbContextType {
   gnbList: GnbWithConnection[]
   addGnb: (gnb: ApiConsoleGnbInfoPost200Response, connection: GnbConnection) => { exists: boolean }
   removeGnb: (gnbId: string) => void
+  updateUeNrdcIndicator: (gnbId: string, imsi: string, indicator: boolean) => void
 }
 
 const GnbContext = createContext<GnbContextType | undefined>(undefined)
@@ -56,8 +57,29 @@ export function GnbProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(GNB_STORAGE_KEY, JSON.stringify(newList))
   }
 
+  const updateUeNrdcIndicator = (gnbId: string, imsi: string, indicator: boolean) => {
+    const newList = gnbList.map(gnb => {
+      if (gnb.gnbInfo?.gnbId === gnbId) {
+        return {
+          ...gnb,
+          gnbInfo: {
+            ...gnb.gnbInfo,
+            ranUeList: gnb.gnbInfo.ranUeList?.map(ue => 
+              ue.imsi === imsi 
+                ? { ...ue, nrdcIndicator: indicator }
+                : ue
+            )
+          }
+        }
+      }
+      return gnb
+    })
+    setGnbList(newList)
+    localStorage.setItem(GNB_STORAGE_KEY, JSON.stringify(newList))
+  }
+
   return (
-    <GnbContext.Provider value={{ gnbList, addGnb, removeGnb }}>
+    <GnbContext.Provider value={{ gnbList, addGnb, removeGnb, updateUeNrdcIndicator }}>
       {children}
     </GnbContext.Provider>
   )

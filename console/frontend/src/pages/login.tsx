@@ -4,13 +4,13 @@ import styles from './css/login.module.css'
 import logoImg from '../assets/free-ran-ue.jpg'
 import { consoleApi } from '../apiCfg'
 import ErrorBox from '../components/errorBox/errorBox'
-import { useErrors } from '../hooks/useErrors'
+import { useNotifications } from '../hooks/useNotifications'
 
 export default function Login() {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const { errors, addError, removeError } = useErrors()
+  const { errors, addError, removeNotification } = useNotifications()
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -34,7 +34,7 @@ export default function Login() {
     <>
       <ErrorBox 
         errors={errors}
-        onClose={removeError}
+        onClose={removeNotification}
         duration={5000}
       />
       <div className={styles.loginContainer}>

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import Modal from '../modal/modal'
 import styles from '../modal/modal.module.css'
-import { useErrors } from '../../hooks/useErrors'
 import ErrorBox from '../errorBox/errorBox'
 import { gnbApi } from '../../apiCfg'
 import { useGnb } from '../../context/gnbContext'
 import { useNavigate } from 'react-router-dom'
+import { useNotifications } from '../../hooks/useNotifications'
+import SuccessBox from '../successBox/successBox'
 
 interface AddGnbModalProps {
   isOpen: boolean
@@ -14,7 +15,7 @@ interface AddGnbModalProps {
 
 export default function AddGnbModal({ isOpen, onClose }: AddGnbModalProps) {
   const navigate = useNavigate()
-  const { errors, addError, removeError } = useErrors()
+  const { successes, errors, addSuccess, addError, removeNotification } = useNotifications()
   const { addGnb } = useGnb()
   const [formData, setFormData] = useState({
     ip: '',
@@ -54,6 +55,8 @@ export default function AddGnbModal({ isOpen, onClose }: AddGnbModalProps) {
       const { exists } = addGnb(result.data, { ip: formData.ip, port: portNumber })
       if (exists) {
         addError('gNB already exists, information updated')
+      } else {
+        addSuccess('gNB added successfully')
       }
 
       onClose()
@@ -69,9 +72,14 @@ export default function AddGnbModal({ isOpen, onClose }: AddGnbModalProps) {
 
   return (
     <>
+      <SuccessBox 
+        successes={successes}
+        onClose={removeNotification}
+        duration={5000}
+      />
       <ErrorBox 
         errors={errors}
-        onClose={removeError}
+        onClose={removeNotification}
         duration={5000}
       />
       <Modal

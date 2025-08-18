@@ -336,8 +336,8 @@ func (g *Gnb) Stop() {
 				if err := xnUe.GetDataPlaneConn().Close(); err != nil {
 					g.XnLog.Errorf("Error closing XN UE connection: %v", err)
 				}
+				g.XnLog.Debugf("Closed XN UE connection from: %v", xnUe.GetDataPlaneConn().RemoteAddr())
 			}
-			g.XnLog.Debugf("Closed XN UE connection from: %v", xnUe.GetDataPlaneConn().RemoteAddr())
 		}(key.(*XnUe))
 		return true
 	})

@@ -77,7 +77,7 @@
 
     Please also pay attention to the `xnIp` and `xnPort` field, as these will be used for the Xn-interface between the gNBs.
 
-    Also noticed the fields `staticNrdc` that should be set as `true` for enabling static NR-DC and `xnInterface` that identify the neighbor gNB's IP and port.
+    Also noticed the fields `staticNrdc` that should be set as `true` for enabling static NR-DC.
 
 - Start gNB:
 
@@ -99,7 +99,7 @@
 
 - Modify the configuration file for UE:
 
-    The configuration `YAML` file template is located at `free-ran-ue/config/ue-dc.yaml`.
+    The configuration `YAML` file template is located at `free-ran-ue/config/ue-dc-static.yaml`.
 
     Ensure that the information matches your web console settings, especially the `authenticationSubscription` section. For web console settings, please refer to: [Create Subscriber via Webconsole](https://free5gc.org/guide/Webconsole/Create-Subscriber-via-webconsole/)
 
@@ -177,5 +177,3 @@ PING 1.1.1.1 (1.1.1.1) from 10.60.0.2 ueTun0: 56(84) bytes of data.
 5 packets transmitted, 5 received, 0% packet loss, time 4007ms
 rtt min/avg/max/mdev = 3.972/4.371/4.644/0.232 ms
 ```
-
-Now, both the Master-gNB and Secondary-gNB are running successfully. The UE can also use two tunnel paths to handle the traffic.

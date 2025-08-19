@@ -136,7 +136,31 @@
     ./build/free-ran-ue ue -c config/ue-dc-dynamic.yaml
     ```
 
-## E. ICMP Test
+## E. Start Console
+
+- Modify the configuration file for console:
+
+    The configuration `YAML` file template is located at `free-ran-ue/config/console.yaml`.
+
+    The port field will be used for accessing the console page.
+
+    Make sure the gNB's configuration YAML has the `api` section for console access, like:
+
+    ```yaml
+    api:
+      ip: "10.0.1.2"
+      port: 40104
+    ```
+
+- Start Console
+
+    After configuring the `YAML` file, execute the binary in the `build` folder to start console with the specified configuration file:
+
+    ```bash
+    ./build/free-ran-ue console -c config/console.yaml
+    ```
+
+## F. ICMP Test
 
 After UE has started, a network interface will be available. Use `ifconfig` to check it:
 

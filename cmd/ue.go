@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/Alonza0314/free-ran-ue/logger"
@@ -57,7 +58,9 @@ func ueFunc(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := ue.Start(ctx); err != nil {
+	wg := sync.WaitGroup{}
+
+	if err := ue.Start(ctx, &wg); err != nil {
 		return
 	}
 	defer ue.Stop()
@@ -67,4 +70,5 @@ func ueFunc(cmd *cobra.Command, args []string) {
 	<-sigCh
 
 	cancel()
+	wg.Wait()
 }

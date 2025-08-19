@@ -39,7 +39,7 @@ source ~/.bashrc
     make
     ```
 
-2. Bring up namespaces (under `free-rna-ue`)
+2. Bring up namespaces (under `free-ran-ue`)
 
     ```bash
     make dc-ns-u
@@ -48,7 +48,7 @@ source ~/.bashrc
     After using, there is `down` command to clean up the namespaces:
 
     ```bash
-    make dc- ns-down
+    make dc-ns-down
     ```
 
 ## C. Configure free5GC
@@ -126,7 +126,7 @@ The configuration file `config/gnb.yaml` has already been set up with the enviro
     2. Start Master-gNB
 
         ```bash
-        ./build/free-ran-ue gnb -c config/gnb-dc-master.yaml
+        ./build/free-ran-ue gnb -c config/gnb-dc-static-master.yaml
         ```
 
 - Secondary-gNB
@@ -140,12 +140,12 @@ The configuration file `config/gnb.yaml` has already been set up with the enviro
     2. Start Master-gNB
 
         ```bash
-        ./build/free-ran-ue gnb -c config/gnb-dc-secondary.yaml
+        ./build/free-ran-ue gnb -c config/gnb-dc-static-secondary.yaml
         ```
 
 ## E. Start UE
 
-The configuration file `config/ue.yaml` has already been set up with the environment values. No need to modify the configuration.
+The configuration file `config/ue-dc-static.yaml` has already been set up with the environment values. No need to modify the configuration.
 
 1. Enter the UE-namespace (under `free-ran-ue`)
 
@@ -156,7 +156,7 @@ The configuration file `config/ue.yaml` has already been set up with the environ
 2. Start UE
 
     ```bash
-    ./build/free-ran-ue ue -c config/ue-dc.yaml
+    ./build/free-ran-ue ue -c config/ue-dc-static.yaml
     ```
 
 ## F. ICMP Test

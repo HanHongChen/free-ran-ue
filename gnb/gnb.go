@@ -1071,6 +1071,16 @@ func (g *Gnb) processUePduSessionModifyIndication(ranUe *RanUe) error {
 		g.XnLog.Debugln("XN PDU Session Resource Modify Confirm sent")
 	}
 
+	// send modify message to UE
+	modifyMessage := []byte(util.TUNNEL_UPDATE)
+
+	n, err = ranUe.GetN1Conn().Write(modifyMessage)
+	if err != nil {
+		return fmt.Errorf("error send modify message to UE: %v", err)
+	}
+	g.NasLog.Tracef("Sent %d bytes of modify message to UE", n)
+	g.NasLog.Debugln("Send Modify Message to UE")
+
 	// update ranUe NRDC status
 	if ranUe.IsNrdcActivated() {
 		ranUe.DeactivateNrdc()

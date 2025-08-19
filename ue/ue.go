@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Alonza0314/free-ran-ue/logger"
@@ -65,6 +66,7 @@ type nrdc struct {
 	enable bool
 	dcRanDataPlane
 	specifiedFlow []string
+	rwLock        sync.RWMutex
 }
 
 type Ue struct {
@@ -178,6 +180,7 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 				port: config.Ue.Nrdc.DcRanDataPlane.Port,
 			},
 			specifiedFlow: make([]string, 0),
+			rwLock:        sync.RWMutex{},
 		},
 
 		ueTunnelDeviceName: config.Ue.UeTunnelDevice,
@@ -186,7 +189,7 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 	}
 }
 
-func (u *Ue) Start(ctx context.Context) error {
+func (u *Ue) Start(ctx context.Context, wg *sync.WaitGroup) error {
 	u.UeLog.Infof("Starting UE: imsi-%s", u.supi)
 
 	if err := u.connectToRanControlPlane(); err != nil {
@@ -231,8 +234,11 @@ func (u *Ue) Start(ctx context.Context) error {
 		return err
 	}
 
+	// wait for RAN message
+	go u.waitForRanMessage(ctx, wg)
+
 	// handle data plane
-	go u.handleDataPlane(ctx)
+	go u.handleDataPlane(ctx, wg)
 
 	u.UeLog.Infoln("UE started")
 	return nil
@@ -256,7 +262,7 @@ func (u *Ue) Stop() {
 		u.UeLog.Errorf("Error closing RAN connection: %v", err)
 	}
 
-	if u.nrdc.enable {
+	if u.isNrdcEnabled() {
 		if err := u.dcRanDataPlaneConn.Close(); err != nil {
 			u.UeLog.Errorf("Error closing DC RAN connection: %v", err)
 		}
@@ -299,7 +305,7 @@ func (u *Ue) connectToRanDataPlane() error {
 	u.ranDataPlaneConn = conn
 	u.RanLog.Debugln("Dial TCP to RAN data plane success")
 
-	if u.nrdc.enable {
+	if u.isNrdcEnabled() {
 		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port))
 		if err != nil {
 			return err
@@ -594,6 +600,47 @@ func (u *Ue) extractUeInformationFromNasPduSessionEstablishmentAccept(nasPduSess
 	return nil
 }
 
+func (u *Ue) waitForRanMessage(ctx context.Context, wg *sync.WaitGroup) {
+	u.RanLog.Infoln("Waiting for RAN message")
+	wg.Add(1)
+
+	buffer := make([]byte, 1024)
+	for {
+		if err := u.ranControlPlaneConn.SetReadDeadline(time.Now().Add(1 * time.Second)); err != nil {
+			u.RanLog.Errorf("Error set read deadline: %+v", err)
+			goto STOP_WAITING
+		}
+		select {
+		case <-ctx.Done():
+			if err := u.ranControlPlaneConn.SetReadDeadline(time.Time{}); err != nil {
+				u.RanLog.Errorf("Error set read deadline: %+v", err)
+			}
+			goto STOP_WAITING
+		default:
+			n, err := u.ranControlPlaneConn.Read(buffer)
+			if err != nil {
+				if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
+					goto STOP_WAITING
+				}
+				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+					continue
+				}
+				u.RanLog.Warnf("Error read from ran control plane: %+v", err)
+			}
+
+			switch string(buffer[:n]) {
+			case util.TUNNEL_UPDATE:
+				go u.updateDataPlane()
+			default:
+				u.RanLog.Warnf("Received unknown message from RAN: %+v", buffer[:n])
+			}
+		}
+	}
+STOP_WAITING:
+	u.RanLog.Infoln("Stop waiting for RAN message")
+	wg.Done()
+}
+
 func (u *Ue) setupTunnelDevice() error {
 	u.TunLog.Infoln("Setting up UE tunnel device")
 
@@ -643,7 +690,7 @@ func (u *Ue) setupTunnelDevice() error {
 	}()
 	u.TunLog.Debugln("Read from RAN started")
 
-	if u.nrdc.enable {
+	if u.isNrdcEnabled() {
 		go func() {
 			buffer := make([]byte, 4096)
 			for {
@@ -677,18 +724,20 @@ func (u *Ue) cleanUpTunnelDevice() error {
 	return nil
 }
 
-func (u *Ue) handleDataPlane(ctx context.Context) {
+func (u *Ue) handleDataPlane(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+
 	// forward data from TUN to RAN and RAN to TUN
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			goto HANDLE_DATA_PLANE_FINISH
 		case buffer := <-u.readFromTun:
-			if !u.nrdc.enable {
+			if !u.isNrdcEnabled() {
 				n, err := u.ranDataPlaneConn.Write(buffer)
 				if err != nil {
 					if errors.Is(err, net.ErrClosed) {
-						return
+						goto HANDLE_DATA_PLANE_FINISH
 					}
 					u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
 				}
@@ -697,12 +746,18 @@ func (u *Ue) handleDataPlane(ctx context.Context) {
 				if util.IsIpInSpecifiedFlow(buffer, u.nrdc.specifiedFlow) {
 					n, err := u.dcRanDataPlaneConn.Write(buffer)
 					if err != nil {
+						if errors.Is(err, net.ErrClosed) {
+							goto HANDLE_DATA_PLANE_FINISH
+						}
 						u.RanLog.Warnf("Error sent to dc ran data plane: %+v", err)
 					}
 					u.RanLog.Tracef("Sent %d bytes of data to DC RAN: %+v", n, buffer[:n])
 				} else {
 					n, err := u.ranDataPlaneConn.Write(buffer)
 					if err != nil {
+						if errors.Is(err, net.ErrClosed) {
+							goto HANDLE_DATA_PLANE_FINISH
+						}
 						u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
 					}
 					u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
@@ -715,6 +770,52 @@ func (u *Ue) handleDataPlane(ctx context.Context) {
 			}
 			u.TunLog.Tracef("Wrote %d bytes of data to TUN: %+v", n, buffer[:n])
 		}
+	}
+
+HANDLE_DATA_PLANE_FINISH:
+	wg.Done()
+}
+
+func (u *Ue) updateDataPlane() {
+	u.TunLog.Infoln("Updating data plane")
+
+	u.rwLock.Lock()
+	defer u.rwLock.Unlock()
+
+	if !u.nrdc.enable {
+		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port))
+		if err != nil {
+			u.TunLog.Errorf("Error connect to dc ran data plane: %+v", err)
+			return
+		}
+		u.dcRanDataPlaneConn = conn
+		u.RanLog.Debugf("Connected to DC RAN data plane: %s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port)
+
+		go func() {
+			buffer := make([]byte, 4096)
+			for {
+				n, err := u.dcRanDataPlaneConn.Read(buffer)
+				if err != nil {
+					if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
+						u.TunLog.Debugln("DC RAN data plane connection closed")
+						return
+					}
+					u.RanLog.Errorf("Error read from dc ran data plane: %+v", err)
+				}
+				u.readFromRan <- buffer[:n]
+			}
+		}()
+		u.TunLog.Debugln("Read from DC RAN data plane started")
+
+		u.nrdc.enable = true
+		u.TunLog.Infoln("Data plane is updated to NRDC mode")
+	} else {
+		if err := u.dcRanDataPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing DC RAN connection: %v", err)
+		}
+
+		u.nrdc.enable = false
+		u.TunLog.Infoln("Data plane is updated to non-NRDC mode")
 	}
 }
 
@@ -735,4 +836,11 @@ func (u *Ue) get5GmmCapability() *nasType.Capability5GMM {
 		Len:   1,
 		Octet: [13]uint8{0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}
+}
+
+func (u *Ue) isNrdcEnabled() bool {
+	u.rwLock.RLock()
+	defer u.rwLock.RUnlock()
+
+	return u.nrdc.enable
 }

@@ -298,10 +298,10 @@ func xnPduSessionResourceModifyIndicationProcessor(g *Gnb, conn net.Conn, imsi s
 		return
 	}
 
-	for _, pduSessionResourceModifyItem := range pduSessionResourceModifyIndicationIE.Value.PDUSessionResourceModifyListModInd.List {
-		switch pduSessionResourceModifyItem.PDUSessionID.Value {
+	for i := range pduSessionResourceModifyIndicationIE.Value.PDUSessionResourceModifyListModInd.List {
+		switch pduSessionResourceModifyIndicationIE.Value.PDUSessionResourceModifyListModInd.List[i].PDUSessionID.Value {
 		case 4:
-			pduSessionResourceModifyItem.PDUSessionResourceModifyIndicationTransfer = pduSessionResourceModifyIndicationTransferMarshal
+			pduSessionResourceModifyIndicationIE.Value.PDUSessionResourceModifyListModInd.List[i].PDUSessionResourceModifyIndicationTransfer = pduSessionResourceModifyIndicationTransferMarshal
 		}
 	}
 	g.XnLog.Tracef("Get PDUSessionResourceModifyIndicationTransfer: %+v", pduSessionResourceModifyIndicationTransfer)

@@ -3,6 +3,10 @@
 > [!Important]
 > Beleive myself that I can do everything.
 
+## 20250819
+
+After a long long time, I've finished the manual dynamic NR-DC control in free-ran-ue. Now, user can use the console to switch DC status.
+
 ## 20250807
 
 I fixed the bug about configuring QoS flow from YAML file. It should be extract via NAS message.

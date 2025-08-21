@@ -50,11 +50,11 @@ Please refer to the official document: [Install free5GC](https://free5gc.org/gui
 
 2. Check IP Forward is enabled
 
-    If you have rebooted your machine, remember to run these command with setting your export IP:
+    If you have rebooted your machine, remember to run these command with setting your export network interface:
 
     ```bash
     sudo sysctl -w net.ipv4.ip_forward=1
-    sudo iptables -t nat -A POSTROUTING -o <your export IP> -j MASQUERADE
+    sudo iptables -t nat -A POSTROUTING -o <export network interface> -j MASQUERADE
     sudo systemctl stop ufw
     sudo iptables -I FORWARD 1 -j ACCEPT
     ```

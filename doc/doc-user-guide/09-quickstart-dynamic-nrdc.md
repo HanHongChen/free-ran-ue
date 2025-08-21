@@ -99,13 +99,24 @@ sudo corepack enable
             - addr: 10.0.1.1
         ```
 
-3. Run free5GC (under `free5gc`)
+3. Check IP Forward is enabled
+
+    If you have rebooted your machine, remember to run these command with setting your export network interface:
+
+    ```bash
+    sudo sysctl -w net.ipv4.ip_forward=1
+    sudo iptables -t nat -A POSTROUTING -o <export network interface> -j MASQUERADE
+    sudo systemctl stop ufw
+    sudo iptables -I FORWARD 1 -j ACCEPT
+    ```
+
+4. Run free5GC (under `free5gc`)
 
     ```bash
     ./run.sh
     ```
 
-4. Run webconsole and create a subscriber by default (under `free5gc`)
+5. Run webconsole and create a subscriber by default (under `free5gc`)
 
     ```bash
     cd webconsole
@@ -205,7 +216,7 @@ The configuration file `config/ue-dc-dynamic.yaml` has already been set up with 
     ICMP test with `ueTun0` via Master-gNB:
 
     ```bash
-    ping -I uetun0 8.8.8.8 -c 5
+    ping -I ueTun0 8.8.8.8 -c 5
     ```
 
     Expected successful output:
@@ -259,7 +270,7 @@ The configuration file `config/ue-dc-dynamic.yaml` has already been set up with 
     ICMP test with `ueTun0` via Master-gNB:
 
     ```bash
-    ping -I uetun0 8.8.8.8 -c 5
+    ping -I ueTun0 8.8.8.8 -c 5
     ```
 
     Expected successful output:

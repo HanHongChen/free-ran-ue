@@ -186,7 +186,7 @@ ueTun0: flags=4305<UP,POINTOPOINT,RUNNING,NOARP,MULTICAST>  mtu 1500
     ICMP test with `ueTun0` via Master-gNB:
 
     ```bash
-    ping -I uetun0 8.8.8.8 -c 5
+    ping -I ueTun0 8.8.8.8 -c 5
     ```
 
     Expected successful output:
@@ -244,7 +244,7 @@ ueTun0: flags=4305<UP,POINTOPOINT,RUNNING,NOARP,MULTICAST>  mtu 1500
     ICMP test with `ueTun0` via Master-gNB:
 
     ```bash
-    ping -I uetun0 8.8.8.8 -c 5
+    ping -I ueTun0 8.8.8.8 -c 5
     ```
 
     Expected successful output:

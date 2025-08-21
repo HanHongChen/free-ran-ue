@@ -171,7 +171,7 @@ The configuration file `config/ue.yaml` has already been set up with the environ
 3. `ping` test
 
     ```bash
-    ping -I uetun0 8.8.8.8 -c 5
+    ping -I ueTun0 8.8.8.8 -c 5
     ```
 
     Expected successful output:

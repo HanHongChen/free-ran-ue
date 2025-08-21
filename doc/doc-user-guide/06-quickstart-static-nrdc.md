@@ -189,7 +189,7 @@ The configuration file `config/ue-dc-static.yaml` has already been set up with t
 3. `ping` test via Master-gMB
 
     ```bash
-    ping -I uetun0 8.8.8.8 -c 5
+    ping -I ueTun0 8.8.8.8 -c 5
     ```
 
     Expected successful output:
@@ -210,7 +210,7 @@ The configuration file `config/ue-dc-static.yaml` has already been set up with t
 4. `ping` test via Secondary-gNB
 
     ```bash
-    ping -I uetun0 1.1.1.1 -c 5
+    ping -I ueTun0 1.1.1.1 -c 5
     ```
 
     Expected successful output:

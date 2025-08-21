@@ -205,7 +205,7 @@ The configuration file `config/ue-dc-dynamic.yaml` has already been set up with 
     ICMP test with `ueTun0` via Master-gNB:
 
     ```bash
-    ping -I uetun0 8.8.8.8 -c 5
+    ping -I ueTun0 8.8.8.8 -c 5
     ```
 
     Expected successful output:
@@ -259,7 +259,7 @@ The configuration file `config/ue-dc-dynamic.yaml` has already been set up with 
     ICMP test with `ueTun0` via Master-gNB:
 
     ```bash
-    ping -I uetun0 8.8.8.8 -c 5
+    ping -I ueTun0 8.8.8.8 -c 5
     ```
 
     Expected successful output:

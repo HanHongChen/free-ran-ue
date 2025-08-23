@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/util"
@@ -629,7 +630,7 @@ func (u *Ue) waitForRanMessage(ctx context.Context, wg *sync.WaitGroup) {
 			}
 
 			switch string(buffer[:n]) {
-			case util.TUNNEL_UPDATE:
+			case constant.UE_TUNNEL_UPDATE:
 				go u.updateDataPlane()
 			default:
 				u.RanLog.Warnf("Received unknown message from RAN: %+v", buffer[:n])

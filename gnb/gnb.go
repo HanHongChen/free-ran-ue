@@ -15,6 +15,7 @@ import (
 	consoleModel "github.com/Alonza0314/free-ran-ue/console/model"
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/Alonza0314/free-ran-ue/util"
 	"github.com/free5gc/aper"
 	"github.com/free5gc/nas"
@@ -1072,7 +1073,7 @@ func (g *Gnb) processUePduSessionModifyIndication(ranUe *RanUe) error {
 	}
 
 	// send modify message to UE
-	modifyMessage := []byte(util.TUNNEL_UPDATE)
+	modifyMessage := []byte(constant.UE_TUNNEL_UPDATE)
 
 	n, err = ranUe.GetN1Conn().Write(modifyMessage)
 	if err != nil {

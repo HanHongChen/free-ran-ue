@@ -34,13 +34,14 @@ type GnbIE struct {
 	Tai    TaiIE    `yaml:"tai"`
 	Snssai SnssaiIE `yaml:"snssai"`
 
-	StaticNrdc   bool          `yaml:"staticNrdc"`
+	StaticNrdc  bool          `yaml:"staticNrdc"`
 	XnInterface XnInterfaceIE `yaml:"xnInterface"`
 
 	Api ApiIE `yaml:"api"`
 }
 
 type XnInterfaceIE struct {
+	Enable bool   `yaml:"enable"`
 	XnIp   string `yaml:"xnIp"`
 	XnPort int    `yaml:"xnPort"`
 }

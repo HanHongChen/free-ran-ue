@@ -13,9 +13,9 @@ import (
 	"time"
 
 	consoleModel "github.com/Alonza0314/free-ran-ue/console/model"
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
-	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/Alonza0314/free-ran-ue/util"
 	"github.com/free5gc/aper"
 	"github.com/free5gc/nas"
@@ -28,6 +28,7 @@ import (
 )
 
 type xnInterface struct {
+	enable bool
 	xnIp   string
 	xnPort int
 }
@@ -161,6 +162,7 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 
 		staticNrdc: config.Gnb.StaticNrdc,
 		xnInterface: xnInterface{
+			enable: config.Gnb.XnInterface.Enable,
 			xnIp:   config.Gnb.XnInterface.XnIp,
 			xnPort: config.Gnb.XnInterface.XnPort,
 		},
@@ -209,16 +211,18 @@ func (g *Gnb) Start(ctx context.Context) error {
 	}
 	g.startGtpProcessor(ctx)
 
-	if err := g.startXnListener(); err != nil {
-		g.XnLog.Errorf("Error starting XN listener: %v", err)
-		close(g.gtpChannel)
-		if err := g.n3Conn.Close(); err != nil {
-			g.GtpLog.Errorf("Error closing N3 connection: %v", err)
+	if g.xnInterface.enable {
+		if err := g.startXnListener(); err != nil {
+			g.XnLog.Errorf("Error starting XN listener: %v", err)
+			close(g.gtpChannel)
+			if err := g.n3Conn.Close(); err != nil {
+				g.GtpLog.Errorf("Error closing N3 connection: %v", err)
+			}
+			if err := g.n2Conn.Close(); err != nil {
+				g.SctpLog.Errorf("Error closing N2 connection: %v", err)
+			}
+			return err
 		}
-		if err := g.n2Conn.Close(); err != nil {
-			g.SctpLog.Errorf("Error closing N2 connection: %v", err)
-		}
-		return err
 	}
 
 	if err := g.startRanControlPlaneListener(); err != nil {
@@ -257,6 +261,10 @@ func (g *Gnb) Start(ctx context.Context) error {
 	}
 
 	go func() {
+		if !g.xnInterface.enable {
+			return
+		}
+
 		for {
 			conn, err := (*g.xnListener).Accept()
 			if err != nil {
@@ -317,27 +325,31 @@ func (g *Gnb) Stop() {
 	g.RanLog.Debugln("gNB listener stopped")
 	g.RanLog.Tracef("gNB listener stopped at %s:%d", g.ranControlPlaneIp, g.ranControlPlanePort)
 
-	if err := (*g.xnListener).Close(); err != nil {
-		g.XnLog.Errorf("Error closing XN listener: %v", err)
+	if g.xnInterface.enable {
+		if err := (*g.xnListener).Close(); err != nil {
+			g.XnLog.Errorf("Error closing XN listener: %v", err)
+		}
+		g.XnLog.Debugln("XN listener stopped")
+		g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
 	}
-	g.XnLog.Debugln("XN listener stopped")
-	g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
 
 	var wg sync.WaitGroup
-	g.xnUeConns.Range(func(key, value interface{}) bool {
-		wg.Add(1)
-		go func(xnUe *XnUe) {
-			defer wg.Done()
-			if xnUe, ok := key.(*XnUe); ok && xnUe.GetDataPlaneConn() != nil {
-				g.XnLog.Tracef("XN UE %v still in connection", xnUe.GetDataPlaneConn().RemoteAddr())
-				if err := xnUe.GetDataPlaneConn().Close(); err != nil {
-					g.XnLog.Errorf("Error closing XN UE connection: %v", err)
+	if g.xnInterface.enable {
+		g.xnUeConns.Range(func(key, value interface{}) bool {
+			wg.Add(1)
+			go func(xnUe *XnUe) {
+				defer wg.Done()
+				if xnUe, ok := key.(*XnUe); ok && xnUe.GetDataPlaneConn() != nil {
+					g.XnLog.Tracef("XN UE %v still in connection", xnUe.GetDataPlaneConn().RemoteAddr())
+					if err := xnUe.GetDataPlaneConn().Close(); err != nil {
+						g.XnLog.Errorf("Error closing XN UE connection: %v", err)
+					}
+					g.XnLog.Debugf("Closed XN UE connection from: %v", xnUe.GetDataPlaneConn().RemoteAddr())
 				}
-				g.XnLog.Debugf("Closed XN UE connection from: %v", xnUe.GetDataPlaneConn().RemoteAddr())
-			}
-		}(key.(*XnUe))
-		return true
-	})
+			}(key.(*XnUe))
+			return true
+		})
+	}
 	g.ranUeConns.Range(func(key, value interface{}) bool {
 		wg.Add(1)
 		go func(ranUe *RanUe) {

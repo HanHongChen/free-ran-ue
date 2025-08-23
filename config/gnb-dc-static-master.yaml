@@ -38,6 +38,7 @@ gnb:
 
   staticNrdc: true
   xnInterface:
+    enable: true
     xnIp: "10.0.1.3"
     xnPort: 31415
 

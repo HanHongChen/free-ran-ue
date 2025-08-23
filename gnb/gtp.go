@@ -11,18 +11,8 @@ import (
 	"sync"
 
 	"github.com/Alonza0314/free-ran-ue/logger"
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/free5gc/aper"
-)
-
-const (
-	IS_NEXT_EXTENSION_HEADER = 0x04
-	IS_SEQUENCE_NUMBER       = 0x02
-	IS_N_PDU_NUMBER          = 0x01
-
-	NEXT_EXTENSION_HEADER_TYPE_NO_MORE_EXTENSION_HEADERS = 0x00
-
-	NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER        = 0x85
-	NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER_LENGTH = 2
 )
 
 type TeidGenerator struct {
@@ -167,15 +157,15 @@ func parseGtpPacket(gtpPacket []byte) (string, []byte, error) {
 
 	isNextExtensionHeader, isSequenceNumber, isNPDUNumber := false, false, false
 
-	if basicHeader[0]&IS_NEXT_EXTENSION_HEADER != 0 {
+	if basicHeader[0]&constant.IS_NEXT_EXTENSION_HEADER != 0 {
 		isNextExtensionHeader = true
 	}
 
-	if basicHeader[0]&IS_SEQUENCE_NUMBER != 0 {
+	if basicHeader[0]&constant.IS_SEQUENCE_NUMBER != 0 {
 		isSequenceNumber = true
 	}
 
-	if basicHeader[0]&IS_N_PDU_NUMBER != 0 {
+	if basicHeader[0]&constant.IS_N_PDU_NUMBER != 0 {
 		isNPDUNumber = true
 	}
 
@@ -189,12 +179,12 @@ func parseGtpPacket(gtpPacket []byte) (string, []byte, error) {
 
 	for {
 		switch gtpPacket[headerLength] {
-		case NEXT_EXTENSION_HEADER_TYPE_NO_MORE_EXTENSION_HEADERS:
+		case constant.NEXT_EXTENSION_HEADER_TYPE_NO_MORE_EXTENSION_HEADERS:
 			headerLength += 1
 			return hex.EncodeToString(basicHeader[4:]), gtpPacket[headerLength:], nil
-		case NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER:
+		case constant.NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER:
 			extensionHeaderLength := gtpPacket[headerLength+1]
-			headerLength += 2 + int(extensionHeaderLength)*NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER_LENGTH
+			headerLength += 2 + int(extensionHeaderLength)*constant.NEXT_EXTENSION_HEADER_TYPE_PDU_SESSION_CONTAINER_LENGTH
 		default:
 			return "", nil, fmt.Errorf("unknown GTP extension header type: %d", gtpPacket[headerLength])
 		}

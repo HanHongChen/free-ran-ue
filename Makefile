@@ -1,4 +1,4 @@
-.PHONY: all bin console ns-up ns-down ns-ran ns-ue dc-ns-up dc-ns-down dc-ns-mran dc-ns-sran dc-ns-ue dci-ns-up dci-ns-down dci-ns-mran dci-ns-sran dci-ns-ue dci-ns-iperf-a dci-ns-iperf-b
+.PHONY: all bin console console-init ns-up ns-down ns-ran ns-ue dc-ns-up dc-ns-down dc-ns-mran dc-ns-sran dc-ns-ue dci-ns-up dci-ns-down dci-ns-mran dci-ns-sran dci-ns-ue dci-ns-iperf-a dci-ns-iperf-b
 
 .DEFAULT_GOAL := bin
 
@@ -11,6 +11,12 @@ bin:
 # Build the console
 console:
 	cd console/frontend && yarn build
+	mkdir -p build/console
+	cp -r console/frontend/dist/* build/console/
+	rm -rf console/frontend/dist
+
+console-init:
+	cd console/frontend && yarn install && yarn build
 	mkdir -p build/console
 	cp -r console/frontend/dist/* build/console/
 	rm -rf console/frontend/dist

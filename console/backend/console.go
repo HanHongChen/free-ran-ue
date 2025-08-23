@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/util"
@@ -51,7 +52,7 @@ func NewConsole(config *model.ConsoleConfig, logger *logger.ConsoleLogger) *cons
 		ConsoleLogger: logger,
 	}
 
-	c.router = util.NewGinRouter(util.CONSOLE_API_PREFIX, c.initRoutes())
+	c.router = util.NewGinRouter(constant.API_PREFIX_CONSOLE, c.initRoutes())
 
 	c.router.NoRoute(c.returnPages())
 	return c

@@ -12,7 +12,7 @@ import SuccessBox from '../components/successBox/successBox'
 
 export default function Gnb() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const { gnbList, removeGnb, addGnb } = useGnb()
+  const { gnbList, removeGnb, addGnb, setGnbStatus } = useGnb()
   const { errors, successes, addError, addSuccess, removeNotification } = useNotifications()
   const navigate = useNavigate()
 
@@ -41,6 +41,8 @@ export default function Gnb() {
             navigate('/login')
           }, 2000)
           return
+        } else {
+          setGnbStatus(gnb.gnbInfo?.gnbId || '', 'offline')
         }
       }
     }
@@ -89,9 +91,9 @@ export default function Gnb() {
                   <tr key={gnb.gnbInfo?.gnbId}>
                     <td>{index + 1}</td>
                     <td>
-                      <span className={`${styles.status} ${styles.statusActive}`}>
-                        Active
-                      </span>
+                    <span className={`${styles.status} ${gnb.status === 'online' ? styles.statusOnline : styles.statusOffline}`}>
+                      {gnb.status === 'online' ? 'Online' : 'Offline'}
+                    </span>
                     </td>
                     <td>{gnb.gnbInfo?.gnbName}</td>
                     <td>

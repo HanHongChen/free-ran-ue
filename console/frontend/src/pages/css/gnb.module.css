@@ -33,6 +33,12 @@
   letter-spacing: -0.025em;
 }
 
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .list {
   background: white;
   border-radius: 12px;
@@ -70,12 +76,12 @@
   font-weight: 500;
 }
 
-.statusActive {
+.statusOnline {
   background-color: #dcfce7;
   color: #166534;
 }
 
-.statusInactive {
+.statusOffline {
   background-color: #fee2e2;
   color: #991b1b;
 }

@@ -45,7 +45,6 @@ type authenticationSubscription struct {
 }
 
 type pduSession struct {
-	pduSessionId uint8
 	dnn          string
 	sNssai       *models.Snssai
 }
@@ -166,7 +165,6 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 		},
 
 		pduSession: pduSession{
-			pduSessionId: config.Ue.PduSession.PduSessionId,
 			dnn:          config.Ue.PduSession.Dnn,
 			sNssai: &models.Snssai{
 				Sst: int32(sstInt),
@@ -465,13 +463,13 @@ func (u *Ue) processPduSessionEstablishment() error {
 	u.PduLog.Infoln("Processing PDU session establishment")
 
 	// send pdu session establishment request
-	pduSessionEstablishmentRequest, err := getPduSessionEstablishmentRequest(u.pduSession.pduSessionId)
+	pduSessionEstablishmentRequest, err := getPduSessionEstablishmentRequest(constant.PDU_SESSION_ID)
 	if err != nil {
 		return fmt.Errorf("error get pdu session establishment request: %+v", err)
 	}
 	u.NasLog.Tracef("PDU session establishment request: %+v", pduSessionEstablishmentRequest)
 
-	ulNasTransportPduSessionEstablishmentRequest, err := getUlNasTransportMessage(pduSessionEstablishmentRequest, u.pduSession.pduSessionId, nasMessage.ULNASTransportRequestTypeInitialRequest, u.pduSession.dnn, u.pduSession.sNssai)
+	ulNasTransportPduSessionEstablishmentRequest, err := getUlNasTransportMessage(pduSessionEstablishmentRequest, constant.PDU_SESSION_ID, nasMessage.ULNASTransportRequestTypeInitialRequest, u.pduSession.dnn, u.pduSession.sNssai)
 	if err != nil {
 		return fmt.Errorf("error get ul nas transport pdu session establishment request: %+v", err)
 	}

@@ -983,7 +983,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	}
 	g.NgapLog.Tracef("Get pdu session resource setup response transfer: %+v", ngapPduSessionResourceSetupResponseTransfer)
 
-	ngapPduSessionResourceSetupResponse, err := getPduSessionResourceSetupResponse(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), 4, ngapPduSessionResourceSetupResponseTransfer)
+	ngapPduSessionResourceSetupResponse, err := getPduSessionResourceSetupResponse(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), constant.PDU_SESSION_ID, ngapPduSessionResourceSetupResponseTransfer)
 	if err != nil {
 		return fmt.Errorf("error get pdu session resource setup response: %v", err)
 	}
@@ -1010,7 +1010,7 @@ func (g *Gnb) processUePduSessionModifyIndication(ranUe *RanUe) error {
 	g.NgapLog.Tracef("Get pdu session modify indication transfer: %+v", pduSessionModifyIndicationTransfer)
 
 	// send ngap pdu session resource modify indication to AMF
-	pduSessionModifyIndication, err := getPDUSessionResourceModifyIndication(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), 4, pduSessionModifyIndicationTransfer)
+	pduSessionModifyIndication, err := getPDUSessionResourceModifyIndication(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), constant.PDU_SESSION_ID, pduSessionModifyIndicationTransfer)
 	if err != nil {
 		return fmt.Errorf("error get pdu session modify indication: %v", err)
 	}
@@ -1175,7 +1175,7 @@ func (g *Gnb) processUeDeRegistration(ranUe *RanUe) error {
 	g.NgapLog.Debugln("Receive NGAP UE Context Release Command from AMF")
 
 	// send ngap ue context release complete to AMF
-	ngapUeContextReleaseCompleteMessage, err := getNgapUeContextReleaseCompleteMessage(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), []int64{4}, g.plmnId, g.tai)
+	ngapUeContextReleaseCompleteMessage, err := getNgapUeContextReleaseCompleteMessage(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), []int64{constant.PDU_SESSION_ID}, g.plmnId, g.tai)
 	if err != nil {
 		return fmt.Errorf("error get ngap ue context release complete message: %v", err)
 	}

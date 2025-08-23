@@ -73,7 +73,7 @@
     - `free-ran-ue/config/gnb-dc-static-master.yaml`
     - `free-ran-ue/config/gnb-dc-static-secondary.yaml`
 
-    Ensure that the information matches your core network settings. For core network settings, please refer to: [Start free5GC](01-start-free5gc.md)
+    Ensure that the information matches your core network settings. For core network settings, please refer to: [Start free5GC](01-free5gc.md)
 
     Please also pay attention to the `xnIp` and `xnPort` field, as these will be used for the Xn-interface between the gNBs.
 

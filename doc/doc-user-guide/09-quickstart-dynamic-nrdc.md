@@ -184,6 +184,33 @@ The configuration file `config/ue-dc-dynamic.yaml` has already been set up with 
     ./build/free-ran-ue console -c config/console.yaml
     ```
 
+3. Add gNB
+
+    - Sign in the console:
+
+        - username: `admin`
+        - password: `free-ran-ue`
+
+        ![free-ran-ue-console-login](../image/free-ran-ue-console-login.png)
+
+    - Add gNB-master and gNB-secondary:
+
+        - gNB-master
+
+            - IP Address: `10.0.1.2`
+            - Port: `40104`
+
+        - gNB-secondary
+
+            - IP Address: `10.0.1.3`
+            - Port: `40104`
+
+        ![free-ran-ue-gNB-add](../image/free-ran-ue-gNB-add.png)
+
+    - Check add success:
+
+        ![free-ran-ue-gNBs](../image/free-ran-ue-gNBs.png)
+
 ## G. ICMP Test
 
 1. Enter the UE-namespace (under `free-ran-ue`)
@@ -257,13 +284,17 @@ The configuration file `config/ue-dc-dynamic.yaml` has already been set up with 
 
 4. Use console to start DC:
 
-    1. Enter gNB's information page:
+    1. Enter gNB-master's information page:
 
         ![free-ran-ue-gNB-info-non-dc](../image/free-ran-ue-gNB-info-non-dc.png)
 
     2. Turn on the DC of UE:
 
         ![free-ran-ue-gNB-info-dc](../image/free-ran-ue-gNB-info-dc.png)
+
+    3. Check XnUE exist in gNB-secondary:
+
+        ![free-ran-ue-gNB-xnue](../image/free-ran-ue-gNB-xnue.png)
 
 5. After DC enabled:
 

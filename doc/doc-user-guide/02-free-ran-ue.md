@@ -6,7 +6,7 @@
 > There are two options for deployment:
 >
 > - Use two separate machines.
-> - Use namespace separation. For details, please refer to [Quick Start](03-free-ran-ue-with-namespace.md).
+> - Use namespace separation. For details, please refer to [Quick Start](03-quickstart-free-ran-ue.md).
 
 ## A. Prerequisites
 
@@ -68,7 +68,7 @@
 
     The configuration `YAML` file template is located at `free-ran-ue/config/gnb.yaml`.
 
-    Ensure that the information matches your core network settings. For core network settings, please refer to: [Start free5GC](01-start-free5gc.md)
+    Ensure that the information matches your core network settings. For core network settings, please refer to: [Start free5GC](01-free5gc.md)
 
 - Start gNB:
 

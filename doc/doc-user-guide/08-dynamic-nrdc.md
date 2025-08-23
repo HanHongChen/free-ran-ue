@@ -94,7 +94,7 @@
     - `free-ran-ue/config/gnb-dc-dynamic-master.yaml`
     - `free-ran-ue/config/gnb-dc-dynamic-secondary.yaml`
 
-    Ensure that the information matches your core network settings. For core network settings, please refer to: [Start free5GC](01-start-free5gc.md)
+    Ensure that the information matches your core network settings. For core network settings, please refer to: [Start free5GC](01-free5gc.md)
 
     Please also pay attention to the `xnIp` and `xnPort` field, as these will be used for the Xn-interface between the gNBs.
 
@@ -159,6 +159,23 @@
     ```bash
     ./build/free-ran-ue console -c config/console.yaml
     ```
+
+    - Sign in console:
+
+        - username: `admin`
+        - password: `free-ran-ue`
+
+        ![free-ran-ue-console-login](../image/free-ran-ue-console-login.png)
+
+    - Add gNB:
+
+        Enter the gNB page:
+
+        ![free-ran-ue-gNB](../image/free-ran-ue-gNB.png)
+
+        Click the `Add gNB` button and enter the target gNB's API IP and port based the configuration file:
+
+        ![free-ran-ue-gNB-add](../image/free-ran-ue-gNB-add.png)
 
 ## F. ICMP Test
 
@@ -227,7 +244,7 @@ ueTun0: flags=4305<UP,POINTOPOINT,RUNNING,NOARP,MULTICAST>  mtu 1500
 
 - Use console to start DC:
 
-    1. Enter gNB's information page:
+    1. Enter master gNB's information page:
 
         ![free-ran-ue-gNB-info-non-dc](../image/free-ran-ue-gNB-info-non-dc.png)
 

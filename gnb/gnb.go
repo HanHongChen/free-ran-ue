@@ -64,8 +64,6 @@ type Gnb struct {
 	n2Conn *sctp.SCTPConn
 	n3Conn *net.UDPConn
 
-	ngapPpid uint32
-
 	gnbId   []byte
 	gnbName string
 
@@ -153,8 +151,6 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		ranControlPlanePort: config.Gnb.RanControlPlanePort,
 		ranDataPlanePort:    config.Gnb.RanDataPlanePort,
 		xnPort:              config.Gnb.XnPort,
-
-		ngapPpid: config.Gnb.NgapPpid,
 
 		gnbId:   gnbId,
 		gnbName: config.Gnb.GnbName,
@@ -400,7 +396,7 @@ func (g *Gnb) connectToAmf() error {
 	}
 	g.SctpLog.Tracef("N2 connection default sent param: %+v", info)
 
-	info.PPID = g.ngapPpid
+	info.PPID = constant.NGAP_PPID
 	if err := conn.SetDefaultSentParam(info); err != nil {
 		return fmt.Errorf("error setting default sent param: %v", err)
 	}

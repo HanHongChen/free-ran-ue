@@ -26,8 +26,6 @@ type GnbIE struct {
 
 	XnPort int `yaml:"xnPort"`
 
-	NgapPpid uint32 `yaml:"ngapPpid"`
-
 	GnbId   string `yaml:"gnbId"`
 	GnbName string `yaml:"gnbName"`
 

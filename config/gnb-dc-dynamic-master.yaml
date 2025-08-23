@@ -19,8 +19,6 @@ gnb:
 
   xnPort: 31415
 
-  ngapPpid: 0x3c000000
-
   gnbId: "000314"
   gnbName: "gNB-master"
 

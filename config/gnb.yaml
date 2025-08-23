@@ -15,8 +15,6 @@ gnb:
   ranControlPlanePort: 31413
   ranDataPlanePort: 31414
 
-  ngapPpid: 0x3c000000
-
   gnbId: "000314"
   gnbName: "gNB"
 

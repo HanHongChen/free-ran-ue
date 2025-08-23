@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/Alonza0314/free-ran-ue/constant"
 	loggergo "github.com/Alonza0314/logger-go/v2"
 	loggergoModel "github.com/Alonza0314/logger-go/v2/model"
 	loggergoUtil "github.com/Alonza0314/logger-go/v2/util"
@@ -26,13 +27,13 @@ func NewGnbLogger(level loggergoUtil.LogLevelString, filePath string, debugMode 
 	return GnbLogger{
 		Logger: logger,
 
-		CfgLog:  logger.WithTags(GNB_TAG, CONFIG_TAG),
-		RanLog:  logger.WithTags(GNB_TAG, RAN_TAG),
-		SctpLog: logger.WithTags(GNB_TAG, SCTP_TAG),
-		NgapLog: logger.WithTags(GNB_TAG, NGAP_TAG),
-		NasLog:  logger.WithTags(GNB_TAG, NAS_TAG),
-		GtpLog:  logger.WithTags(GNB_TAG, GTP_TAG),
-		XnLog:   logger.WithTags(GNB_TAG, XN_TAG),
-		ApiLog:  logger.WithTags(GNB_TAG, API_TAG),
+		CfgLog:  logger.WithTags(constant.GNB_TAG, constant.CONFIG_TAG),
+		RanLog:  logger.WithTags(constant.GNB_TAG, constant.RAN_TAG),
+		SctpLog: logger.WithTags(constant.GNB_TAG, constant.SCTP_TAG),
+		NgapLog: logger.WithTags(constant.GNB_TAG, constant.NGAP_TAG),
+		NasLog:  logger.WithTags(constant.GNB_TAG, constant.NAS_TAG),
+		GtpLog:  logger.WithTags(constant.GNB_TAG, constant.GTP_TAG),
+		XnLog:   logger.WithTags(constant.GNB_TAG, constant.XN_TAG),
+		ApiLog:  logger.WithTags(constant.GNB_TAG, constant.API_TAG),
 	}
 }

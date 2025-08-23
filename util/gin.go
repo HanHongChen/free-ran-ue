@@ -3,15 +3,8 @@ package util
 import (
 	"net/http"
 
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/gin-gonic/gin"
-)
-
-type API_PREFIX string
-
-const (
-	GNB_API_PREFIX     API_PREFIX = "/api/gnb"
-	UE_API_PREFIX      API_PREFIX = "/api/ue"
-	CONSOLE_API_PREFIX API_PREFIX = "/api/console"
 )
 
 type Route struct {
@@ -23,7 +16,7 @@ type Route struct {
 
 type Routes []Route
 
-func NewGinRouter(apiPrefix API_PREFIX, routes Routes) *gin.Engine {
+func NewGinRouter(apiPrefix constant.API_PREFIX, routes Routes) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()

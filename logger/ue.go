@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/Alonza0314/free-ran-ue/constant"
 	loggergo "github.com/Alonza0314/logger-go/v2"
 	loggergoModel "github.com/Alonza0314/logger-go/v2/model"
 	loggergoUtil "github.com/Alonza0314/logger-go/v2/util"
@@ -24,11 +25,11 @@ func NewUeLogger(level loggergoUtil.LogLevelString, filePath string, debugMode b
 	return UeLogger{
 		Logger: logger,
 
-		CfgLog: logger.WithTags(UE_TAG, CONFIG_TAG),
-		UeLog:  logger.WithTags(UE_TAG, UE_TAG),
-		RanLog: logger.WithTags(UE_TAG, RAN_TAG),
-		NasLog: logger.WithTags(UE_TAG, NAS_TAG),
-		PduLog: logger.WithTags(UE_TAG, PDU_TAG),
-		TunLog: logger.WithTags(UE_TAG, TUN_TAG),
+		CfgLog: logger.WithTags(constant.UE_TAG, constant.CONFIG_TAG),
+		UeLog:  logger.WithTags(constant.UE_TAG, constant.UE_TAG),
+		RanLog: logger.WithTags(constant.UE_TAG, constant.RAN_TAG),
+		NasLog: logger.WithTags(constant.UE_TAG, constant.NAS_TAG),
+		PduLog: logger.WithTags(constant.UE_TAG, constant.PDU_TAG),
+		TunLog: logger.WithTags(constant.UE_TAG, constant.TUN_TAG),
 	}
 }

@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/Alonza0314/free-ran-ue/constant"
 	loggergo "github.com/Alonza0314/logger-go/v2"
 	loggergoModel "github.com/Alonza0314/logger-go/v2/model"
 	loggergoUtil "github.com/Alonza0314/logger-go/v2/util"
@@ -24,11 +25,11 @@ func NewConsoleLogger(level loggergoUtil.LogLevelString, filePath string, debugM
 	return ConsoleLogger{
 		Logger: logger,
 
-		CfgLog:     logger.WithTags(CSL_TAG, CONFIG_TAG),
-		ConsoleLog: logger.WithTags(CSL_TAG, CONSOLE_TAG),
-		LoginLog:   logger.WithTags(CSL_TAG, LOGIN_TAG),
-		LogoutLog:  logger.WithTags(CSL_TAG, LOGOUT_TAG),
-		AuthLog:    logger.WithTags(CSL_TAG, AUTH_TAG),
-		GnbLog:     logger.WithTags(CSL_TAG, GNB_TAG),
+		CfgLog:     logger.WithTags(constant.CSL_TAG, constant.CONFIG_TAG),
+		ConsoleLog: logger.WithTags(constant.CSL_TAG, constant.CONSOLE_TAG),
+		LoginLog:   logger.WithTags(constant.CSL_TAG, constant.LOGIN_TAG),
+		LogoutLog:  logger.WithTags(constant.CSL_TAG, constant.LOGOUT_TAG),
+		AuthLog:    logger.WithTags(constant.CSL_TAG, constant.AUTH_TAG),
+		GnbLog:     logger.WithTags(constant.CSL_TAG, constant.GNB_TAG),
 	}
 }

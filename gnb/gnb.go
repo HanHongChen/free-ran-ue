@@ -1353,7 +1353,7 @@ func (g *Gnb) xnPduSessionResourceModifyConfirm(imsi string, ngapPduSessionResou
 func (g *Gnb) startApiServer() {
 	g.ApiLog.Infoln("Starting API server")
 
-	g.api.router = util.NewGinRouter(util.GNB_API_PREFIX, g.initApiRoutes())
+	g.api.router = util.NewGinRouter(constant.API_PREFIX_GNB, g.initApiRoutes())
 
 	g.api.server = &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", g.api.ip, g.api.port),

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 
 	"github.com/Alonza0314/free-ran-ue/console/model"
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/Alonza0314/free-ran-ue/util"
 	"github.com/gin-gonic/gin"
 )
@@ -32,9 +33,9 @@ func (cs *console) handleConsoleGnbInfo(c *gin.Context) {
 		return
 	}
 
-	uri := fmt.Sprintf("http://%s:%d%s", request.Ip, request.Port, API_GNB_INFO)
+	uri := fmt.Sprintf("http://%s:%d%s", request.Ip, request.Port, constant.API_GNB_INFO)
 
-	response, err := util.SendHttpRequest(uri, API_GNB_INFO_METHOD, nil, nil)
+	response, err := util.SendHttpRequest(uri, constant.API_GNB_INFO_METHOD, nil, nil)
 	if err != nil {
 		cs.GnbLog.Warnln(err)
 		c.JSON(http.StatusInternalServerError, model.ConsoleGnbInfoResponse{
@@ -49,7 +50,7 @@ func (cs *console) handleConsoleGnbInfo(c *gin.Context) {
 		}
 	}
 
-	c.Data(response.StatusCode, APPLICATION_JSON, response.Body)
+	c.Data(response.StatusCode, constant.APPLICATION_JSON, response.Body)
 }
 
 func (cs *console) handleConsoleGnbUeNrdcModify(c *gin.Context) {
@@ -81,9 +82,9 @@ func (cs *console) handleConsoleGnbUeNrdcModify(c *gin.Context) {
 		return
 	}
 
-	uri := fmt.Sprintf("http://%s:%d%s", request.Ip, request.Port, API_GNB_UE_NRDC_MODIFY)
+	uri := fmt.Sprintf("http://%s:%d%s", request.Ip, request.Port, constant.API_GNB_UE_NRDC_MODIFY)
 
-	response, err := util.SendHttpRequest(uri, API_GNB_UE_NRDC_MODIFY_METHOD, nil, rawBody)
+	response, err := util.SendHttpRequest(uri, constant.API_GNB_UE_NRDC_MODIFY_METHOD, nil, rawBody)
 	if err != nil {
 		cs.GnbLog.Warnln(err)
 		c.JSON(http.StatusInternalServerError, model.ConsoleGnbUeNrdcModifyResponse{
@@ -98,5 +99,5 @@ func (cs *console) handleConsoleGnbUeNrdcModify(c *gin.Context) {
 		}
 	}
 
-	c.Data(response.StatusCode, APPLICATION_JSON, response.Body)
+	c.Data(response.StatusCode, constant.APPLICATION_JSON, response.Body)
 }

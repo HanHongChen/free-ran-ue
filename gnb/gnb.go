@@ -13,6 +13,7 @@ import (
 	"time"
 
 	consoleModel "github.com/Alonza0314/free-ran-ue/console/model"
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/util"
@@ -27,6 +28,7 @@ import (
 )
 
 type xnInterface struct {
+	enable bool
 	xnIp   string
 	xnPort int
 }
@@ -62,8 +64,6 @@ type Gnb struct {
 
 	n2Conn *sctp.SCTPConn
 	n3Conn *net.UDPConn
-
-	ngapPpid uint32
 
 	gnbId   []byte
 	gnbName string
@@ -153,8 +153,6 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		ranDataPlanePort:    config.Gnb.RanDataPlanePort,
 		xnPort:              config.Gnb.XnPort,
 
-		ngapPpid: config.Gnb.NgapPpid,
-
 		gnbId:   gnbId,
 		gnbName: config.Gnb.GnbName,
 
@@ -164,6 +162,7 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 
 		staticNrdc: config.Gnb.StaticNrdc,
 		xnInterface: xnInterface{
+			enable: config.Gnb.XnInterface.Enable,
 			xnIp:   config.Gnb.XnInterface.XnIp,
 			xnPort: config.Gnb.XnInterface.XnPort,
 		},
@@ -212,16 +211,18 @@ func (g *Gnb) Start(ctx context.Context) error {
 	}
 	g.startGtpProcessor(ctx)
 
-	if err := g.startXnListener(); err != nil {
-		g.XnLog.Errorf("Error starting XN listener: %v", err)
-		close(g.gtpChannel)
-		if err := g.n3Conn.Close(); err != nil {
-			g.GtpLog.Errorf("Error closing N3 connection: %v", err)
+	if g.xnInterface.enable {
+		if err := g.startXnListener(); err != nil {
+			g.XnLog.Errorf("Error starting XN listener: %v", err)
+			close(g.gtpChannel)
+			if err := g.n3Conn.Close(); err != nil {
+				g.GtpLog.Errorf("Error closing N3 connection: %v", err)
+			}
+			if err := g.n2Conn.Close(); err != nil {
+				g.SctpLog.Errorf("Error closing N2 connection: %v", err)
+			}
+			return err
 		}
-		if err := g.n2Conn.Close(); err != nil {
-			g.SctpLog.Errorf("Error closing N2 connection: %v", err)
-		}
-		return err
 	}
 
 	if err := g.startRanControlPlaneListener(); err != nil {
@@ -260,6 +261,10 @@ func (g *Gnb) Start(ctx context.Context) error {
 	}
 
 	go func() {
+		if !g.xnInterface.enable {
+			return
+		}
+
 		for {
 			conn, err := (*g.xnListener).Accept()
 			if err != nil {
@@ -320,27 +325,31 @@ func (g *Gnb) Stop() {
 	g.RanLog.Debugln("gNB listener stopped")
 	g.RanLog.Tracef("gNB listener stopped at %s:%d", g.ranControlPlaneIp, g.ranControlPlanePort)
 
-	if err := (*g.xnListener).Close(); err != nil {
-		g.XnLog.Errorf("Error closing XN listener: %v", err)
+	if g.xnInterface.enable {
+		if err := (*g.xnListener).Close(); err != nil {
+			g.XnLog.Errorf("Error closing XN listener: %v", err)
+		}
+		g.XnLog.Debugln("XN listener stopped")
+		g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
 	}
-	g.XnLog.Debugln("XN listener stopped")
-	g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
 
 	var wg sync.WaitGroup
-	g.xnUeConns.Range(func(key, value interface{}) bool {
-		wg.Add(1)
-		go func(xnUe *XnUe) {
-			defer wg.Done()
-			if xnUe, ok := key.(*XnUe); ok && xnUe.GetDataPlaneConn() != nil {
-				g.XnLog.Tracef("XN UE %v still in connection", xnUe.GetDataPlaneConn().RemoteAddr())
-				if err := xnUe.GetDataPlaneConn().Close(); err != nil {
-					g.XnLog.Errorf("Error closing XN UE connection: %v", err)
+	if g.xnInterface.enable {
+		g.xnUeConns.Range(func(key, value interface{}) bool {
+			wg.Add(1)
+			go func(xnUe *XnUe) {
+				defer wg.Done()
+				if xnUe, ok := key.(*XnUe); ok && xnUe.GetDataPlaneConn() != nil {
+					g.XnLog.Tracef("XN UE %v still in connection", xnUe.GetDataPlaneConn().RemoteAddr())
+					if err := xnUe.GetDataPlaneConn().Close(); err != nil {
+						g.XnLog.Errorf("Error closing XN UE connection: %v", err)
+					}
+					g.XnLog.Debugf("Closed XN UE connection from: %v", xnUe.GetDataPlaneConn().RemoteAddr())
 				}
-				g.XnLog.Debugf("Closed XN UE connection from: %v", xnUe.GetDataPlaneConn().RemoteAddr())
-			}
-		}(key.(*XnUe))
-		return true
-	})
+			}(key.(*XnUe))
+			return true
+		})
+	}
 	g.ranUeConns.Range(func(key, value interface{}) bool {
 		wg.Add(1)
 		go func(ranUe *RanUe) {
@@ -399,7 +408,7 @@ func (g *Gnb) connectToAmf() error {
 	}
 	g.SctpLog.Tracef("N2 connection default sent param: %+v", info)
 
-	info.PPID = g.ngapPpid
+	info.PPID = constant.NGAP_PPID
 	if err := conn.SetDefaultSentParam(info); err != nil {
 		return fmt.Errorf("error setting default sent param: %v", err)
 	}
@@ -986,7 +995,7 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	}
 	g.NgapLog.Tracef("Get pdu session resource setup response transfer: %+v", ngapPduSessionResourceSetupResponseTransfer)
 
-	ngapPduSessionResourceSetupResponse, err := getPduSessionResourceSetupResponse(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), 4, ngapPduSessionResourceSetupResponseTransfer)
+	ngapPduSessionResourceSetupResponse, err := getPduSessionResourceSetupResponse(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), constant.PDU_SESSION_ID, ngapPduSessionResourceSetupResponseTransfer)
 	if err != nil {
 		return fmt.Errorf("error get pdu session resource setup response: %v", err)
 	}
@@ -1013,7 +1022,7 @@ func (g *Gnb) processUePduSessionModifyIndication(ranUe *RanUe) error {
 	g.NgapLog.Tracef("Get pdu session modify indication transfer: %+v", pduSessionModifyIndicationTransfer)
 
 	// send ngap pdu session resource modify indication to AMF
-	pduSessionModifyIndication, err := getPDUSessionResourceModifyIndication(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), 4, pduSessionModifyIndicationTransfer)
+	pduSessionModifyIndication, err := getPDUSessionResourceModifyIndication(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), constant.PDU_SESSION_ID, pduSessionModifyIndicationTransfer)
 	if err != nil {
 		return fmt.Errorf("error get pdu session modify indication: %v", err)
 	}
@@ -1072,7 +1081,7 @@ func (g *Gnb) processUePduSessionModifyIndication(ranUe *RanUe) error {
 	}
 
 	// send modify message to UE
-	modifyMessage := []byte(util.TUNNEL_UPDATE)
+	modifyMessage := []byte(constant.UE_TUNNEL_UPDATE)
 
 	n, err = ranUe.GetN1Conn().Write(modifyMessage)
 	if err != nil {
@@ -1178,7 +1187,7 @@ func (g *Gnb) processUeDeRegistration(ranUe *RanUe) error {
 	g.NgapLog.Debugln("Receive NGAP UE Context Release Command from AMF")
 
 	// send ngap ue context release complete to AMF
-	ngapUeContextReleaseCompleteMessage, err := getNgapUeContextReleaseCompleteMessage(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), []int64{4}, g.plmnId, g.tai)
+	ngapUeContextReleaseCompleteMessage, err := getNgapUeContextReleaseCompleteMessage(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), []int64{constant.PDU_SESSION_ID}, g.plmnId, g.tai)
 	if err != nil {
 		return fmt.Errorf("error get ngap ue context release complete message: %v", err)
 	}

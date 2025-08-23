@@ -52,7 +52,6 @@ type CipheringAlgorithmIE struct {
 }
 
 type PduSessionIE struct {
-	PduSessionId uint8    `yaml:"pduSessionId"`
 	Dnn          string   `yaml:"dnn"`
 	Snssai       SnssaiIE `yaml:"snssai"`
 }

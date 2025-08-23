@@ -28,7 +28,6 @@ ue:
     nea3: false
 
   pduSession:
-    pduSessionId: 4
     dnn: "internet"
     snssai:
       sst: "1"

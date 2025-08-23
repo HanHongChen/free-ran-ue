@@ -18,7 +18,7 @@ If gNB get the signal to modify the UE's tunnel, it will iinteract with secondar
     2. Encapsulate into `PDUSessionResourceModifyIndication` NGAP message.
 
         ```go
-        pduSessionModifyIndication, err := getPDUSessionResourceModifyIndication(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), 4, pduSessionModifyIndicationTransfer)
+        pduSessionModifyIndication, err := getPDUSessionResourceModifyIndication(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), constant.PDU_SESSION_ID, pduSessionModifyIndicationTransfer)
         ```
 
     3. Interact with secondary gNB.

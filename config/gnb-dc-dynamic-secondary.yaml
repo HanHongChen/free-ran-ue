@@ -19,8 +19,6 @@ gnb:
 
   xnPort: 31415
 
-  ngapPpid: 0x3c000000
-
   gnbId: "314314"
   gnbName: "gNB-secondary"
 
@@ -40,6 +38,7 @@ gnb:
 
   staticNrdc: false
   xnInterface:
+    enable: true
     xnIp: "10.0.1.2"
     xnPort: 31415
 

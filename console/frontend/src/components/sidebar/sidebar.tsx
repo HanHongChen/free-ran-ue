@@ -1,12 +1,24 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import styles from './sidebar.module.css'
+import { consoleApi } from '../../apiCfg'
 
 export default function Sidebar() {
+  const navigate = useNavigate()
   const navItems = [
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/gnb', label: 'gNB' },
     { path: '/ue', label: 'UE' },
   ]
+  
+  const handleLogout = async () => {
+    try {
+      await consoleApi.apiConsoleLogoutDelete()
+    } finally {
+      localStorage.removeItem('token')
+      localStorage.removeItem('gnbList')
+      navigate('/login')
+    }
+  }
 
   return (
     <aside className={styles.sidebar}>
@@ -26,6 +38,9 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      <div className={styles.footer}>
+        <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
+      </div>
     </aside>
   )
 }

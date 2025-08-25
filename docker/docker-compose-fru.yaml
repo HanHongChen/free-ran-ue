@@ -1,5 +1,0 @@
-services:
-  free-ran-ue:
-    container_name: free-ran-ue
-    image: free-ran-ue:latest
-    command: ["tail", "-f", "/dev/null"]

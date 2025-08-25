@@ -2,6 +2,12 @@
 
 ![free-ran-ue](/doc/image/free-ran-ue.jpg)
 
+<p align="center">
+<a href="https://github.com/Alonza0314/free-ran-ue/releases"><img src="https://img.shields.io/github/v/release/Alonza0314/free-ran-ue?color=orange" alt="Release"/></a>
+<a href="https://github.com/Alonza0314/free-ran-ue/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Alonza0314/free-ran-ue?color=blue" alt="License"/></a>
+<a href="https://www.codefactor.io/repository/github/Alonza0314/free-ran-ue"><img src="https://www.codefactor.io/repository/github/Alonza0314/free-ran-ue/badge" alt="CodeFactor"/></a>
+</p>
+
 ## Introduction
 
 free-ran-ue is a tool designed to simulate interactions between the core network and RAN/UE. Its primary goal is to provide a practical platform for testing the [NR-DC(New Radio Dual Connectivity)](https://free5gc.org/blog/20250219/20250219/) feature.

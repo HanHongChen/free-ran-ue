@@ -212,7 +212,7 @@ services:
     expose:
       - "2121"
     volumes:
-      - ./config/webconsolecfg.yaml:/free5gc/config/webconsolecfg.yaml
+      - ./config/free5gc-consolecfg.yaml:/free5gc/config/webconsolecfg.yaml
     environment:
       - GIN_MODE=release
     networks:

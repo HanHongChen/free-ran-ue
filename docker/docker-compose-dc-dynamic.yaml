@@ -206,7 +206,7 @@ services:
           - n3.free5gc.org
 
   webconsole:
-    container_name: webconsole
+    container_name: free5gc-console
     image: free5gc/webui:latest
     command: ./webui -c ./config/webconsolecfg.yaml
     expose:
@@ -232,12 +232,14 @@ services:
     image: free-ran-ue:latest
     command: ./free-ran-ue gnb -c gnbcfg.yaml
     volumes:
-      - ./config/gnbcfg-dc-static-master.yaml:/free-ran-ue/gnbcfg.yaml
+      - ./config/gnbcfg-dc-dynamic-master.yaml:/free-ran-ue/gnbcfg.yaml
     networks:
       cn-rans:
         ipv4_address: 10.0.1.2
       mran-ue:
         ipv4_address: 10.0.2.3
+      console-rans:
+        ipv4_address: 10.0.4.3
     depends_on:
       - amf
       - ausf
@@ -255,12 +257,14 @@ services:
     image: free-ran-ue:latest
     command: ./free-ran-ue gnb -c gnbcfg.yaml
     volumes:
-      - ./config/gnbcfg-dc-static-secondary.yaml:/free-ran-ue/gnbcfg.yaml
+      - ./config/gnbcfg-dc-dynamic-secondary.yaml:/free-ran-ue/gnbcfg.yaml
     networks:
       cn-rans:
         ipv4_address: 10.0.1.4
       sran-ue:
         ipv4_address: 10.0.3.3
+      console-rans:
+        ipv4_address: 10.0.4.5
     depends_on:
       - amf
       - ausf
@@ -278,7 +282,7 @@ services:
     image: free-ran-ue:latest
     command: ["tail", "-f", "/dev/null"]
     volumes:
-      - ./config/uecfg-dc-static.yaml:/free-ran-ue/uecfg.yaml
+      - ./config/uecfg-dc-dynamic.yaml:/free-ran-ue/uecfg.yaml
     cap_add:
       - NET_ADMIN
     devices:
@@ -292,6 +296,21 @@ services:
       - gnb-master
       - gnb-secondary
 
+  console:
+    container_name: fru-console
+    image: free-ran-ue:latest
+    command: ./free-ran-ue console -c consolecfg.yaml
+    volumes:
+      - ./config/fru-consolecfg.yaml:/free-ran-ue/consolecfg.yaml
+    networks:
+      console-rans:
+        ipv4_address: 10.0.4.2
+    ports:
+      - "40104:40104"
+    depends_on:
+      - gnb-master
+      - gnb-secondary
+
 networks:
   sbi:
     ipam:
@@ -299,7 +318,7 @@ networks:
       config:
         - subnet: 10.0.10.0/24
     driver_opts:
-      com.docker.network.bridge.name: docker-sbi
+      com.docker.network.bridge.name: br-sbi
 
   cn-rans:
     ipam:
@@ -307,7 +326,7 @@ networks:
       config:
         - subnet: 10.0.1.0/24
     driver_opts:
-      com.docker.network.bridge.name: docker-cn-rans
+      com.docker.network.bridge.name: br-cn-rans
 
   mran-ue:
     ipam:
@@ -315,7 +334,7 @@ networks:
       config:
         - subnet: 10.0.2.0/24
     driver_opts:
-      com.docker.network.bridge.name: docker-mran-ue
+      com.docker.network.bridge.name: br-mran-ue
 
   sran-ue:
     ipam:
@@ -323,7 +342,15 @@ networks:
       config:
         - subnet: 10.0.3.0/24
     driver_opts:
-      com.docker.network.bridge.name: docker-sran-ue
+      com.docker.network.bridge.name: br-sran-ue
+
+  console-rans:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.4.0/24
+    driver_opts:
+      com.docker.network.bridge.name: br-console-rans
 
 volumes:
   dbdata:

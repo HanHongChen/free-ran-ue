@@ -10,7 +10,7 @@ require (
 	github.com/free5gc/openapi v1.2.1
 	github.com/free5gc/sctp v1.1.0
 	github.com/free5gc/util v1.2.0
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/assert v1.2.1
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/golang-jwt/jwt/v5 v5.2.2

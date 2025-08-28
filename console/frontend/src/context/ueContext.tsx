@@ -35,7 +35,6 @@ export function UeProvider({ children }: { children: ReactNode }) {
   const [xnUeList, setXnUeList] = useState<XnUe[]>([])
 
   useEffect(() => {
-    // 从所有 GNB 中收集 RAN UE 列表
     const newRanUeList = gnbList.reduce<RanUe[]>((acc, gnb) => {
       if (!gnb.gnbInfo?.ranUeList) return acc
       
@@ -49,7 +48,6 @@ export function UeProvider({ children }: { children: ReactNode }) {
     }, [])
     setRanUeList(newRanUeList)
 
-    // 从所有 GNB 中收集 XN UE 列表
     const newXnUeList = gnbList.reduce<XnUe[]>((acc, gnb) => {
       if (!gnb.gnbInfo?.xnUeList) return acc
       

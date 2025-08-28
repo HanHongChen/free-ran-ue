@@ -12,10 +12,36 @@ import SuccessBox from '../components/successBox/successBox'
 export default function GnbInfo() {
   const { gnbId } = useParams()
   const navigate = useNavigate()
-  const { gnbList, updateUeNrdcIndicator } = useGnb()
+  const { gnbList, updateUeNrdcIndicator, addGnb, setGnbStatus } = useGnb()
   const { successes, errors, addSuccess, addError, removeNotification } = useNotifications()
 
   const gnb = gnbList.find(gnb => gnb.gnbInfo?.gnbId === gnbId)
+
+  const updateGnb = async () => {
+    for (const gnb of gnbList) {
+      try {
+        const result = await gnbApi.apiConsoleGnbInfoPost({
+          ip: gnb.connection?.ip || '',
+          port: gnb.connection?.port || 0
+        }, {
+          headers: {
+            'Authorization': localStorage.getItem('token')
+          }
+        })
+        addGnb(result.data, gnb.connection || { ip: '', port: 0 })
+      } catch (error: any) {
+        addError("gNB " + gnb.gnbInfo?.gnbName + " update failed: " + error.response?.data?.message)
+        if (error.response?.status === 401) {
+          setTimeout(() => {
+            navigate('/login')
+          }, 2000)
+          return
+        } else {
+          setGnbStatus(gnb.gnbInfo?.gnbId || '', 'offline')
+        }
+      }
+    }
+  }
 
   const handleChangeNrdcIndicator = async (gnbId: string, ip: string, port: number, imsi: string, indicator: boolean) => {
     try {
@@ -30,6 +56,7 @@ export default function GnbInfo() {
       })
 
       updateUeNrdcIndicator(gnbId, imsi, !indicator)
+      updateGnb()
 
       addSuccess(response.data.message || 'UE DC-status changed successfully')
     } catch (error: any) {

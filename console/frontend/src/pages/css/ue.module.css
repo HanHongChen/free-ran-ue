@@ -95,3 +95,15 @@
 .ueList {
   margin-top: 1rem;
 }
+
+.gnbLink {
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.gnbLink:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}

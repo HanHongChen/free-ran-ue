@@ -1,10 +1,15 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import styles from './css/ue.module.css'
 import Sidebar from '../components/sidebar/sidebar'
 import { useUe } from '../context/ueContext'
 
 export default function Ue() {
+  const navigate = useNavigate()
   const { ranUeList, xnUeList } = useUe()
+
+  const handleGnbClick = (gnbId: string) => {
+    navigate(`/gnb/${gnbId}`)
+  }
 
   return (
     <div className={styles.container}>
@@ -31,7 +36,14 @@ export default function Ue() {
                   <tr key={ue.imsi}>
                     <td>{index + 1}</td>
                     <td>{ue.imsi}</td>
-                    <td>{ue.gnbName || ue.gnbId}</td>
+                    <td>
+                      <span 
+                        className={styles.gnbLink}
+                        onClick={() => handleGnbClick(ue.gnbId)}
+                      >
+                        {ue.gnbName || ue.gnbId}
+                      </span>
+                    </td>
                     <td>
                       <span className={ue.nrdcIndicator ? styles.statusOnline : styles.statusOffline}>
                         {ue.nrdcIndicator ? 'Enabled' : 'Disabled'}
@@ -60,7 +72,14 @@ export default function Ue() {
                   <tr key={ue.imsi}>
                     <td>{index + 1}</td>
                     <td>{ue.imsi}</td>
-                    <td>{ue.gnbName || ue.gnbId}</td>
+                    <td>
+                      <span 
+                        className={styles.gnbLink}
+                        onClick={() => handleGnbClick(ue.gnbId)}
+                      >
+                        {ue.gnbName || ue.gnbId}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -1,54 +1,10 @@
 import { Outlet } from 'react-router-dom'
 import styles from './css/ue.module.css'
 import Sidebar from '../components/sidebar/sidebar'
-import { useGnb } from '../context/gnbContext'
-import { useEffect, useState } from 'react'
+import { useUe } from '../context/ueContext'
 
 export default function Ue() {
-  const { gnbList } = useGnb()
-  
-  interface RanUe {
-    imsi: string;
-    nrdcIndicator: boolean;
-    gnbId: string;
-    gnbName: string;
-  }
-
-  interface XnUe {
-    imsi: string;
-    gnbId: string;
-    gnbName: string;
-  }
-
-  const [ranUeList, setRanUeList] = useState<RanUe[]>([])
-  const [xnUeList, setXnUeList] = useState<XnUe[]>([])
-
-  useEffect(() => {
-    const newRanUeList = gnbList.reduce<RanUe[]>((acc, gnb) => {
-      if (!gnb.gnbInfo?.ranUeList) return acc;
-      
-      const ueList = gnb.gnbInfo.ranUeList.map(ue => ({
-        imsi: ue.imsi || '',
-        nrdcIndicator: ue.nrdcIndicator || false,
-        gnbId: gnb.gnbInfo?.gnbId || '',
-        gnbName: gnb.gnbInfo?.gnbName || ''
-      }));
-      return [...acc, ...ueList];
-    }, []);
-    setRanUeList(newRanUeList);
-
-    const newXnUeList = gnbList.reduce<XnUe[]>((acc, gnb) => {
-      if (!gnb.gnbInfo?.xnUeList) return acc;
-      
-      const ueList = gnb.gnbInfo.xnUeList.map(ue => ({
-        imsi: ue.imsi || '',
-        gnbId: gnb.gnbInfo?.gnbId || '',
-        gnbName: gnb.gnbInfo?.gnbName || ''
-      }));
-      return [...acc, ...ueList];
-    }, []);
-    setXnUeList(newXnUeList);
-  }, [gnbList]);
+  const { ranUeList, xnUeList } = useUe()
 
   return (
     <div className={styles.container}>

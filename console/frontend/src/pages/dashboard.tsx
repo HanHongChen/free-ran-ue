@@ -3,18 +3,12 @@ import styles from './css/dashboard.module.css'
 import Sidebar from '../components/sidebar/sidebar'
 import StatsCard from '../components/stats/stats-card'
 import { useGnb } from '../context/gnbContext'
+import { useUe } from '../context/ueContext'
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const { gnbList } = useGnb()
-
-  const totalRanUes = gnbList.reduce((acc, gnb) => {
-    return acc + (gnb.gnbInfo?.ranUeList?.length || 0)
-  }, 0)
-
-  const totalXnUes = gnbList.reduce((acc, gnb) => {
-    return acc + (gnb.gnbInfo?.xnUeList?.length || 0)
-  }, 0)
+  const { totalRanUes, totalXnUes } = useUe()
 
   return (
     <div className={styles.container}>

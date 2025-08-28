@@ -20,5 +20,5 @@ jobs:
       - name: Test Docker image
         run: |
           docker images
-          docker run --rm free-ran-ue:test ls /free-ran-ue/free-ran-ue
-          docker run --rm free-ran-ue:test ls /free-ran-ue/build/console
+          docker run --rm free-ran-ue:latest ls /free-ran-ue/free-ran-ue
+          docker run --rm free-ran-ue:latest ls /free-ran-ue/build/console

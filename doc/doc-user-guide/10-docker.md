@@ -1,4 +1,4 @@
-# Docker Usage
+# Docker Deployment
 
 > [!Note]
 > Docker offers an alternative way to deploy free5GC with free-ran-ue on a single machine without any network setting conflicts.

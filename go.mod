@@ -16,7 +16,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 

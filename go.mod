@@ -15,7 +15,7 @@ require (
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -44,7 +44,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/tim-ywliu/nested-logrus-formatter v1.3.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect

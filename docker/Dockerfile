@@ -35,4 +35,4 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /free-ran-ue/build/free-ran-ue /free-ran-ue/free-ran-ue
-COPY --from=consoleBuilder /free-ran-ue/build/console /free-ran-ue/build/console
+COPY --from=consoleBuilder /free-ran-ue/build/console /free-ran-ue/console

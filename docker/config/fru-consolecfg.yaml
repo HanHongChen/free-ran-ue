@@ -8,5 +8,7 @@ console:
     secret: "free-ran-ue"
     expiresIn: 1h # 1 hour
 
+  frontendFilePath: "console"
+
 logger:
   level: "info" # error, warn, info, debug, trace, test

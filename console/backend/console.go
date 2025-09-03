@@ -32,6 +32,8 @@ type console struct {
 
 	jwt
 
+	frontendFilePath string
+
 	*logger.ConsoleLogger
 }
 
@@ -48,6 +50,8 @@ func NewConsole(config *model.ConsoleConfig, logger *logger.ConsoleLogger) *cons
 			secret:    config.Console.JWT.Secret,
 			expiresIn: config.Console.JWT.ExpiresIn,
 		},
+
+		frontendFilePath: config.Console.FrontendFilePath,
 
 		ConsoleLogger: logger,
 	}
@@ -90,19 +94,19 @@ func (cs *console) Stop() {
 }
 
 func (cs *console) returnPages() gin.HandlerFunc {
-	return func(cs *gin.Context) {
-		method := cs.Request.Method
+	return func(c *gin.Context) {
+		method := c.Request.Method
 		if method == http.MethodGet {
 
-			destPath := filepath.Join("build/console", cs.Request.URL.Path)
+			destPath := filepath.Join(cs.frontendFilePath, c.Request.URL.Path)
 			if _, err := os.Stat(destPath); err == nil {
-				cs.File(filepath.Clean(destPath))
+				c.File(filepath.Clean(destPath))
 				return
 			}
 
-			cs.File(filepath.Clean("build/console/index.html"))
+			c.File(filepath.Clean("build/console/index.html"))
 		} else {
-			cs.Next()
+			c.Next()
 		}
 	}
 }

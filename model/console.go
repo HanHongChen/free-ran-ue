@@ -14,6 +14,8 @@ type ConsoleIE struct {
 	Port int `yaml:"port"`
 
 	JWT JWTIE `yaml:"jwt"`
+
+	FrontendFilePath string `yaml:"frontendFilePath"`
 }
 
 type JWTIE struct {

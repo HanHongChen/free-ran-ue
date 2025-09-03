@@ -33,9 +33,9 @@ func (cs *console) handleConsoleGnbInfo(c *gin.Context) {
 		return
 	}
 
-	uri := fmt.Sprintf("http://%s:%d%s", request.Ip, request.Port, constant.API_GNB_INFO)
+	uri := fmt.Sprintf("http://%s:%d%s", request.Ip, request.Port, constant.API_REQUEST_GNB_INFO)
 
-	response, err := util.SendHttpRequest(uri, constant.API_GNB_INFO_METHOD, nil, nil)
+	response, err := util.SendHttpRequest(uri, constant.API_REQUEST_GNB_INFO_METHOD, nil, nil)
 	if err != nil {
 		cs.GnbLog.Warnln(err)
 		c.JSON(http.StatusInternalServerError, model.ConsoleGnbInfoResponse{
@@ -82,9 +82,9 @@ func (cs *console) handleConsoleGnbUeNrdcModify(c *gin.Context) {
 		return
 	}
 
-	uri := fmt.Sprintf("http://%s:%d%s", request.Ip, request.Port, constant.API_GNB_UE_NRDC_MODIFY)
+	uri := fmt.Sprintf("http://%s:%d%s", request.Ip, request.Port, constant.API_REQUEST_GNB_UE_NRDC)
 
-	response, err := util.SendHttpRequest(uri, constant.API_GNB_UE_NRDC_MODIFY_METHOD, nil, rawBody)
+	response, err := util.SendHttpRequest(uri, constant.API_REQUEST_GNB_UE_NRDC_METHOD, nil, rawBody)
 	if err != nil {
 		cs.GnbLog.Warnln(err)
 		c.JSON(http.StatusInternalServerError, model.ConsoleGnbUeNrdcModifyResponse{

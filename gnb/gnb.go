@@ -1392,14 +1392,14 @@ func (g *Gnb) initApiRoutes() util.Routes {
 	return util.Routes{
 		{
 			Name:        "Console GNB Info",
-			Method:      http.MethodGet,
-			Pattern:     "/info",
+			Method:      constant.API_GNB_INFO_METHOD,
+			Pattern:     constant.API_GNB_INFO,
 			HandlerFunc: g.handleConsoleGnbInfo,
 		},
 		{
 			Name:        "Console GNB UE NRDC Modify",
-			Method:      http.MethodPost,
-			Pattern:     "/ue/nrdc",
+			Method:      constant.API_GNB_UE_NRDC_METHOD,
+			Pattern:     constant.API_GNB_UE_NRDC,
 			HandlerFunc: g.handleConsoleGnbUeNrdcModify,
 		},
 	}

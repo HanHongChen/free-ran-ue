@@ -67,13 +67,22 @@ const (
 	API_PREFIX_CONSOLE API_PREFIX = "/api/console"
 )
 
+// for gNB
+const (
+	API_GNB_INFO        = "/info"
+	API_GNB_INFO_METHOD = http.MethodGet
+
+	API_GNB_UE_NRDC        = "/ue/nrdc"
+	API_GNB_UE_NRDC_METHOD = http.MethodPost
+)
+
 // for console
 const (
 	APPLICATION_JSON = "application/json"
 
-	API_GNB_INFO        = API_PREFIX_GNB + "/info"
-	API_GNB_INFO_METHOD = http.MethodGet
+	API_REQUEST_GNB_INFO        = API_PREFIX_GNB + API_GNB_INFO
+	API_REQUEST_GNB_INFO_METHOD = API_GNB_INFO_METHOD
 
-	API_GNB_UE_NRDC_MODIFY        = API_PREFIX_GNB + "/ue/nrdc"
-	API_GNB_UE_NRDC_MODIFY_METHOD = http.MethodPost
+	API_REQUEST_GNB_UE_NRDC        = API_PREFIX_GNB + API_GNB_UE_NRDC
+	API_REQUEST_GNB_UE_NRDC_METHOD = API_GNB_UE_NRDC_METHOD
 )

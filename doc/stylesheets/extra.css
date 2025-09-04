@@ -65,6 +65,17 @@
   background: linear-gradient(135deg, #004480 0%, #0056a0 100%);
 }
 
+/* 自定義 Logo */
+.md-header__button.md-logo {
+  padding: 0;
+  margin: 0.4rem;
+}
+
+.md-header__button.md-logo img {
+  height: 2rem;
+  width: auto;
+}
+
 .md-tabs {
   background: linear-gradient(135deg, #004480 0%, #0056a0 100%);
 }

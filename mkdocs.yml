@@ -45,9 +45,9 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  favicon: console/frontend/public/free-ran-ue-favicon.png
+  favicon: image/free-ran-ue-favicon.png
+  logo: image/free-ran-ue-logo.png
   icon:
-    logo: material/radio-tower
     repo: fontawesome/brands/github
 
 # Plugins
@@ -106,4 +106,4 @@ extra:
 copyright: Copyright &copy; 2025 Alonza0314. All rights reserved.
 
 # Documentation directory
-docs_dir: doc 
+docs_dir: doc

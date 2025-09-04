@@ -3,6 +3,26 @@
 > [!Important]
 > Beleive myself that I can do everything.
 
+## 20250904 Logo and Favicon
+
+The logo and favicon are designed by [Lily](https://github.com/lilywuuuuu). Welcoms for new contributor!!
+
+## 20250903 YARN Dependabot & Frontend Files
+
+The dependabot will help the project to update frontend's deps.
+
+And, I make the frontend file path will be read from config instead of hardcode in backend.
+
+## 20250902 GTP5G
+
+I updated the description of gtp5g in quickstart pages.
+
+## 20250828 Console UE & Docker Build Test
+
+Now, console will desplay UE's info!
+
+The ci actions will also support for test image build.
+
 ## 20250826 Docker
 
 Today I finish the docker deployment in three types:

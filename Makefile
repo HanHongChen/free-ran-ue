@@ -2,7 +2,7 @@
 
 .DEFAULT_GOAL := bin
 
-all: bin console
+all: bin console-init
 
 # Build the binary
 bin:

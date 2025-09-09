@@ -6,7 +6,7 @@ all: bin console-init
 
 # Build the binary
 bin:
-	GOOS=linux GOARCH=amd64 go build -o build/free-ran-ue main.go
+	go build -o build/free-ran-ue main.go
 
 # Build the console
 console:

@@ -1,14 +1,14 @@
 console:
-  username: "admin"
-  password: "free-ran-ue"
+  username: "admin" # Console username
+  password: "free-ran-ue" # Console password
 
-  port: 40104
+  port: 40104 # Console accessport
 
   jwt:
-    secret: "free-ran-ue"
+    secret: "free-ran-ue" # JWT secret
     expiresIn: 1h # 1 hour
 
-  frontendFilePath: "build/console"
+  frontendFilePath: "build/console" # Console frontend file path
 
 logger:
   level: "info" # error, warn, info, debug, trace, test

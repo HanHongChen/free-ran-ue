@@ -16,8 +16,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a h1:PRapMdjqo96T7y8PHShUlirRDI0EaJNVrmdfQaHxOKY=
 github.com/free5gc/aper v1.0.6-0.20250102035630-3ddc831eed6a/go.mod h1:L4d0BJpHVOgiOC49aCz44mF0Vja3l+bcVSAs7i3CZ8s=
-github.com/free5gc/nas v1.2.0 h1:pu0W1oDm2S8aeHdCo1n0zCbYu6R/ZTdZ/5lN3VYggMM=
-github.com/free5gc/nas v1.2.0/go.mod h1:P8t/0Q3KnGQIEs+dTxXMHGh0aZ8CxC6NsCgrOXIEFW8=
+github.com/free5gc/nas v1.2.1 h1:jIXffRFXCuAEQs5j5NHlS+ugQBbReNe6q3NPxfrTZVo=
+github.com/free5gc/nas v1.2.1/go.mod h1:K14TWrOk7UXdLmZkP5uGCSf/0EYxrUOzpi/hlfJm40w=
 github.com/free5gc/ngap v1.1.0 h1:MOcUYh+aix/Ow0ZN1W1EiwVpwTPbuuuKKlgHeEuxZMk=
 github.com/free5gc/ngap v1.1.0/go.mod h1:SNeOmVtAg3Qf0alAG6d3r8CzHpf+2c9AXXoe380iauM=
 github.com/free5gc/openapi v1.2.2 h1:SoWkuI/QOWA22UgNuqtkeoKeLEjThziJYGQFh/1gxSQ=

@@ -59,3 +59,34 @@ func TestValidateLoggerIe(t *testing.T) {
 		})
 	}
 }
+
+var testValidateIpCases = []struct {
+	name          string
+	ip            string
+	expectedError error
+}{
+	{
+		name:          "testValidIp",
+		ip:            "192.168.1.1",
+		expectedError: nil,
+	},
+	{
+		name:          "testInvalidRangeIp",
+		ip:            "192.168.1.256",
+		expectedError: fmt.Errorf("invalid ip address: 192.168.1.256"),
+	},
+	{
+		name:          "testInvalidFormatIp",
+		ip:            "192.168.1.1.1",
+		expectedError: fmt.Errorf("invalid ip address: 192.168.1.1.1"),
+	},
+}
+
+func TestValidateIp(t *testing.T) {
+	for _, testCase := range testValidateIpCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateIp(testCase.ip)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

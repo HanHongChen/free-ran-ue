@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/Alonza0314/free-ran-ue/model"
 	loggergoUtil "github.com/Alonza0314/logger-go/v2/util"
@@ -30,6 +31,14 @@ func ValidateLoggerIe(loggerIe *model.LoggerIE) error {
 	default:
 		return fmt.Errorf("invalid logger level: %s", loggerIe.Level)
 	}
+}
+
+func ValidateIp(ip string) error {
+	ipAddress := net.ParseIP(ip)
+	if ipAddress == nil {
+		return fmt.Errorf("invalid ip address: %s", ip)
+	}
+	return nil
 }
 
 func ValidateUeIe(ueIe *model.UeIE) error {

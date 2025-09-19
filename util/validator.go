@@ -156,6 +156,19 @@ func ValidatePduSession(pduSession *model.PduSessionIE) error {
 	return nil
 }
 
+func ValidateNrdc(nrdc *model.NrdcIE) error {
+	if !nrdc.Enable {
+		return nil
+	}
+	if err := ValidateIp(nrdc.DcRanDataPlane.Ip); err != nil {
+		return fmt.Errorf("invalid nrdc dc ran data plane ip, %s", err.Error())
+	}
+	if err := ValidatePort(nrdc.DcRanDataPlane.Port); err != nil {
+		return fmt.Errorf("invalid nrdc dc ran data plane port, %s", err.Error())
+	}
+	return nil
+}
+
 func ValidateUeIe(ueIe *model.UeIE) error {
 	return nil
 }

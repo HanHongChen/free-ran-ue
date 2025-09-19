@@ -508,3 +508,59 @@ func TestValidatePduSession(t *testing.T) {
 		})
 	}
 }
+
+var testValidateNrdcCases = []struct {
+	name          string
+	nrdc          model.NrdcIE
+	expectedError error
+}{
+	{
+		name: "testValidEnableNrdc",
+		nrdc: model.NrdcIE{
+			Enable: true,
+			DcRanDataPlane: model.DcDataPlaneIE{
+				Ip:   "10.0.3.1",
+				Port: 31414,
+			},
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testValidDisableNrdc",
+		nrdc: model.NrdcIE{
+			Enable: false,
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testInvalidIpNrdc",
+		nrdc: model.NrdcIE{
+			Enable: true,
+			DcRanDataPlane: model.DcDataPlaneIE{
+				Ip:   "10.0.3.1.1",
+				Port: 31414,
+			},
+		},
+		expectedError: fmt.Errorf("invalid nrdc dc ran data plane ip, invalid ip address: 10.0.3.1.1"),
+	},
+	{
+		name: "testInvalidPortNrdc",
+		nrdc: model.NrdcIE{
+			Enable: true,
+			DcRanDataPlane: model.DcDataPlaneIE{
+				Ip:   "10.0.3.1",
+				Port: 0,
+			},
+		},
+		expectedError: fmt.Errorf("invalid nrdc dc ran data plane port, invalid port range: 0, range should be 1-65535"),
+	},
+}
+
+func TestValidateNrdc(t *testing.T) {
+	for _, testCase := range testValidateNrdcCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateNrdc(&testCase.nrdc)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

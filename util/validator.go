@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net"
 	"strconv"
@@ -81,6 +82,29 @@ func ValidateMsin(msin string) error {
 	}
 	if err := ValidateIntStringWithLength(msin, 10); err != nil {
 		return err
+	}
+	return nil
+}
+
+func ValidateHexString(hexString string) error {
+	if _, err := hex.DecodeString(hexString); err != nil {
+		return fmt.Errorf("invalid hex string: %s", hexString)
+	}
+	return nil
+}
+
+func ValidateAuthenticationSubscription(authenticationSubscription *model.AuthenticationSubscriptionIE) error {
+	if err := ValidateHexString(authenticationSubscription.EncPermanentKey); err != nil {
+		return fmt.Errorf("invalid enc permanent key, %s", err.Error())
+	}
+	if err := ValidateHexString(authenticationSubscription.EncOpcKey); err != nil {
+		return fmt.Errorf("invalid enc opc key, %s", err.Error())
+	}
+	if err := ValidateIntStringWithLength(authenticationSubscription.AuthenticationManagementField, 4); err != nil {
+		return fmt.Errorf("invalid authentication management field, %s", err.Error())
+	}
+	if err := ValidateIntStringWithLength(authenticationSubscription.SequenceNumber, 12); err != nil {
+		return fmt.Errorf("invalid sequence number, %s", err.Error())
 	}
 	return nil
 }

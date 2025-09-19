@@ -187,3 +187,34 @@ func TestValidatePlmnId(t *testing.T) {
 		})
 	}
 }
+
+var testValidateMsinCases = []struct {
+	name          string
+	msin          string
+	expectedError error
+}{
+	{
+		name:          "testValidMsin",
+		msin:          "0000000001",
+		expectedError: nil,
+	},
+	{
+		name:          "testInvalidMsin",
+		msin:          "00000000010",
+		expectedError: fmt.Errorf("invalid msin: 00000000010, msin should be 10 digits"),
+	},
+	{
+		name:          "testInvalidNonIntMsin",
+		msin:          "000000000a",
+		expectedError: fmt.Errorf("invalid int string: 000000000a"),
+	},
+}
+
+func TestValidateMsin(t *testing.T) {
+	for _, testCase := range testValidateMsinCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateMsin(testCase.msin)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

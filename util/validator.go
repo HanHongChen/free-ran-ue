@@ -75,6 +75,16 @@ func ValidatePlmnId(plmnId *model.PlmnIdIE) error {
 	return nil
 }
 
+func ValidateMsin(msin string) error {
+	if len(msin) != 10 {
+		return fmt.Errorf("invalid msin: %s, msin should be 10 digits", msin)
+	}
+	if err := ValidateIntStringWithLength(msin, 10); err != nil {
+		return err
+	}
+	return nil
+}
+
 func ValidateUeIe(ueIe *model.UeIE) error {
 	return nil
 }

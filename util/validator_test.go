@@ -459,3 +459,52 @@ func TestValidateCipheringAlgorithm(t *testing.T) {
 		})
 	}
 }
+
+var testValidatePduSessionCases = []struct {
+	name          string
+	pduSession    model.PduSessionIE
+	expectedError error
+}{
+	{
+		name: "testValidPduSession",
+		pduSession: model.PduSessionIE{
+			Dnn: "internet",
+			Snssai: model.SnssaiIE{
+				Sst: "1",
+				Sd:  "010203",
+			},
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testInvalidSstNilPduSession",
+		pduSession: model.PduSessionIE{
+			Dnn: "internet",
+			Snssai: model.SnssaiIE{
+				Sst: "z",
+				Sd:  "010203",
+			},
+		},
+		expectedError: fmt.Errorf("invalid pdu session sst, invalid int string: z"),
+	},
+	{
+		name: "testInvalidSdNilPduSession",
+		pduSession: model.PduSessionIE{
+			Dnn: "internet",
+			Snssai: model.SnssaiIE{
+				Sst: "1",
+				Sd:  "zzzzzz",
+			},
+		},
+		expectedError: fmt.Errorf("invalid pdu session sd, invalid hex string: zzzzzz"),
+	},
+}
+
+func TestValidatePduSession(t *testing.T) {
+	for _, testCase := range testValidatePduSessionCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidatePduSession(&testCase.pduSession)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

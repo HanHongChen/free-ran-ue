@@ -146,6 +146,16 @@ func ValidateCipheringAlgorithm(cipheringAlgorithm *model.CipheringAlgorithmIE) 
 	return ValidateXorBooleanFlag(cipheringAlgorithm.Nea0, cipheringAlgorithm.Nea1, cipheringAlgorithm.Nea2, cipheringAlgorithm.Nea3)
 }
 
+func ValidatePduSession(pduSession *model.PduSessionIE) error {
+	if err := ValidateIntStringWithLength(pduSession.Snssai.Sst, 1); err != nil {
+		return fmt.Errorf("invalid pdu session sst, %s", err.Error())
+	}
+	if err := ValidateHexString(pduSession.Snssai.Sd); err != nil {
+		return fmt.Errorf("invalid pdu session sd, %s", err.Error())
+	}
+	return nil
+}
+
 func ValidateUeIe(ueIe *model.UeIE) error {
 	return nil
 }

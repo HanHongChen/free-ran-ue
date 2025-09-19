@@ -413,3 +413,49 @@ func TestValidateIntegrityAlgorithm(t *testing.T) {
 		})
 	}
 }
+
+var testValidateCipheringAlgorithmCases = []struct {
+	name               string
+	cipheringAlgorithm model.CipheringAlgorithmIE
+	expectedError      error
+}{
+	{
+		name: "testValidCipheringAlgorithm",
+		cipheringAlgorithm: model.CipheringAlgorithmIE{
+			Nea0: true,
+			Nea1: false,
+			Nea2: false,
+			Nea3: false,
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testInvalidMultipleTrueCipheringAlgorithm",
+		cipheringAlgorithm: model.CipheringAlgorithmIE{
+			Nea0: true,
+			Nea1: false,
+			Nea2: false,
+			Nea3: true,
+		},
+		expectedError: fmt.Errorf("exist multiple true boolean flags"),
+	},
+	{
+		name: "testInvalidNoTrueCipheringAlgorithm",
+		cipheringAlgorithm: model.CipheringAlgorithmIE{
+			Nea0: false,
+			Nea1: false,
+			Nea2: false,
+			Nea3: false,
+		},
+		expectedError: fmt.Errorf("no true boolean flag, one true flag is required"),
+	},
+}
+
+func TestValidateCipheringAlgorithm(t *testing.T) {
+	for _, testCase := range testValidateCipheringAlgorithmCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateCipheringAlgorithm(&testCase.cipheringAlgorithm)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

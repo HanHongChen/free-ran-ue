@@ -142,6 +142,10 @@ func ValidateIntegrityAlgorithm(integrityAlgorithm *model.IntegrityAlgorithmIE) 
 	return ValidateXorBooleanFlag(integrityAlgorithm.Nia0, integrityAlgorithm.Nia1, integrityAlgorithm.Nia2, integrityAlgorithm.Nia3)
 }
 
+func ValidateCipheringAlgorithm(cipheringAlgorithm *model.CipheringAlgorithmIE) error {
+	return ValidateXorBooleanFlag(cipheringAlgorithm.Nea0, cipheringAlgorithm.Nea1, cipheringAlgorithm.Nea2, cipheringAlgorithm.Nea3)
+}
+
 func ValidateUeIe(ueIe *model.UeIE) error {
 	return nil
 }

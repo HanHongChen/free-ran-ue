@@ -336,3 +336,80 @@ func TestValidateAuthenticationSubscription(t *testing.T) {
 		})
 	}
 }
+
+var testValidateXorBooleanFlagCases = []struct {
+	name          string
+	booleanFlags  []bool
+	expectedError error
+}{
+	{
+		name:          "testValidXorBooleanFlag",
+		booleanFlags:  []bool{true, false, false},
+		expectedError: nil,
+	},
+	{
+		name:          "testInvalidXorBooleanFlag",
+		booleanFlags:  []bool{false, false, false},
+		expectedError: fmt.Errorf("no true boolean flag, one true flag is required"),
+	},
+	{
+		name:          "testInvalidXorBooleanFlag",
+		booleanFlags:  []bool{true, true, false},
+		expectedError: fmt.Errorf("exist multiple true boolean flags"),
+	},
+}
+
+func TestValidateXorBooleanFlag(t *testing.T) {
+	for _, testCase := range testValidateXorBooleanFlagCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateXorBooleanFlag(testCase.booleanFlags...)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}
+
+var testValidateIntegrityAlgorithmCases = []struct {
+	name               string
+	integrityAlgorithm model.IntegrityAlgorithmIE
+	expectedError      error
+}{
+	{
+		name: "testValidIntegrityAlgorithm",
+		integrityAlgorithm: model.IntegrityAlgorithmIE{
+			Nia0: false,
+			Nia1: false,
+			Nia2: true,
+			Nia3: false,
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testInvalidMultipleTrueIntegrityAlgorithm",
+		integrityAlgorithm: model.IntegrityAlgorithmIE{
+			Nia0: false,
+			Nia1: false,
+			Nia2: true,
+			Nia3: true,
+		},
+		expectedError: fmt.Errorf("exist multiple true boolean flags"),
+	},
+	{
+		name: "testInvalidNoTrueIntegrityAlgorithm",
+		integrityAlgorithm: model.IntegrityAlgorithmIE{
+			Nia0: false,
+			Nia1: false,
+			Nia2: false,
+			Nia3: false,
+		},
+		expectedError: fmt.Errorf("no true boolean flag, one true flag is required"),
+	},
+}
+
+func TestValidateIntegrityAlgorithm(t *testing.T) {
+	for _, testCase := range testValidateIntegrityAlgorithmCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateIntegrityAlgorithm(&testCase.integrityAlgorithm)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

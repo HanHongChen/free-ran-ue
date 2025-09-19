@@ -121,6 +121,27 @@ func ValidateAuthenticationSubscription(authenticationSubscription *model.Authen
 	return nil
 }
 
+func ValidateXorBooleanFlag(booleanFlags ...bool) error {
+	trueExist := false
+	for _, booleanFlag := range booleanFlags {
+		if booleanFlag {
+			if trueExist {
+				return fmt.Errorf("exist multiple true boolean flags")
+			} else {
+				trueExist = true
+			}
+		}
+	}
+	if !trueExist {
+		return fmt.Errorf("no true boolean flag, one true flag is required")
+	}
+	return nil
+}
+
+func ValidateIntegrityAlgorithm(integrityAlgorithm *model.IntegrityAlgorithmIE) error {
+	return ValidateXorBooleanFlag(integrityAlgorithm.Nia0, integrityAlgorithm.Nia1, integrityAlgorithm.Nia2, integrityAlgorithm.Nia3)
+}
+
 func ValidateUeIe(ueIe *model.UeIE) error {
 	return nil
 }

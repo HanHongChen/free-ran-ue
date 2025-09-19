@@ -15,37 +15,37 @@ var testValidateLoggerIeCases = []struct {
 	expectedError error
 }{
 	{
-		name:          "testValidateLoggerIe",
+		name:          "testError",
 		loggerIe:      model.LoggerIE{Level: "error"},
 		expectedError: nil,
 	},
 	{
-		name:          "testValidateLoggerIe",
+		name:          "testWarn",
 		loggerIe:      model.LoggerIE{Level: "warn"},
 		expectedError: nil,
 	},
 	{
-		name:          "testValidateLoggerIe",
+		name:          "testInfo",
 		loggerIe:      model.LoggerIE{Level: "info"},
 		expectedError: nil,
 	},
 	{
-		name:          "testValidateLoggerIe",
+		name:          "testDebug",
 		loggerIe:      model.LoggerIE{Level: "debug"},
 		expectedError: nil,
 	},
 	{
-		name:          "testValidateLoggerIe",
+		name:          "testTrace",
 		loggerIe:      model.LoggerIE{Level: "trace"},
 		expectedError: nil,
 	},
 	{
-		name:          "testValidateLoggerIe",
+		name:          "testTest",
 		loggerIe:      model.LoggerIE{Level: "test"},
 		expectedError: nil,
 	},
 	{
-		name:          "testValidateLoggerIe",
+		name:          "testInvalid",
 		loggerIe:      model.LoggerIE{Level: "invalid"},
 		expectedError: fmt.Errorf("invalid logger level: invalid"),
 	},

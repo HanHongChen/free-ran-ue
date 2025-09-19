@@ -36,10 +36,8 @@ gnb:
 
   xnInterface:
     enable: true
-
     xnListenIp: "10.0.1.2"
     xnListenPort: 31415
-
     xnDialIp: "10.0.1.3"
     xnDialPort: 31415
 

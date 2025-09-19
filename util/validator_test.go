@@ -90,3 +90,29 @@ func TestValidateIp(t *testing.T) {
 		})
 	}
 }
+
+var testValidatePortCases = []struct {
+	name          string
+	port          int
+	expectedError error
+}{
+	{
+		name:          "testValidPort",
+		port:          8080,
+		expectedError: nil,
+	},
+	{
+		name:          "testInvalidPort",
+		port:          0,
+		expectedError: fmt.Errorf("invalid port range: 0, range should be 1-65535"),
+	},
+}
+
+func TestValidatePort(t *testing.T) {
+	for _, testCase := range testValidatePortCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidatePort(testCase.port)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

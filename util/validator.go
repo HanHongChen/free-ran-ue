@@ -41,6 +41,13 @@ func ValidateIp(ip string) error {
 	return nil
 }
 
+func ValidatePort(port int) error {
+	if port < 1 || port > 65535 {
+		return fmt.Errorf("invalid port range: %d, range should be 1-65535", port)
+	}
+	return nil
+}
+
 func ValidateUeIe(ueIe *model.UeIE) error {
 	return nil
 }

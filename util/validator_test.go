@@ -6,6 +6,7 @@ import (
 
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/util"
+	"github.com/free5gc/openapi/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -214,6 +215,37 @@ func TestValidateMsin(t *testing.T) {
 	for _, testCase := range testValidateMsinCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := util.ValidateMsin(testCase.msin)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}
+
+var testValidateAccessTypeCases = []struct {
+	name          string
+	accessType    string
+	expectedError error
+}{
+	{
+		name:          "testValidAccessType",
+		accessType:    "3GPP_ACCESS",
+		expectedError: nil,
+	},
+	{
+		name:          "testInvalidAccessType",
+		accessType:    "INVALID",
+		expectedError: fmt.Errorf("invalid access type: INVALID"),
+	},
+	{
+		name:          "testUnsupportedAccessType",
+		accessType:    "NON_3GPP_ACCESS",
+		expectedError: fmt.Errorf("unsupported access type: NON_3GPP_ACCESS"),
+	},
+}
+
+func TestValidateAccessType(t *testing.T) {
+	for _, testCase := range testValidateAccessTypeCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateAccessType(models.AccessType(testCase.accessType))
 			assert.Equal(t, testCase.expectedError, err)
 		})
 	}

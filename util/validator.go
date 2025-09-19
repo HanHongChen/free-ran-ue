@@ -8,6 +8,7 @@ import (
 
 	"github.com/Alonza0314/free-ran-ue/model"
 	loggergoUtil "github.com/Alonza0314/logger-go/v2/util"
+	"github.com/free5gc/openapi/models"
 )
 
 /*
@@ -84,6 +85,17 @@ func ValidateMsin(msin string) error {
 		return err
 	}
 	return nil
+}
+
+func ValidateAccessType(accessType models.AccessType) error {
+	switch accessType {
+	case models.AccessType__3_GPP_ACCESS:
+		return nil
+	case models.AccessType_NON_3_GPP_ACCESS:
+		return fmt.Errorf("unsupported access type: %s", accessType)
+	default:
+		return fmt.Errorf("invalid access type: %s", accessType)
+	}
 }
 
 func ValidateHexString(hexString string) error {

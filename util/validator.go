@@ -170,6 +170,48 @@ func ValidateNrdc(nrdc *model.NrdcIE) error {
 }
 
 func ValidateUeIe(ueIe *model.UeIE) error {
+	if err := ValidateIp(ueIe.RanControlPlaneIp); err != nil {
+		return fmt.Errorf("invalid ue ran control plane ip, %s", err.Error())
+	}
+	if err := ValidateIp(ueIe.RanDataPlaneIp); err != nil {
+		return fmt.Errorf("invalid ue ran data plane ip, %s", err.Error())
+	}
+
+	if err := ValidatePort(ueIe.RanControlPlanePort); err != nil {
+		return fmt.Errorf("invalid ue ran control plane port, %s", err.Error())
+	}
+	if err := ValidatePort(ueIe.RanDataPlanePort); err != nil {
+		return fmt.Errorf("invalid ue ran data plane port, %s", err.Error())
+	}
+
+	if err := ValidatePlmnId(&ueIe.PlmnId); err != nil {
+		return fmt.Errorf("invalid ue plmn id, %s", err.Error())
+	}
+	if err := ValidateMsin(ueIe.Msin); err != nil {
+		return fmt.Errorf("invalid ue msin, %s", err.Error())
+	}
+
+	if err := ValidateAccessType(ueIe.AccessType); err != nil {
+		return fmt.Errorf("invalid ue access type, %s", err.Error())
+	}
+	if err := ValidateAuthenticationSubscription(&ueIe.AuthenticationSubscription); err != nil {
+		return fmt.Errorf("invalid ue authentication subscription, %s", err.Error())
+	}
+
+	if err := ValidateCipheringAlgorithm(&ueIe.CipheringAlgorithm); err != nil {
+		return fmt.Errorf("invalid ue ciphering algorithm, %s", err.Error())
+	}
+	if err := ValidateIntegrityAlgorithm(&ueIe.IntegrityAlgorithm); err != nil {
+		return fmt.Errorf("invalid ue integrity algorithm, %s", err.Error())
+	}
+
+	if err := ValidatePduSession(&ueIe.PduSession); err != nil {
+		return fmt.Errorf("invalid ue pdu session, %s", err.Error())
+	}
+
+	if err := ValidateNrdc(&ueIe.Nrdc); err != nil {
+		return fmt.Errorf("invalid ue nrdc, %s", err.Error())
+	}
 	return nil
 }
 

@@ -564,3 +564,159 @@ func TestValidateNrdc(t *testing.T) {
 		})
 	}
 }
+
+var testValidateUeIeCases = []struct {
+	name          string
+	ueIe          model.UeIE
+	expectedError error
+}{
+	{
+		name: "testValidUeIe",
+		ueIe: model.UeIE{
+			RanControlPlaneIp:   "10.0.2.1",
+			RanDataPlaneIp:      "10.0.2.1",
+			RanControlPlanePort: 31413,
+			RanDataPlanePort:    31414,
+			PlmnId: model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "93",
+			},
+			Msin:       "0000000001",
+			AccessType: models.AccessType("3GPP_ACCESS"),
+			AuthenticationSubscription: model.AuthenticationSubscriptionIE{
+				EncPermanentKey:               "8baf473f2f8fd09487cccbd7097c6862",
+				EncOpcKey:                     "8e27b6af0e692e750f32667a3b14605d",
+				AuthenticationManagementField: "8000",
+				SequenceNumber:                "000000000023",
+			},
+			CipheringAlgorithm: model.CipheringAlgorithmIE{
+				Nea0: true,
+				Nea1: false,
+				Nea2: false,
+				Nea3: false,
+			},
+			IntegrityAlgorithm: model.IntegrityAlgorithmIE{
+				Nia0: false,
+				Nia1: false,
+				Nia2: true,
+				Nia3: false,
+			},
+			PduSession: model.PduSessionIE{
+				Dnn: "internet",
+				Snssai: model.SnssaiIE{
+					Sst: "1",
+					Sd:  "010203",
+				},
+			},
+			UeTunnelDevice: "ueTun0",
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testValidStaticNrdcUeIe",
+		ueIe: model.UeIE{
+			RanControlPlaneIp:   "10.0.2.1",
+			RanDataPlaneIp:      "10.0.2.1",
+			RanControlPlanePort: 31413,
+			RanDataPlanePort:    31414,
+			PlmnId: model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "93",
+			},
+			Msin:       "0000000001",
+			AccessType: models.AccessType("3GPP_ACCESS"),
+			AuthenticationSubscription: model.AuthenticationSubscriptionIE{
+				EncPermanentKey:               "8baf473f2f8fd09487cccbd7097c6862",
+				EncOpcKey:                     "8e27b6af0e692e750f32667a3b14605d",
+				AuthenticationManagementField: "8000",
+				SequenceNumber:                "000000000023",
+			},
+			CipheringAlgorithm: model.CipheringAlgorithmIE{
+				Nea0: true,
+				Nea1: false,
+				Nea2: false,
+				Nea3: false,
+			},
+			IntegrityAlgorithm: model.IntegrityAlgorithmIE{
+				Nia0: false,
+				Nia1: false,
+				Nia2: true,
+				Nia3: false,
+			},
+			PduSession: model.PduSessionIE{
+				Dnn: "internet",
+				Snssai: model.SnssaiIE{
+					Sst: "1",
+					Sd:  "010203",
+				},
+			},
+			Nrdc: model.NrdcIE{
+				Enable: true,
+				DcRanDataPlane: model.DcDataPlaneIE{
+					Ip:   "10.0.3.1",
+					Port: 31414,
+				},
+			},
+			UeTunnelDevice: "ueTun0",
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testValidDynamicNrdcUeIe",
+		ueIe: model.UeIE{
+			RanControlPlaneIp:   "10.0.2.1",
+			RanDataPlaneIp:      "10.0.2.1",
+			RanControlPlanePort: 31413,
+			RanDataPlanePort:    31414,
+			PlmnId: model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "93",
+			},
+			Msin:       "0000000001",
+			AccessType: models.AccessType("3GPP_ACCESS"),
+			AuthenticationSubscription: model.AuthenticationSubscriptionIE{
+				EncPermanentKey:               "8baf473f2f8fd09487cccbd7097c6862",
+				EncOpcKey:                     "8e27b6af0e692e750f32667a3b14605d",
+				AuthenticationManagementField: "8000",
+				SequenceNumber:                "000000000023",
+			},
+			CipheringAlgorithm: model.CipheringAlgorithmIE{
+				Nea0: true,
+				Nea1: false,
+				Nea2: false,
+				Nea3: false,
+			},
+			IntegrityAlgorithm: model.IntegrityAlgorithmIE{
+				Nia0: false,
+				Nia1: false,
+				Nia2: true,
+				Nia3: false,
+			},
+			PduSession: model.PduSessionIE{
+				Dnn: "internet",
+				Snssai: model.SnssaiIE{
+					Sst: "1",
+					Sd:  "010203",
+				},
+			},
+			Nrdc: model.NrdcIE{
+				Enable: false,
+				DcRanDataPlane: model.DcDataPlaneIE{
+					Ip:   "10.0.3.1",
+					Port: 31414,
+				},
+			},
+			UeTunnelDevice: "ueTun0",
+		},
+		expectedError: nil,
+	},
+}
+
+func TestValidateUeIe(t *testing.T) {
+	for _, testCase := range testValidateUeIeCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateUeIe(&testCase.ueIe)
+			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}

@@ -7,8 +7,6 @@ gnb:
   ranControlPlaneIp: "10.0.2.3"
   ranDataPlaneIp: "10.0.2.3"
 
-  xnIp: "10.0.1.2"
-
   amfN2Port: 38412
   ranN2Port: 38413
   upfN3Port: 2152
@@ -16,8 +14,6 @@ gnb:
 
   ranControlPlanePort: 31413
   ranDataPlanePort: 31414
-
-  xnPort: 31415
 
   gnbId: "000314"
   gnbName: "gNB-master"
@@ -37,10 +33,13 @@ gnb:
     sd: "010203"
 
   staticNrdc: true
+
   xnInterface:
     enable: true
-    xnIp: "10.0.1.4"
-    xnPort: 31415
+    xnListenIp: "10.0.1.2"
+    xnListenPort: 31415
+    xnDialIp: "10.0.1.4"
+    xnDialPort: 31415
 
   api:
     ip: "10.0.1.2"

@@ -29,8 +29,10 @@ import (
 
 type xnInterface struct {
 	enable bool
-	xnIp   string
-	xnPort int
+	xnListenIp string
+	xnListenPort int
+	xnDialIp   string
+	xnDialPort int
 }
 
 type api struct {
@@ -50,8 +52,6 @@ type Gnb struct {
 	ranControlPlaneIp string
 	ranDataPlaneIp    string
 
-	xnIp string
-
 	amfN2Port int
 	ranN2Port int
 	upfN3Port int
@@ -59,8 +59,6 @@ type Gnb struct {
 
 	ranControlPlanePort int
 	ranDataPlanePort    int
-
-	xnPort int
 
 	n2Conn *sctp.SCTPConn
 	n3Conn *net.UDPConn
@@ -143,7 +141,6 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		ranN3Ip:           config.Gnb.RanN3Ip,
 		ranControlPlaneIp: config.Gnb.RanControlPlaneIp,
 		ranDataPlaneIp:    config.Gnb.RanDataPlaneIp,
-		xnIp:              config.Gnb.XnIp,
 
 		amfN2Port:           config.Gnb.AmfN2Port,
 		ranN2Port:           config.Gnb.RanN2Port,
@@ -151,7 +148,6 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		ranN3Port:           config.Gnb.RanN3Port,
 		ranControlPlanePort: config.Gnb.RanControlPlanePort,
 		ranDataPlanePort:    config.Gnb.RanDataPlanePort,
-		xnPort:              config.Gnb.XnPort,
 
 		gnbId:   gnbId,
 		gnbName: config.Gnb.GnbName,
@@ -163,8 +159,10 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 		staticNrdc: config.Gnb.StaticNrdc,
 		xnInterface: xnInterface{
 			enable: config.Gnb.XnInterface.Enable,
-			xnIp:   config.Gnb.XnInterface.XnIp,
-			xnPort: config.Gnb.XnInterface.XnPort,
+			xnListenIp:   config.Gnb.XnInterface.XnListenIp,
+			xnListenPort: config.Gnb.XnInterface.XnListenPort,
+			xnDialIp:   config.Gnb.XnInterface.XnDialIp,
+			xnDialPort: config.Gnb.XnInterface.XnDialPort,
 		},
 
 		ranUeConns: sync.Map{},
@@ -330,7 +328,7 @@ func (g *Gnb) Stop() {
 			g.XnLog.Errorf("Error closing XN listener: %v", err)
 		}
 		g.XnLog.Debugln("XN listener stopped")
-		g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnIp, g.xnPort)
+		g.XnLog.Tracef("XN listener stopped at %s:%d", g.xnInterface.xnListenIp, g.xnInterface.xnListenPort)
 	}
 
 	var wg sync.WaitGroup
@@ -570,14 +568,14 @@ func (g *Gnb) startGtpProcessor(ctx context.Context) {
 func (g *Gnb) startXnListener() error {
 	g.XnLog.Infoln("Starting XN listener")
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", g.xnIp, g.xnPort))
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnListenIp, g.xnInterface.xnListenPort))
 	if err != nil {
 		return err
 	}
 	g.xnListener = &listener
 
 	g.XnLog.Infoln("============= XN Info ==============")
-	g.XnLog.Infof("XN access address: %s:%d", g.xnIp, g.xnPort)
+	g.XnLog.Infof("XN access address: %s:%d", g.xnInterface.xnListenIp, g.xnInterface.xnListenPort)
 	g.XnLog.Infoln("====================================")
 
 	g.XnLog.Infoln("XN listener started")
@@ -1209,11 +1207,11 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(imsi string, ngapPduSessi
 
 	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
 
-	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnIp, g.xnInterface.xnPort))
+	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort))
 	if err != nil {
 		return qosFlowPerTNLInformationItem, fmt.Errorf("error dial xn: %v", err)
 	}
-	g.XnLog.Debugf("Dial XN at %s:%d", g.xnIp, g.xnPort)
+	g.XnLog.Debugf("Dial XN at %s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort)
 
 	xnPdu := NewXnPdu(imsi, ngapPduSessionResourceSetupRequestRaw)
 	xnPduBytes, err := xnPdu.Marshal()
@@ -1262,11 +1260,11 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(imsi string, ngapPduSessi
 func (g *Gnb) xnPduSessionResourceModifyIndication(imsi string, ngapPduSessionResourceModifyIndicationRaw []byte) ([]byte, error) {
 	g.XnLog.Infoln("Processing XN PDU Session Resource Modify Indication Transfer")
 
-	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnIp, g.xnInterface.xnPort))
+	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort))
 	if err != nil {
 		return nil, fmt.Errorf("error dial xn: %v", err)
 	}
-	g.XnLog.Debugf("Dial XN at %s:%d", g.xnIp, g.xnPort)
+	g.XnLog.Debugf("Dial XN at %s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort)
 
 	xnPdu := NewXnPdu(imsi, ngapPduSessionResourceModifyIndicationRaw)
 	xnPduBytes, err := xnPdu.Marshal()
@@ -1312,11 +1310,11 @@ func (g *Gnb) xnPduSessionResourceModifyIndication(imsi string, ngapPduSessionRe
 func (g *Gnb) xnPduSessionResourceModifyConfirm(imsi string, ngapPduSessionResourceModifyConfirmRaw []byte) ([]byte, error) {
 	g.XnLog.Infoln("Processing XN PDU Session Resource Modify Confirm")
 
-	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnIp, g.xnInterface.xnPort))
+	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort))
 	if err != nil {
 		return nil, fmt.Errorf("error dial xn: %v", err)
 	}
-	g.XnLog.Debugf("Dial XN at %s:%d", g.xnIp, g.xnPort)
+	g.XnLog.Debugf("Dial XN at %s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort)
 
 	xnPdu := NewXnPdu(imsi, ngapPduSessionResourceModifyConfirmRaw)
 	xnPduBytes, err := xnPdu.Marshal()

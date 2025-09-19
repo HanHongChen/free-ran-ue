@@ -14,8 +14,6 @@ type GnbIE struct {
 	RanControlPlaneIp string `yaml:"ranControlPlaneIp"`
 	RanDataPlaneIp    string `yaml:"ranDataPlaneIp"`
 
-	XnIp string `yaml:"xnIp"`
-
 	AmfN2Port int `yaml:"amfN2Port"`
 	RanN2Port int `yaml:"ranN2Port"`
 	UpfN3Port int `yaml:"upfN3Port"`
@@ -23,8 +21,6 @@ type GnbIE struct {
 
 	RanControlPlanePort int `yaml:"ranControlPlanePort"`
 	RanDataPlanePort    int `yaml:"ranDataPlanePort"`
-
-	XnPort int `yaml:"xnPort"`
 
 	GnbId   string `yaml:"gnbId"`
 	GnbName string `yaml:"gnbName"`
@@ -35,6 +31,7 @@ type GnbIE struct {
 	Snssai SnssaiIE `yaml:"snssai"`
 
 	StaticNrdc  bool          `yaml:"staticNrdc"`
+
 	XnInterface XnInterfaceIE `yaml:"xnInterface"`
 
 	Api ApiIE `yaml:"api"`
@@ -42,6 +39,10 @@ type GnbIE struct {
 
 type XnInterfaceIE struct {
 	Enable bool   `yaml:"enable"`
-	XnIp   string `yaml:"xnIp"`
-	XnPort int    `yaml:"xnPort"`
+
+	XnListenIp string `yaml:"xnListenIp"`
+	XnListenPort int `yaml:"xnListenPort"`
+
+	XnDialIp   string `yaml:"xnDialIp"`
+	XnDialPort int `yaml:"xnDialPort"`
 }

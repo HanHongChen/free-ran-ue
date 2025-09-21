@@ -1,48 +1,48 @@
 package model
 
 type GnbConfig struct {
-	Gnb    GnbIE    `yaml:"gnb"`
-	Logger LoggerIE `yaml:"logger"`
+	Gnb    GnbIE    `yaml:"gnb" valid:"required"`
+	Logger LoggerIE `yaml:"logger" valid:"required"`
 }
 
 type GnbIE struct {
-	AmfN2Ip string `yaml:"amfN2Ip"`
-	RanN2Ip string `yaml:"ranN2Ip"`
-	UpfN3Ip string `yaml:"upfN3Ip"`
-	RanN3Ip string `yaml:"ranN3Ip"`
+	AmfN2Ip string `yaml:"amfN2Ip" valid:"required"`
+	RanN2Ip string `yaml:"ranN2Ip" valid:"required"`
+	UpfN3Ip string `yaml:"upfN3Ip" valid:"required"`
+	RanN3Ip string `yaml:"ranN3Ip" valid:"required"`
 
-	RanControlPlaneIp string `yaml:"ranControlPlaneIp"`
-	RanDataPlaneIp    string `yaml:"ranDataPlaneIp"`
+	RanControlPlaneIp string `yaml:"ranControlPlaneIp" valid:"required"`
+	RanDataPlaneIp    string `yaml:"ranDataPlaneIp" valid:"required"`
 
-	AmfN2Port int `yaml:"amfN2Port"`
-	RanN2Port int `yaml:"ranN2Port"`
-	UpfN3Port int `yaml:"upfN3Port"`
-	RanN3Port int `yaml:"ranN3Port"`
+	AmfN2Port int `yaml:"amfN2Port" valid:"required"`
+	RanN2Port int `yaml:"ranN2Port" valid:"required"`
+	UpfN3Port int `yaml:"upfN3Port" valid:"required"`
+	RanN3Port int `yaml:"ranN3Port" valid:"required"`
 
-	RanControlPlanePort int `yaml:"ranControlPlanePort"`
-	RanDataPlanePort    int `yaml:"ranDataPlanePort"`
+	RanControlPlanePort int `yaml:"ranControlPlanePort" valid:"required"`
+	RanDataPlanePort    int `yaml:"ranDataPlanePort" valid:"required"`
 
-	GnbId   string `yaml:"gnbId"`
-	GnbName string `yaml:"gnbName"`
+	GnbId   string `yaml:"gnbId" valid:"required"`
+	GnbName string `yaml:"gnbName" valid:"required"`
 
-	PlmnId PlmnIdIE `yaml:"plmnId"`
+	PlmnId PlmnIdIE `yaml:"plmnId" valid:"required"`
 
-	Tai    TaiIE    `yaml:"tai"`
-	Snssai SnssaiIE `yaml:"snssai"`
+	Tai    TaiIE    `yaml:"tai" valid:"required"`
+	Snssai SnssaiIE `yaml:"snssai" valid:"required"`
 
-	StaticNrdc  bool          `yaml:"staticNrdc"`
+	StaticNrdc bool `yaml:"staticNrdc"`
 
 	XnInterface XnInterfaceIE `yaml:"xnInterface"`
 
-	Api ApiIE `yaml:"api"`
+	Api ApiIE `yaml:"api" valid:"required"`
 }
 
 type XnInterfaceIE struct {
-	Enable bool   `yaml:"enable"`
+	Enable bool `yaml:"enable" valid:"required"`
 
-	XnListenIp string `yaml:"xnListenIp"`
-	XnListenPort int `yaml:"xnListenPort"`
+	XnListenIp   string `yaml:"xnListenIp" valid:"required"`
+	XnListenPort int    `yaml:"xnListenPort" valid:"required"`
 
-	XnDialIp   string `yaml:"xnDialIp"`
-	XnDialPort int `yaml:"xnDialPort"`
+	XnDialIp   string `yaml:"xnDialIp" valid:"required"`
+	XnDialPort int    `yaml:"xnDialPort" valid:"required"`
 }

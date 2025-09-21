@@ -224,3 +224,133 @@ func ValidateUe(ue *model.UeConfig) error {
 	}
 	return nil
 }
+
+func ValidateTaiIe(taiIe *model.TaiIE) error {
+	if err := ValidateHexString(taiIe.Tac); err != nil {
+		return fmt.Errorf("invalid tac: %s", err.Error())
+	}
+
+	if err := ValidatePlmnId(&taiIe.BroadcastPlmnId); err != nil {
+		return fmt.Errorf("invalid broadcastPlmnId: %s", err.Error())
+	}
+	return nil
+}
+
+func ValidateSnssaiIe(snssai *model.SnssaiIE) error {
+	if err := ValidateIntStringWithLength(snssai.Sst, 1); err != nil {
+		return fmt.Errorf("invalid sst, %s", err.Error())
+	}
+
+	if err := ValidateHexString(snssai.Sd); err != nil {
+		return fmt.Errorf("invalid sd, %s", err.Error())
+	}
+	return nil
+}
+
+func ValidateApiIe(apiIe *model.ApiIE) error {
+	if err := ValidateIp(apiIe.Ip); err != nil {
+		return fmt.Errorf("invalid ip: %s", err.Error())
+	}
+
+	if err := ValidatePort(apiIe.Port); err != nil {
+		return fmt.Errorf("invalid port: %s", err.Error())
+	}
+	return nil
+}
+
+func ValidateXnInterfaceIe(xnIe *model.XnInterfaceIE) error {
+	if !xnIe.Enable {
+		return nil
+	}
+
+	if err := ValidateIp(xnIe.XnListenIp); err != nil {
+		return fmt.Errorf("invalid xnListenIp: %s", err.Error())
+	}
+	if err := ValidatePort(xnIe.XnListenPort); err != nil {
+		return fmt.Errorf("invalid xnListenPort: %s", err.Error())
+	}
+	if err := ValidateIp(xnIe.XnDialIp); err != nil {
+		return fmt.Errorf("invalid xnDialIp: %s", err.Error())
+	}
+	if err := ValidatePort(xnIe.XnDialPort); err != nil {
+		return fmt.Errorf("invalid xnDialPort: %s", err.Error())
+	}
+
+	return nil
+}
+
+func ValidateGnbIe(gnbIe *model.GnbIE) error {
+	if err := ValidateIp(gnbIe.AmfN2Ip); err != nil {
+		return fmt.Errorf("invalid gnb amfN2Ip: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.RanN2Ip); err != nil {
+		return fmt.Errorf("invalid gnb ranN2Ip: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.UpfN3Ip); err != nil {
+		return fmt.Errorf("invalid gnb upfN3Ip: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.RanN3Ip); err != nil {
+		return fmt.Errorf("invalid gnb ranN3Ip: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.RanControlPlaneIp); err != nil {
+		return fmt.Errorf("invalid gnb ranControlPlaneIp: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.RanDataPlaneIp); err != nil {
+		return fmt.Errorf("invalid gnb ranDataPlaneIp: %s", err.Error())
+	}
+
+	if err := ValidatePort(gnbIe.AmfN2Port); err != nil {
+		return fmt.Errorf("invalid gnb amfN2Port: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.RanN2Port); err != nil {
+		return fmt.Errorf("invalid gnb ranN2Port: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.UpfN3Port); err != nil {
+		return fmt.Errorf("invalid gnb upfN3Port: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.RanN3Port); err != nil {
+		return fmt.Errorf("invalid gnb ranN3Port: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.RanControlPlanePort); err != nil {
+		return fmt.Errorf("invalid gnb ranControlPlanePort: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.RanDataPlanePort); err != nil {
+		return fmt.Errorf("invalid gnb ranDataPlanePort: %s", err.Error())
+	}
+
+	if err := ValidateHexString(gnbIe.GnbId); err != nil {
+		return fmt.Errorf("invalid gnb gnbId: %s", err.Error())
+	}
+
+	if err := ValidatePlmnId(&gnbIe.PlmnId); err != nil {
+		return fmt.Errorf("invalid gnb plmn id, %s", err.Error())
+	}
+
+	if err := ValidateTaiIe(&gnbIe.Tai); err != nil {
+		return fmt.Errorf("invalid gnb tai: %s", err.Error())
+	}
+
+	if err := ValidateSnssaiIe(&gnbIe.Snssai); err != nil {
+		return fmt.Errorf("invalid gnb snssai: %s", err.Error())
+	}
+
+	if err := ValidateApiIe(&gnbIe.Api); err != nil {
+		return fmt.Errorf("invalid gnb api: %s", err.Error())
+	}
+
+	if err := ValidateXnInterfaceIe(&gnbIe.XnInterface); err != nil {
+		return fmt.Errorf("invalid gnb xnInterface: %s", err.Error())
+	}
+
+	return nil
+}
+
+func ValidateGnb(gnb *model.GnbConfig) error {
+	if err := ValidateGnbIe(&gnb.Gnb); err != nil {
+		return err
+	}
+	if err := ValidateLoggerIe(&gnb.Logger); err != nil {
+		return err
+	}
+	return nil
+}

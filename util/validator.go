@@ -280,34 +280,42 @@ func ValidateXnInterfaceIe(xnIe *model.XnInterfaceIE) error {
 }
 
 func ValidateGnbIe(gnbIe *model.GnbIE) error {
-	//validate ip for gnb
-	ips := map[string]string{
-		"amfN2Ip":           gnbIe.AmfN2Ip,
-		"ranN2Ip":           gnbIe.RanN2Ip,
-		"upfN3Ip":           gnbIe.UpfN3Ip,
-		"ranN3Ip":           gnbIe.RanN3Ip,
-		"ranControlPlaneIp": gnbIe.RanControlPlaneIp,
-		"ranDataPlaneIp":    gnbIe.RanDataPlaneIp,
+	if err := ValidateIp(gnbIe.AmfN2Ip); err != nil {
+		return fmt.Errorf("invalid gnb amfN2Ip: %s", err.Error())
 	}
-	for name, ip := range ips {
-		if err := ValidateIp(ip); err != nil {
-			return fmt.Errorf("invalid gnb %s, %s", name, err.Error())
-		}
+	if err := ValidateIp(gnbIe.RanN2Ip); err != nil {
+		return fmt.Errorf("invalid gnb ranN2Ip: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.UpfN3Ip); err != nil {
+		return fmt.Errorf("invalid gnb upfN3Ip: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.RanN3Ip); err != nil {
+		return fmt.Errorf("invalid gnb ranN3Ip: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.RanControlPlaneIp); err != nil {
+		return fmt.Errorf("invalid gnb ranControlPlaneIp: %s", err.Error())
+	}
+	if err := ValidateIp(gnbIe.RanDataPlaneIp); err != nil {
+		return fmt.Errorf("invalid gnb ranDataPlaneIp: %s", err.Error())
 	}
 
-	// validate port for gnb
-	ports := map[string]int{
-		"amfN2Port":           gnbIe.AmfN2Port,
-		"ranN2Port":           gnbIe.RanN2Port,
-		"upfN3Port":           gnbIe.UpfN3Port,
-		"ranN3Port":           gnbIe.RanN3Port,
-		"ranControlPlanePort": gnbIe.RanControlPlanePort,
-		"ranDataPlanePort":    gnbIe.RanDataPlanePort,
+	if err := ValidatePort(gnbIe.AmfN2Port); err != nil {
+		return fmt.Errorf("invalid gnb amfN2Port: %s", err.Error())
 	}
-	for name, port := range ports {
-		if err := ValidatePort(port); err != nil {
-			return fmt.Errorf("invalid gnb %s, %s", name, err.Error())
-		}
+	if err := ValidatePort(gnbIe.RanN2Port); err != nil {
+		return fmt.Errorf("invalid gnb ranN2Port: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.UpfN3Port); err != nil {
+		return fmt.Errorf("invalid gnb upfN3Port: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.RanN3Port); err != nil {
+		return fmt.Errorf("invalid gnb ranN3Port: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.RanControlPlanePort); err != nil {
+		return fmt.Errorf("invalid gnb ranControlPlanePort: %s", err.Error())
+	}
+	if err := ValidatePort(gnbIe.RanDataPlanePort); err != nil {
+		return fmt.Errorf("invalid gnb ranDataPlanePort: %s", err.Error())
 	}
 
 	if err := ValidateHexString(gnbIe.GnbId); err != nil {

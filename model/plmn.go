@@ -1,11 +1,11 @@
 package model
 
 type TaiIE struct {
-	Tac             string   `yaml:"tac"`
-	BroadcastPlmnId PlmnIdIE `yaml:"broadcastPlmnId"`
+	Tac             string   `yaml:"tac" valid:"required"`
+	BroadcastPlmnId PlmnIdIE `yaml:"broadcastPlmnId" valid:"required"`
 }
 
 type PlmnIdIE struct {
-	Mcc string `yaml:"mcc"`
-	Mnc string `yaml:"mnc"`
+	Mcc string `yaml:"mcc" valid:"required"`
+	Mnc string `yaml:"mnc" valid:"required"`
 }

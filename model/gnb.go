@@ -46,3 +46,8 @@ type XnInterfaceIE struct {
 	XnDialIp   string `yaml:"xnDialIp" valid:"required"`
 	XnDialPort int    `yaml:"xnDialPort" valid:"required"`
 }
+
+type ApiIE struct {
+	Ip   string `yaml:"ip" valid:"required"`
+	Port int    `yaml:"port" valid:"required"`
+}

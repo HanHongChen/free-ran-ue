@@ -1,6 +1,6 @@
 package model
 
 type SnssaiIE struct {
-	Sst string `yaml:"sst"`
-	Sd  string `yaml:"sd"`
+	Sst string `yaml:"sst" valid:"required"`
+	Sd  string `yaml:"sd" valid:"required"`
 }

@@ -1,5 +1,5 @@
 package model
 
 type LoggerIE struct {
-	Level string `yaml:"level"`
+	Level string `yaml:"level" valid:"required"`
 }

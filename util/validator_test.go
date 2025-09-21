@@ -565,154 +565,6 @@ func TestValidateNrdc(t *testing.T) {
 	}
 }
 
-// --- Test for ValidateSnssaiIe ---
-var testValidateSnssaiIeCases = []struct {
-	name          string
-	snssai        model.SnssaiIE
-	expectedError error
-}{
-	{
-		name:          "Valid case from default YAML",
-		snssai:        model.SnssaiIE{Sst: "1", Sd: "010203"},
-		expectedError: nil,
-	},
-	{
-		name:          "Invalid case - SD is not a valid hex string",
-		snssai:        model.SnssaiIE{Sst: "1", Sd: "01020g"}, // 'g' is not a hex character
-		expectedError: fmt.Errorf("invalid sd, invalid hex string: 01020g"),
-	},
-}
-
-func TestValidateSnssaiIe(t *testing.T) {
-	for _, tc := range testValidateSnssaiIeCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := util.ValidateSnssaiIe(&tc.snssai)
-			if tc.expectedError != nil {
-				assert.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-// --- Test for ValidateTaiIe ---
-var testValidateTaiIeCases = []struct {
-	name          string
-	tai           model.TaiIE
-	expectedError error
-}{
-	{
-		name: "Valid case from default YAML",
-		tai: model.TaiIE{
-			Tac: "000001",
-			BroadcastPlmnId: model.PlmnIdIE{
-				Mcc: "208",
-				Mnc: "93",
-			},
-		},
-		expectedError: nil,
-	},
-	{
-		name: "Invalid case - BroadcastPlmnId has incorrect MNC length",
-		tai: model.TaiIE{
-			Tac: "000001",
-			BroadcastPlmnId: model.PlmnIdIE{
-				Mcc: "208",
-				Mnc: "930", // Invalid MNC length
-			},
-		},
-		expectedError: fmt.Errorf("invalid broadcastPlmnId: invalid mnc: 930, mnc should be 2 digits"),
-	},
-}
-
-func TestValidateTaiIe(t *testing.T) {
-	for _, tc := range testValidateTaiIeCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := util.ValidateTaiIe(&tc.tai)
-			if tc.expectedError != nil {
-				assert.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-// --- Test for ValidateApiIe ---
-var testValidateApiIeCases = []struct {
-	name          string
-	api           model.ApiIE
-	expectedError error
-}{
-	{
-		name:          "Valid case from default YAML",
-		api:           model.ApiIE{Ip: "10.0.1.3", Port: 40104},
-		expectedError: nil,
-	},
-	{
-		name:          "Invalid case - Port number is out of range",
-		api:           model.ApiIE{Ip: "10.0.1.3", Port: 99999}, // Port > 65535
-		expectedError: fmt.Errorf("invalid port: invalid port range: 99999, range should be 1-65535"),
-	},
-}
-
-func TestValidateApiIe(t *testing.T) {
-	for _, tc := range testValidateApiIeCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := util.ValidateApiIe(&tc.api)
-			if tc.expectedError != nil {
-				assert.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-// --- Test for ValidateXnInterfaceIe ---
-var testValidateXnInterfaceIeCases = []struct {
-	name          string
-	xn            model.XnInterfaceIE
-	expectedError error
-}{
-	{
-		name: "Valid case from default YAML (enabled)",
-		xn: model.XnInterfaceIE{
-			Enable:       true,
-			XnListenIp:   "10.0.1.3",
-			XnListenPort: 31415,
-			XnDialIp:     "10.0.1.2",
-			XnDialPort:   31415,
-		},
-		expectedError: nil,
-	},
-	{
-		name: "Invalid case - XnDialIp has incorrect format",
-		xn: model.XnInterfaceIE{
-			Enable:       true,
-			XnListenIp:   "10.0.1.3",
-			XnListenPort: 31415,
-			XnDialIp:     "10.0.1.256", // Invalid IP address
-			XnDialPort:   31415,
-		},
-		expectedError: fmt.Errorf("invalid xnDialIp: invalid ip address: 10.0.1.256"),
-	},
-}
-
-func TestValidateXnInterfaceIe(t *testing.T) {
-	for _, tc := range testValidateXnInterfaceIeCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := util.ValidateXnInterfaceIe(&tc.xn)
-			if tc.expectedError != nil {
-				assert.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
 var testValidateUeIeCases = []struct {
 	name          string
 	ueIe          model.UeIE
@@ -869,13 +721,236 @@ func TestValidateUeIe(t *testing.T) {
 	}
 }
 
+var testValidateTaiIeCases = []struct {
+	name          string
+	tai           model.TaiIE
+	expectedError error
+}{
+	{
+		name: "testValidTaiIe",
+		tai: model.TaiIE{
+			Tac: "000001",
+			BroadcastPlmnId: model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "93",
+			},
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testInvalidTac",
+		tai: model.TaiIE{
+			Tac: "zzzzzzzz",
+			BroadcastPlmnId: model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "93",
+			},
+		},
+		expectedError: fmt.Errorf("invalid tac: invalid hex string: zzzzzzzz"),
+	},
+	{
+		name: "testInvalidBroadcastPlmnId",
+		tai: model.TaiIE{
+			Tac: "000001",
+			BroadcastPlmnId: model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "930",
+			},
+		},
+		expectedError: fmt.Errorf("invalid broadcastPlmnId: invalid mnc: 930, mnc should be 2 digits"),
+	},
+}
+
+func TestValidateTaiIe(t *testing.T) {
+	for _, tc := range testValidateTaiIeCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := util.ValidateTaiIe(&tc.tai)
+			if tc.expectedError != nil {
+				assert.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+var testValidateSnssaiIeCases = []struct {
+	name          string
+	snssai        model.SnssaiIE
+	expectedError error
+}{
+	{
+		name:          "testValidSnssaiIe",
+		snssai:        model.SnssaiIE{
+			Sst: "1",
+			Sd:  "010203",
+		},
+		expectedError: nil,
+	},
+	{
+		name:          "testInvalidSst",
+		snssai:        model.SnssaiIE{
+			Sst: "z",
+			Sd:  "010203",
+		},
+		expectedError: fmt.Errorf("invalid sst, invalid int string: z"),
+	},
+	{
+		name:          "testInvalidSd",
+		snssai:        model.SnssaiIE{
+			Sst: "1",
+			Sd:  "01020g",
+		},
+		expectedError: fmt.Errorf("invalid sd, invalid hex string: 01020g"),
+	},
+}
+
+func TestValidateSnssaiIe(t *testing.T) {
+	for _, tc := range testValidateSnssaiIeCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := util.ValidateSnssaiIe(&tc.snssai)
+			if tc.expectedError != nil {
+				assert.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+var testValidateApiIeCases = []struct {
+	name          string
+	api           model.ApiIE
+	expectedError error
+}{
+	{
+		name:          "testValidApiIe",
+		api:           model.ApiIE{
+			Ip: "10.0.1.3",
+			Port: 40104,
+		},
+		expectedError: nil,
+	},
+	{
+		name:          "testInvalidIp",
+		api:           model.ApiIE{
+			Ip: "10.0.1.3.1",
+			Port: 40104,
+		},
+		expectedError: fmt.Errorf("invalid ip: invalid ip address: 10.0.1.3.1"),
+	},
+	{
+		name:          "testInvalidPort",
+		api:           model.ApiIE{
+			Ip: "10.0.1.3",
+			Port: 0,
+		},
+		expectedError: fmt.Errorf("invalid port: invalid port range: 0, range should be 1-65535"),
+	},
+}
+
+func TestValidateApiIe(t *testing.T) {
+	for _, tc := range testValidateApiIeCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := util.ValidateApiIe(&tc.api)
+			if tc.expectedError != nil {
+				assert.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+var testValidateXnInterfaceIeCases = []struct {
+	name          string
+	xn            model.XnInterfaceIE
+	expectedError error
+}{
+	{
+		name: "testValidXnInterfaceIe",
+		xn: model.XnInterfaceIE{
+			Enable:       true,
+			XnListenIp:   "10.0.1.3",
+			XnListenPort: 31415,
+			XnDialIp:     "10.0.1.2",
+			XnDialPort:   31415,
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testValidXnInterfaceIeDisabled",
+		xn: model.XnInterfaceIE{
+			Enable:       false,
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testInvalidXnListenIp",
+		xn: model.XnInterfaceIE{
+			Enable:       true,
+			XnListenIp:   "10.0.1.3.1",
+			XnListenPort: 31415,
+			XnDialIp:     "10.0.1.2",
+			XnDialPort:   31415,
+		},
+		expectedError: fmt.Errorf("invalid xnListenIp: invalid ip address: 10.0.1.3.1"),
+	},
+	{
+		name: "testInvalidXnListenPort",
+		xn: model.XnInterfaceIE{
+			Enable:       true,
+			XnListenIp:   "10.0.1.3",
+			XnListenPort: 0,
+			XnDialIp:     "10.0.1.2",
+			XnDialPort:   31415,
+		},
+		expectedError: fmt.Errorf("invalid xnListenPort: invalid port range: 0, range should be 1-65535"),
+	},
+	{
+		name: "testInvalidXnDialIp",
+		xn: model.XnInterfaceIE{
+			Enable:       true,
+			XnListenIp:   "10.0.1.3",
+			XnListenPort: 31415,
+			XnDialIp:     "10.0.1.256",
+			XnDialPort:   31415,
+		},
+		expectedError: fmt.Errorf("invalid xnDialIp: invalid ip address: 10.0.1.256"),
+	},
+	{
+		name: "testInvalidXnDialPort",
+		xn: model.XnInterfaceIE{
+			Enable:       true,
+			XnListenIp:   "10.0.1.3",
+			XnListenPort: 31415,
+			XnDialIp:     "10.0.1.2",
+			XnDialPort:   0,
+		},
+		expectedError: fmt.Errorf("invalid xnDialPort: invalid port range: 0, range should be 1-65535"),
+	},
+}
+
+func TestValidateXnInterfaceIe(t *testing.T) {
+	for _, tc := range testValidateXnInterfaceIeCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := util.ValidateXnInterfaceIe(&tc.xn)
+			if tc.expectedError != nil {
+				assert.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 var testValidateGnbIeCases = []struct {
 	name          string
 	gnbIe         model.GnbIE
 	expectedError error
 }{
 	{
-		name: "test valid gnb ie",
+		name: "testValidGnbIe",
 		gnbIe: model.GnbIE{
 			AmfN2Ip:             "10.0.1.1",
 			RanN2Ip:             "10.0.1.2",
@@ -891,50 +966,31 @@ var testValidateGnbIeCases = []struct {
 			RanDataPlanePort:    31414,
 			GnbId:               "000314",
 			GnbName:             "gNB",
-			PlmnId:              model.PlmnIdIE{Mcc: "208", Mnc: "93"},
+			PlmnId:              model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "93",
+			},
 			Tai: model.TaiIE{
 				Tac:             "000001",
-				BroadcastPlmnId: model.PlmnIdIE{Mcc: "208", Mnc: "93"},
+				BroadcastPlmnId: model.PlmnIdIE{
+					Mcc: "208",
+					Mnc: "93",
+				},
 			},
-			Snssai: model.SnssaiIE{Sst: "1", Sd: "010203"},
-			Api:    model.ApiIE{Ip: "10.0.1.2", Port: 40104},
-			XnInterface: model.XnInterfaceIE{
-				Enable: false,
+			Snssai: model.SnssaiIE{
+				Sst: "1",
+				Sd:  "010203",
+			},
+			Api:    model.ApiIE{
+				Ip: "10.0.1.2",
+				Port: 40104,
 			},
 		},
 		expectedError: nil,
 	},
 	{
-		name: "test invalid ranN3Ip",
+		name: "testDcStaticgNB",
 		gnbIe: model.GnbIE{
-			// --- Corrected: Fill with valid data first ---
-			AmfN2Ip:             "10.0.1.1",
-			RanN2Ip:             "10.0.1.2",
-			UpfN3Ip:             "10.0.1.1",
-			RanN3Ip:             "invalid-ip", // The only invalid field
-			RanControlPlaneIp:   "10.0.2.1",
-			RanDataPlaneIp:      "10.0.2.1",
-			AmfN2Port:           38412,
-			RanN2Port:           38413,
-			UpfN3Port:           2152,
-			RanN3Port:           2152,
-			RanControlPlanePort: 31413,
-			RanDataPlanePort:    31414,
-			GnbId:               "000314",
-			PlmnId:              model.PlmnIdIE{Mcc: "208", Mnc: "93"},
-			Tai: model.TaiIE{
-				Tac:             "000001",
-				BroadcastPlmnId: model.PlmnIdIE{Mcc: "208", Mnc: "93"},
-			},
-			Snssai: model.SnssaiIE{Sst: "1", Sd: "010203"},
-			Api:    model.ApiIE{Ip: "10.0.1.2", Port: 40104},
-		},
-		expectedError: fmt.Errorf("invalid gnb ranN3Ip, invalid ip address: invalid-ip"),
-	},
-	{
-		name: "test invalid plmnid",
-		gnbIe: model.GnbIE{
-			// --- Corrected: Fill with valid data first ---
 			AmfN2Ip:             "10.0.1.1",
 			RanN2Ip:             "10.0.1.2",
 			UpfN3Ip:             "10.0.1.1",
@@ -948,48 +1004,80 @@ var testValidateGnbIeCases = []struct {
 			RanControlPlanePort: 31413,
 			RanDataPlanePort:    31414,
 			GnbId:               "000314",
-			PlmnId:              model.PlmnIdIE{Mcc: "208", Mnc: "93a"}, // The only invalid field
+			GnbName:             "gNB",
+			PlmnId:              model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "93",
+			},
 			Tai: model.TaiIE{
 				Tac:             "000001",
-				BroadcastPlmnId: model.PlmnIdIE{Mcc: "208", Mnc: "93"},
+				BroadcastPlmnId: model.PlmnIdIE{
+					Mcc: "208",
+					Mnc: "93",
+				},
 			},
-			Snssai: model.SnssaiIE{Sst: "1", Sd: "010203"},
-			Api:    model.ApiIE{Ip: "10.0.1.2", Port: 40104},
+			Snssai: model.SnssaiIE{
+				Sst: "1",
+				Sd:  "010203",
+			},
+			StaticNrdc: true,
+			XnInterface: model.XnInterfaceIE{
+				Enable: true,
+				XnListenIp: "10.0.1.2",
+				XnListenPort: 31415,
+				XnDialIp: "10.0.1.3",
+				XnDialPort: 31415,
+			},
+			Api:    model.ApiIE{
+				Ip: "10.0.1.2",
+				Port: 40104,
+			},
 		},
-		expectedError: fmt.Errorf("invalid gnb plmn id, invalid mnc: 93a, mnc should be 2 digits"),
+		expectedError: nil,
 	},
 	{
-		name: "test valid secondary gnb with nrdc and xn enabled",
+		name: "testDcDynamicgNB",
 		gnbIe: model.GnbIE{
 			AmfN2Ip:             "10.0.1.1",
-			RanN2Ip:             "10.0.1.3",
+			RanN2Ip:             "10.0.1.2",
 			UpfN3Ip:             "10.0.1.1",
-			RanN3Ip:             "10.0.1.3",
-			RanControlPlaneIp:   "10.0.3.1",
-			RanDataPlaneIp:      "10.0.3.1",
+			RanN3Ip:             "10.0.1.2",
+			RanControlPlaneIp:   "10.0.2.1",
+			RanDataPlaneIp:      "10.0.2.1",
 			AmfN2Port:           38412,
 			RanN2Port:           38413,
 			UpfN3Port:           2152,
 			RanN3Port:           2152,
 			RanControlPlanePort: 31413,
 			RanDataPlanePort:    31414,
-			GnbId:               "314314",
-			GnbName:             "gNB-secondary",
-			PlmnId:              model.PlmnIdIE{Mcc: "208", Mnc: "93"},
+			GnbId:               "000314",
+			GnbName:             "gNB",
+			PlmnId:              model.PlmnIdIE{
+				Mcc: "208",
+				Mnc: "93",
+			},
 			Tai: model.TaiIE{
 				Tac:             "000001",
-				BroadcastPlmnId: model.PlmnIdIE{Mcc: "208", Mnc: "93"},
+				BroadcastPlmnId: model.PlmnIdIE{
+					Mcc: "208",
+					Mnc: "93",
+				},
 			},
-			Snssai: model.SnssaiIE{Sst: "1", Sd: "010203"},
-			Api:    model.ApiIE{Ip: "10.0.1.3", Port: 40104},
-
-			StaticNrdc: true,
+			Snssai: model.SnssaiIE{
+				Sst: "1",
+				Sd:  "010203",
+			},
+			StaticNrdc: false,
 			XnInterface: model.XnInterfaceIE{
-				Enable:       true,
-				XnListenIp:   "10.0.1.3",
+				Enable: true,
+				XnListenIp: "10.0.1.2",
 				XnListenPort: 31415,
-				XnDialIp:     "10.0.1.2",
-				XnDialPort:   31415,
+				XnDialIp: "10.0.1.3",
+				XnDialPort: 31415,
+			},
+			Api:    model.ApiIE{
+				Ip: "10.0.1.2",
+				Port: 40104,
 			},
 		},
 		expectedError: nil,

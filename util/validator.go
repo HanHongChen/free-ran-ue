@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 
 	"github.com/Alonza0314/free-ran-ue/model"
@@ -350,6 +351,43 @@ func ValidateGnb(gnb *model.GnbConfig) error {
 		return err
 	}
 	if err := ValidateLoggerIe(&gnb.Logger); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ValidateJWTIE(jwtIe *model.JWTIE) error {
+	if jwtIe.ExpiresIn <= 0 {
+		return fmt.Errorf("invalid expiresIn: %d, expiresIn must be positive", jwtIe.ExpiresIn)
+	}
+	return nil
+}
+
+func ValidateFrontendFilePath(frontendFilePath string) error {
+	if _, err := os.Stat(frontendFilePath); err != nil {
+		return fmt.Errorf("invalid frontendFilePath: %s, %s", frontendFilePath, err.Error())
+	}
+	return nil
+}
+
+func ValidateConsoleIe(consoleIe *model.ConsoleIE) error {
+	if err := ValidatePort(consoleIe.Port); err != nil {
+		return fmt.Errorf("invalid port: %s", err.Error())
+	}
+	if err := ValidateJWTIE(&consoleIe.JWT); err != nil {
+		return fmt.Errorf("invalid jwt: %s", err.Error())
+	}
+	if err := ValidateFrontendFilePath(consoleIe.FrontendFilePath); err != nil {
+		return fmt.Errorf("invalid frontendFilePath: %s", err.Error())
+	}
+	return nil
+}
+
+func ValidateConsole(console *model.ConsoleConfig) error {
+	if err := ValidateConsoleIe(&console.Console); err != nil {
+		return err
+	}
+	if err := ValidateLoggerIe(&console.Logger); err != nil {
 		return err
 	}
 	return nil

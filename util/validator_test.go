@@ -2,7 +2,11 @@ package util_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/util"
@@ -780,24 +784,24 @@ var testValidateSnssaiIeCases = []struct {
 	expectedError error
 }{
 	{
-		name:          "testValidSnssaiIe",
-		snssai:        model.SnssaiIE{
+		name: "testValidSnssaiIe",
+		snssai: model.SnssaiIE{
 			Sst: "1",
 			Sd:  "010203",
 		},
 		expectedError: nil,
 	},
 	{
-		name:          "testInvalidSst",
-		snssai:        model.SnssaiIE{
+		name: "testInvalidSst",
+		snssai: model.SnssaiIE{
 			Sst: "z",
 			Sd:  "010203",
 		},
 		expectedError: fmt.Errorf("invalid sst, invalid int string: z"),
 	},
 	{
-		name:          "testInvalidSd",
-		snssai:        model.SnssaiIE{
+		name: "testInvalidSd",
+		snssai: model.SnssaiIE{
 			Sst: "1",
 			Sd:  "01020g",
 		},
@@ -824,25 +828,25 @@ var testValidateApiIeCases = []struct {
 	expectedError error
 }{
 	{
-		name:          "testValidApiIe",
-		api:           model.ApiIE{
-			Ip: "10.0.1.3",
+		name: "testValidApiIe",
+		api: model.ApiIE{
+			Ip:   "10.0.1.3",
 			Port: 40104,
 		},
 		expectedError: nil,
 	},
 	{
-		name:          "testInvalidIp",
-		api:           model.ApiIE{
-			Ip: "10.0.1.3.1",
+		name: "testInvalidIp",
+		api: model.ApiIE{
+			Ip:   "10.0.1.3.1",
 			Port: 40104,
 		},
 		expectedError: fmt.Errorf("invalid ip: invalid ip address: 10.0.1.3.1"),
 	},
 	{
-		name:          "testInvalidPort",
-		api:           model.ApiIE{
-			Ip: "10.0.1.3",
+		name: "testInvalidPort",
+		api: model.ApiIE{
+			Ip:   "10.0.1.3",
 			Port: 0,
 		},
 		expectedError: fmt.Errorf("invalid port: invalid port range: 0, range should be 1-65535"),
@@ -881,7 +885,7 @@ var testValidateXnInterfaceIeCases = []struct {
 	{
 		name: "testValidXnInterfaceIeDisabled",
 		xn: model.XnInterfaceIE{
-			Enable:       false,
+			Enable: false,
 		},
 		expectedError: nil,
 	},
@@ -966,12 +970,12 @@ var testValidateGnbIeCases = []struct {
 			RanDataPlanePort:    31414,
 			GnbId:               "000314",
 			GnbName:             "gNB",
-			PlmnId:              model.PlmnIdIE{
+			PlmnId: model.PlmnIdIE{
 				Mcc: "208",
 				Mnc: "93",
 			},
 			Tai: model.TaiIE{
-				Tac:             "000001",
+				Tac: "000001",
 				BroadcastPlmnId: model.PlmnIdIE{
 					Mcc: "208",
 					Mnc: "93",
@@ -981,8 +985,8 @@ var testValidateGnbIeCases = []struct {
 				Sst: "1",
 				Sd:  "010203",
 			},
-			Api:    model.ApiIE{
-				Ip: "10.0.1.2",
+			Api: model.ApiIE{
+				Ip:   "10.0.1.2",
 				Port: 40104,
 			},
 		},
@@ -1005,12 +1009,12 @@ var testValidateGnbIeCases = []struct {
 			RanDataPlanePort:    31414,
 			GnbId:               "000314",
 			GnbName:             "gNB",
-			PlmnId:              model.PlmnIdIE{
+			PlmnId: model.PlmnIdIE{
 				Mcc: "208",
 				Mnc: "93",
 			},
 			Tai: model.TaiIE{
-				Tac:             "000001",
+				Tac: "000001",
 				BroadcastPlmnId: model.PlmnIdIE{
 					Mcc: "208",
 					Mnc: "93",
@@ -1022,14 +1026,14 @@ var testValidateGnbIeCases = []struct {
 			},
 			StaticNrdc: true,
 			XnInterface: model.XnInterfaceIE{
-				Enable: true,
-				XnListenIp: "10.0.1.2",
+				Enable:       true,
+				XnListenIp:   "10.0.1.2",
 				XnListenPort: 31415,
-				XnDialIp: "10.0.1.3",
-				XnDialPort: 31415,
+				XnDialIp:     "10.0.1.3",
+				XnDialPort:   31415,
 			},
-			Api:    model.ApiIE{
-				Ip: "10.0.1.2",
+			Api: model.ApiIE{
+				Ip:   "10.0.1.2",
 				Port: 40104,
 			},
 		},
@@ -1052,12 +1056,12 @@ var testValidateGnbIeCases = []struct {
 			RanDataPlanePort:    31414,
 			GnbId:               "000314",
 			GnbName:             "gNB",
-			PlmnId:              model.PlmnIdIE{
+			PlmnId: model.PlmnIdIE{
 				Mcc: "208",
 				Mnc: "93",
 			},
 			Tai: model.TaiIE{
-				Tac:             "000001",
+				Tac: "000001",
 				BroadcastPlmnId: model.PlmnIdIE{
 					Mcc: "208",
 					Mnc: "93",
@@ -1069,14 +1073,14 @@ var testValidateGnbIeCases = []struct {
 			},
 			StaticNrdc: false,
 			XnInterface: model.XnInterfaceIE{
-				Enable: true,
-				XnListenIp: "10.0.1.2",
+				Enable:       true,
+				XnListenIp:   "10.0.1.2",
 				XnListenPort: 31415,
-				XnDialIp: "10.0.1.3",
-				XnDialPort: 31415,
+				XnDialIp:     "10.0.1.3",
+				XnDialPort:   31415,
 			},
-			Api:    model.ApiIE{
-				Ip: "10.0.1.2",
+			Api: model.ApiIE{
+				Ip:   "10.0.1.2",
 				Port: 40104,
 			},
 		},
@@ -1088,6 +1092,126 @@ func TestValidateGnbIe(t *testing.T) {
 	for _, testCase := range testValidateGnbIeCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := util.ValidateGnbIe(&testCase.gnbIe)
+			if testCase.expectedError != nil {
+				assert.EqualError(t, err, testCase.expectedError.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+var testJWTIECases = []struct {
+	name          string
+	jwtIe         model.JWTIE
+	expectedError error
+}{
+	{
+		name: "testValidJWTIE",
+		jwtIe: model.JWTIE{
+			Secret:    "testSecret",
+			ExpiresIn: 1 * time.Hour,
+		},
+		expectedError: nil,
+	},
+	{
+		name: "testInvalidExpiresIn",
+		jwtIe: model.JWTIE{
+			Secret:    "testSecret",
+			ExpiresIn: 0,
+		},
+		expectedError: fmt.Errorf("invalid expiresIn: 0, expiresIn must be positive"),
+	},
+}
+
+func TestValidateJWTIE(t *testing.T) {
+	for _, testCase := range testJWTIECases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateJWTIE(&testCase.jwtIe)
+			if testCase.expectedError != nil {
+				assert.EqualError(t, err, testCase.expectedError.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+var testFrontendFilePathCases = []struct {
+	name             string
+	frontendFilePath string
+	expectedError    error
+}{
+	{
+		name:             "testValidFrontendFilePath",
+		frontendFilePath: "frontend",
+		expectedError:    nil,
+	},
+	{
+		name:             "testInvalidFrontendFilePath",
+		frontendFilePath: "frontend/invalid",
+		expectedError:    fmt.Errorf("no such file or directory"),
+	},
+}
+
+func TestValidateFrontendFilePath(t *testing.T) {
+	dir := t.TempDir()
+	validPath := filepath.Join(dir, "frontend")
+	if err := os.Mkdir(validPath, 0755); err != nil {
+		t.Fatalf("Failed to create valid path: %v", err)
+	}
+
+	for i := range testFrontendFilePathCases {
+		testFrontendFilePathCases[i].frontendFilePath = filepath.Join(dir, testFrontendFilePathCases[i].frontendFilePath)
+	}
+
+	for _, testCase := range testFrontendFilePathCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateFrontendFilePath(testCase.frontendFilePath)
+			if testCase.expectedError != nil {
+				assert.True(t, strings.Contains(err.Error(), testCase.expectedError.Error()))
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+var testConsoleIeCases = []struct {
+	name          string
+	consoleIe     model.ConsoleIE
+	expectedError error
+}{
+	{
+		name: "testValidConsoleIe",
+		consoleIe: model.ConsoleIE{
+			Username: "admin",
+			Password: "free-ran-ue",
+			Port:     40104,
+			JWT: model.JWTIE{
+				Secret:    "free-ran-ue",
+				ExpiresIn: 1 * time.Hour,
+			},
+			FrontendFilePath: "",
+		},
+		expectedError: nil,
+	},
+}
+
+func TestValidateConsoleIe(t *testing.T) {
+	dir := t.TempDir()
+	validPath := filepath.Join(dir, "frontend")
+	if err := os.Mkdir(validPath, 0755); err != nil {
+		t.Fatalf("Failed to create valid path: %v", err)
+	}
+
+	for i := range testConsoleIeCases {
+		testConsoleIeCases[i].consoleIe.FrontendFilePath = filepath.Join(dir, testConsoleIeCases[i].consoleIe.FrontendFilePath)
+	}
+
+	for _, testCase := range testConsoleIeCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := util.ValidateConsoleIe(&testCase.consoleIe)
 			if testCase.expectedError != nil {
 				assert.EqualError(t, err, testCase.expectedError.Error())
 			} else {

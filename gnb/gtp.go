@@ -51,6 +51,9 @@ func (t *TeidGenerator) ReleaseTeid(teid aper.OctetString) {
 	t.mtx.Lock()
 	defer t.mtx.Unlock()
 
+	if len(teid) == 0 {
+		return
+	}
 	value := t.deFormatFromString(hex.EncodeToString(teid))
 
 	if _, exists := t.teids.Load(value); exists {

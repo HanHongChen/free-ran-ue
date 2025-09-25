@@ -318,7 +318,7 @@ var testValidateAuthenticationSubscriptionCases = []struct {
 			AuthenticationManagementField: "8000",
 			SequenceNumber:                "00000000002a",
 		},
-		expectedError: fmt.Errorf("invalid sequence number, invalid int string: 00000000002a"),
+		expectedError: nil,
 	},
 	{
 		name: "testInvalidIntLengthSequenceNumber",
@@ -326,9 +326,9 @@ var testValidateAuthenticationSubscriptionCases = []struct {
 			EncPermanentKey:               "8baf473f2f8fd09487cccbd7097c6862",
 			EncOpcKey:                     "8e27b6af0e692e750f32667a3b14605d",
 			AuthenticationManagementField: "8000",
-			SequenceNumber:                "0000000000230",
+			SequenceNumber:                "00000000002g",
 		},
-		expectedError: fmt.Errorf("invalid sequence number, invalid int string: 0000000000230, length should be 12"),
+		expectedError: fmt.Errorf("invalid sequence number, invalid hex string: 00000000002g"),
 	},
 }
 

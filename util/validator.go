@@ -116,7 +116,7 @@ func ValidateAuthenticationSubscription(authenticationSubscription *model.Authen
 	if err := ValidateIntStringWithLength(authenticationSubscription.AuthenticationManagementField, 4); err != nil {
 		return fmt.Errorf("invalid authentication management field, %s", err.Error())
 	}
-	if err := ValidateIntStringWithLength(authenticationSubscription.SequenceNumber, 12); err != nil {
+	if err := ValidateHexString(authenticationSubscription.SequenceNumber); err != nil {
 		return fmt.Errorf("invalid sequence number, %s", err.Error())
 	}
 	return nil

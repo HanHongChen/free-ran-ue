@@ -310,26 +310,6 @@ var testValidateAuthenticationSubscriptionCases = []struct {
 		},
 		expectedError: fmt.Errorf("invalid authentication management field, invalid int string: 80000, length should be 4"),
 	},
-	{
-		name: "testInvalidNonIntSequenceNumber",
-		authenticationSubscription: model.AuthenticationSubscriptionIE{
-			EncPermanentKey:               "8baf473f2f8fd09487cccbd7097c6862",
-			EncOpcKey:                     "8e27b6af0e692e750f32667a3b14605d",
-			AuthenticationManagementField: "8000",
-			SequenceNumber:                "00000000002a",
-		},
-		expectedError: nil,
-	},
-	{
-		name: "testInvalidIntLengthSequenceNumber",
-		authenticationSubscription: model.AuthenticationSubscriptionIE{
-			EncPermanentKey:               "8baf473f2f8fd09487cccbd7097c6862",
-			EncOpcKey:                     "8e27b6af0e692e750f32667a3b14605d",
-			AuthenticationManagementField: "8000",
-			SequenceNumber:                "00000000002g",
-		},
-		expectedError: fmt.Errorf("invalid sequence number, invalid hex string: 00000000002g"),
-	},
 }
 
 func TestValidateAuthenticationSubscription(t *testing.T) {

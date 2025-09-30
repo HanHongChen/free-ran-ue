@@ -33,7 +33,11 @@ func TestTcpDialWithOptionalLocalAddress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error listening: %v", err)
 	}
-	defer listener.Close()
+	defer func() {
+		if err := listener.Close(); err != nil {
+			t.Fatalf("error closing listener: %v", err)
+		}
+	}()
 
 	go func() {
 		conn, err := listener.Accept()
@@ -41,9 +45,13 @@ func TestTcpDialWithOptionalLocalAddress(t *testing.T) {
 			if errors.Is(err, net.ErrClosed) {
 				return
 			}
-			t.Fatalf("error accepting: %v", err)
+			t.Errorf("error accepting: %v", err)
 		}
-		defer conn.Close()
+		defer func() {
+			if err := conn.Close(); err != nil {
+				t.Errorf("error closing connection: %v", err)
+			}
+		}()
 	}()
 
 	for _, testCase := range testTcpDialWithOptionalLocalAddressCases {

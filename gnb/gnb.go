@@ -1207,7 +1207,7 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(imsi string, ngapPduSessi
 
 	var qosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
 
-	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort))
+	xnConn, err := util.TcpDialWithOptionalLocalAddress(g.xnInterface.xnDialIp, g.xnInterface.xnDialPort, "")
 	if err != nil {
 		return qosFlowPerTNLInformationItem, fmt.Errorf("error dial xn: %v", err)
 	}
@@ -1260,7 +1260,7 @@ func (g *Gnb) xnPduSessionResourceSetupRequestTransfer(imsi string, ngapPduSessi
 func (g *Gnb) xnPduSessionResourceModifyIndication(imsi string, ngapPduSessionResourceModifyIndicationRaw []byte) ([]byte, error) {
 	g.XnLog.Infoln("Processing XN PDU Session Resource Modify Indication Transfer")
 
-	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort))
+	xnConn, err := util.TcpDialWithOptionalLocalAddress(g.xnInterface.xnDialIp, g.xnInterface.xnDialPort, "")
 	if err != nil {
 		return nil, fmt.Errorf("error dial xn: %v", err)
 	}
@@ -1310,7 +1310,7 @@ func (g *Gnb) xnPduSessionResourceModifyIndication(imsi string, ngapPduSessionRe
 func (g *Gnb) xnPduSessionResourceModifyConfirm(imsi string, ngapPduSessionResourceModifyConfirmRaw []byte) ([]byte, error) {
 	g.XnLog.Infoln("Processing XN PDU Session Resource Modify Confirm")
 
-	xnConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", g.xnInterface.xnDialIp, g.xnInterface.xnDialPort))
+	xnConn, err := util.TcpDialWithOptionalLocalAddress(g.xnInterface.xnDialIp, g.xnInterface.xnDialPort, "")
 	if err != nil {
 		return nil, fmt.Errorf("error dial xn: %v", err)
 	}

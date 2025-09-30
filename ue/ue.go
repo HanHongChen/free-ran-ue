@@ -65,6 +65,7 @@ type dcRanDataPlane struct {
 type nrdc struct {
 	enable bool
 	dcRanDataPlane
+	dcLocalDataPlaneIp string
 	specifiedFlow []string
 	rwLock        sync.RWMutex
 }
@@ -72,6 +73,7 @@ type nrdc struct {
 type Ue struct {
 	ranControlPlaneIp string
 	ranDataPlaneIp    string
+	localDataPlaneIp  string
 
 	ranControlPlanePort int
 	ranDataPlanePort    int
@@ -137,6 +139,7 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 	return &Ue{
 		ranControlPlaneIp: config.Ue.RanControlPlaneIp,
 		ranDataPlaneIp:    config.Ue.RanDataPlaneIp,
+		localDataPlaneIp:  config.Ue.LocalDataPlaneIp,
 
 		ranControlPlanePort: config.Ue.RanControlPlanePort,
 		ranDataPlanePort:    config.Ue.RanDataPlanePort,
@@ -178,6 +181,7 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 				ip:   config.Ue.Nrdc.DcRanDataPlane.Ip,
 				port: config.Ue.Nrdc.DcRanDataPlane.Port,
 			},
+			dcLocalDataPlaneIp: config.Ue.Nrdc.DcLocalDataPlaneIp,
 			specifiedFlow: make([]string, 0),
 			rwLock:        sync.RWMutex{},
 		},
@@ -279,7 +283,7 @@ func (u *Ue) connectToRanControlPlane() error {
 
 	u.RanLog.Tracef("RAN control plane address: %s:%d", u.ranControlPlaneIp, u.ranControlPlanePort)
 
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.ranControlPlaneIp, u.ranControlPlanePort))
+	conn, err := util.TcpDialWithOptionalLocalAddress(u.ranControlPlaneIp, u.ranControlPlanePort, "")
 	if err != nil {
 		return err
 	}
@@ -297,7 +301,7 @@ func (u *Ue) connectToRanDataPlane() error {
 
 	u.RanLog.Tracef("RAN data plane address: %s:%d", u.ranDataPlaneIp, u.ranDataPlanePort)
 
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.ranDataPlaneIp, u.ranDataPlanePort))
+	conn, err := util.TcpDialWithOptionalLocalAddress(u.ranDataPlaneIp, u.ranDataPlanePort, u.localDataPlaneIp)
 	if err != nil {
 		return err
 	}
@@ -305,7 +309,7 @@ func (u *Ue) connectToRanDataPlane() error {
 	u.RanLog.Debugln("Dial TCP to RAN data plane success")
 
 	if u.isNrdcEnabled() {
-		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port))
+		conn, err := util.TcpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
 		if err != nil {
 			return err
 		}
@@ -782,7 +786,7 @@ func (u *Ue) updateDataPlane() {
 	defer u.rwLock.Unlock()
 
 	if !u.nrdc.enable {
-		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port))
+		conn, err := util.TcpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
 		if err != nil {
 			u.TunLog.Errorf("Error connect to dc ran data plane: %+v", err)
 			return

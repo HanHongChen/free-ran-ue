@@ -10,6 +10,7 @@ type UeConfig struct {
 type UeIE struct {
 	RanControlPlaneIp string `yaml:"ranControlPlaneIp" valid:"required"`
 	RanDataPlaneIp    string `yaml:"ranDataPlaneIp" valid:"required"`
+	LocalDataPlaneIp  string `yaml:"localDataPlaneIp"`
 
 	RanControlPlanePort int `yaml:"ranControlPlanePort" valid:"required"`
 	RanDataPlanePort    int `yaml:"ranDataPlanePort" valid:"required"`
@@ -57,8 +58,9 @@ type PduSessionIE struct {
 }
 
 type NrdcIE struct {
-	Enable         bool          `yaml:"enable" valid:"required"`
-	DcRanDataPlane DcDataPlaneIE `yaml:"dcRanDataPlane" valid:"required"`
+	Enable             bool          `yaml:"enable" valid:"required"`
+	DcRanDataPlane     DcDataPlaneIE `yaml:"dcRanDataPlane" valid:"required"`
+	DcLocalDataPlaneIp string        `yaml:"dcLocalDataPlaneIp"`
 }
 
 type DcDataPlaneIE struct {

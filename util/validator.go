@@ -167,6 +167,11 @@ func ValidateNrdc(nrdc *model.NrdcIE) error {
 	if err := ValidatePort(nrdc.DcRanDataPlane.Port); err != nil {
 		return fmt.Errorf("invalid nrdc dc ran data plane port, %s", err.Error())
 	}
+	if nrdc.DcLocalDataPlaneIp != "" {
+		if err := ValidateIp(nrdc.DcLocalDataPlaneIp); err != nil {
+			return fmt.Errorf("invalid nrdc dc local data plane ip, %s", err.Error())
+		}
+	}
 	return nil
 }
 
@@ -176,6 +181,12 @@ func ValidateUeIe(ueIe *model.UeIE) error {
 	}
 	if err := ValidateIp(ueIe.RanDataPlaneIp); err != nil {
 		return fmt.Errorf("invalid ue ran data plane ip, %s", err.Error())
+	}
+
+	if ueIe.LocalDataPlaneIp != "" {
+		if err := ValidateIp(ueIe.LocalDataPlaneIp); err != nil {
+			return fmt.Errorf("invalid ue local data plane ip, %s", err.Error())
+		}
 	}
 
 	if err := ValidatePort(ueIe.RanControlPlanePort); err != nil {

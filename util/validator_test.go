@@ -510,6 +510,18 @@ var testValidateNrdcCases = []struct {
 		expectedError: nil,
 	},
 	{
+		name: "testValidEnableNrdcWithLocalDataPlaneIp",
+		nrdc: model.NrdcIE{
+			Enable: true,
+			DcRanDataPlane: model.DcDataPlaneIE{
+				Ip:   "10.0.3.1",
+				Port: 31414,
+			},
+			DcLocalDataPlaneIp: "10.0.3.2",
+		},
+		expectedError: nil,
+	},
+	{
 		name: "testValidDisableNrdc",
 		nrdc: model.NrdcIE{
 			Enable: false,
@@ -601,6 +613,7 @@ var testValidateUeIeCases = []struct {
 		ueIe: model.UeIE{
 			RanControlPlaneIp:   "10.0.2.1",
 			RanDataPlaneIp:      "10.0.2.1",
+			LocalDataPlaneIp:    "10.0.2.2",
 			RanControlPlanePort: 31413,
 			RanDataPlanePort:    31414,
 			PlmnId: model.PlmnIdIE{
@@ -640,6 +653,7 @@ var testValidateUeIeCases = []struct {
 					Ip:   "10.0.3.1",
 					Port: 31414,
 				},
+				DcLocalDataPlaneIp: "10.0.3.2",
 			},
 			UeTunnelDevice: "ueTun0",
 		},
@@ -650,6 +664,7 @@ var testValidateUeIeCases = []struct {
 		ueIe: model.UeIE{
 			RanControlPlaneIp:   "10.0.2.1",
 			RanDataPlaneIp:      "10.0.2.1",
+			LocalDataPlaneIp:    "10.0.2.2",
 			RanControlPlanePort: 31413,
 			RanDataPlanePort:    31414,
 			PlmnId: model.PlmnIdIE{
@@ -689,6 +704,7 @@ var testValidateUeIeCases = []struct {
 					Ip:   "10.0.3.1",
 					Port: 31414,
 				},
+				DcLocalDataPlaneIp: "10.0.3.2",
 			},
 			UeTunnelDevice: "ueTun0",
 		},

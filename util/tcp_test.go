@@ -1,9 +1,11 @@
-package ue
+package util_test
 
 import (
 	"errors"
 	"net"
 	"testing"
+
+	"github.com/Alonza0314/free-ran-ue/util"
 )
 
 var testTcpDialWithOptionalLocalAddressCases = []struct {
@@ -46,7 +48,7 @@ func TestTcpDialWithOptionalLocalAddress(t *testing.T) {
 
 	for _, testCase := range testTcpDialWithOptionalLocalAddressCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			_, err := tcpDialWithOptionalLocalAddress(testCase.remoteAddress, testCase.remotePort, testCase.localAddress)
+			_, err := util.TcpDialWithOptionalLocalAddress(testCase.remoteAddress, testCase.remotePort, testCase.localAddress)
 			if err != nil {
 				t.Fatalf("error dialing: %v", err)
 			}

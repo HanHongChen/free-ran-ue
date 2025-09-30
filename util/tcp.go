@@ -1,11 +1,11 @@
-package ue
+package util
 
 import (
 	"fmt"
 	"net"
 )
 
-func tcpDialWithOptionalLocalAddress(remoteAddress string, remotePort int, localAddress string) (net.Conn, error) {
+func TcpDialWithOptionalLocalAddress(remoteAddress string, remotePort int, localAddress string) (net.Conn, error) {
 	if localAddress == "" {
 		return net.Dial("tcp", fmt.Sprintf("%s:%d", remoteAddress, remotePort))
 	}

@@ -10,9 +10,23 @@ ueRoutingInfo: # the list of UE routing information
       # default path derived from this topology
       # node name should be consistent with smfcfg.yaml
       - A: gNB1
-        B: I-UPF
-      - A: I-UPF
-        B: PSA-UPF
+        B: I-UPF-1
+      - A: I-UPF-1
+        B: PSA-UPF-1
     specificPath:
       - dest: 1.1.1.1/32
-        path: [I-UPF]
+        path: [I-UPF-1]
+
+  UE2: # Group Name
+    members:
+      - imsi-208930000000002 # Subscription Permanent Identifier of the UE
+    topology: # Network topology for this group (Uplink: A->B, Downlink: B->A)
+        # default path derived from this topology
+        # node name should be consistent with smfcfg.yaml
+      - A: gNB2
+        B: I-UPF-2
+      - A: I-UPF-2
+        B: PSA-UPF-2
+    specificPath:
+      - dest: 1.1.1.1/32
+        path: [I-UPF-2]

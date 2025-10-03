@@ -130,7 +130,10 @@ services:
 
   smf:
     container_name: smf
-    image: free5gc/smf:latest
+    build:
+      context: ./nf_smf
+      args:
+        DEBUG_TOOLS: "false"
     command: ./smf -c ./config/smfcfg.yaml -u ./config/uerouting.yaml
     expose:
       - "8000"
@@ -146,8 +149,8 @@ services:
           - smf.free5gc.org
     depends_on:
       - nrf
-      - i-upf
-      - psa-upf
+      - i-upf-1
+      - psa-upf-1
 
   udm:
     container_name: udm
@@ -188,41 +191,89 @@ services:
       - db
       - nrf
 
-  i-upf:
-    container_name: i-upf
-    image: free5gc/upf:latest
+  i-upf-1:
+    container_name: i-upf-1
+    build:
+      context: ./nf_upf
+      args:
+        DEBUG_TOOLS: "false"
     command: bash -c "./upf-iptables.sh && ./upf -c ./config/upfcfg.yaml"
     volumes:
-      - ./config/ULCL/i-upfcfg.yaml:/free5gc/config/upfcfg.yaml
+      - ./config/ULCL/i-upfcfg-1.yaml:/free5gc/config/upfcfg.yaml
       - ./script/upf-iptables.sh:/free5gc/upf-iptables.sh
     cap_add:
       - NET_ADMIN
     networks:
       sbi:
         aliases:
-          - i-upf.free5gc.org
+          - i-upf-1.free5gc.org
       cn-ran:
         ipv4_address: 10.0.1.5
         aliases:
-          - n3.free5gc.org
+          - n3-1.free5gc.org
 
-  psa-upf:
-    container_name: psa-upf
-    image: free5gc/upf:latest
+  i-upf-2:
+    container_name: i-upf-2
+    build:
+      context: ./nf_upf
+      args:
+        DEBUG_TOOLS: "false"
     command: bash -c "./upf-iptables.sh && ./upf -c ./config/upfcfg.yaml"
     volumes:
-      - ./config/ULCL/psa-upfcfg.yaml:/free5gc/config/upfcfg.yaml
+      - ./config/ULCL/i-upfcfg-2.yaml:/free5gc/config/upfcfg.yaml
       - ./script/upf-iptables.sh:/free5gc/upf-iptables.sh
     cap_add:
       - NET_ADMIN
     networks:
       sbi:
         aliases:
-          - psa-upf.free5gc.org
+          - i-upf-2.free5gc.org
+      cn-ran:
+        ipv4_address: 10.0.1.9
+        aliases:
+          - n3-2.free5gc.org
+
+  psa-upf-1:
+    container_name: psa-upf-1
+    build:
+      context: ./nf_upf
+      args:
+        DEBUG_TOOLS: "false"
+    command: bash -c "./upf-iptables.sh && ./upf -c ./config/upfcfg.yaml"
+    volumes:
+      - ./config/ULCL/psa-upfcfg-1.yaml:/free5gc/config/upfcfg.yaml
+      - ./script/upf-iptables.sh:/free5gc/upf-iptables.sh
+    cap_add:
+      - NET_ADMIN
+    networks:
+      sbi:
+        aliases:
+          - psa-upf-1.free5gc.org
       cn-ran:
         ipv4_address: 10.0.1.7
         aliases:
-          - n9.free5gc.org
+          - n9-1.free5gc.org
+
+  psa-upf-2:
+    container_name: psa-upf-2
+    build:
+      context: ./nf_upf
+      args:
+        DEBUG_TOOLS: "false"
+    command: bash -c "./upf-iptables.sh && ./upf -c ./config/upfcfg.yaml"
+    volumes:
+      - ./config/ULCL/psa-upfcfg-2.yaml:/free5gc/config/upfcfg.yaml
+      - ./script/upf-iptables.sh:/free5gc/upf-iptables.sh
+    cap_add:
+      - NET_ADMIN
+    networks:
+      sbi:
+        aliases:
+          - psa-upf-2.free5gc.org
+      cn-ran:
+        ipv4_address: 10.0.1.11
+        aliases:
+          - n9-2.free5gc.org
 
   webconsole:
     container_name: webconsole
@@ -246,15 +297,17 @@ services:
       - db
       - nrf
 
-  gnb:
-    container_name: gnb
+  gnb-1:
+    container_name: gnb-1
     image: free-ran-ue:latest
     command: ./free-ran-ue gnb -c ./gnbcfg.yaml
     volumes:
-      - ./config/gnbcfg.yaml:/free-ran-ue/gnbcfg.yaml
+      - ./config/gnbcfg-1.yaml:/free-ran-ue/gnbcfg.yaml
     networks:
       cn-ran:
         ipv4_address: 10.0.1.2
+        aliases:
+          - gnb-1.free5gc.org
       ran-ue:
         ipv4_address: 10.0.2.3
     depends_on:
@@ -267,15 +320,41 @@ services:
       - smf
       - udm
       - udr
-      - i-upf
-      - psa-upf
+      - i-upf-1
+      - psa-upf-1
 
-  ue:
-    container_name: ue
+  gnb-2:
+    container_name: gnb-2
+    image: free-ran-ue:latest
+    command: ./free-ran-ue gnb -c ./gnbcfg.yaml
+    volumes:
+      - ./config/gnbcfg-2.yaml:/free-ran-ue/gnbcfg.yaml
+    networks:
+      cn-ran:
+        ipv4_address: 10.0.1.4
+        aliases:
+          - gnb-2.free5gc.org
+      ran-ue:
+        ipv4_address: 10.0.2.5
+    depends_on:
+      - amf
+      - ausf
+      - chf
+      - nrf
+      - nssf
+      - pcf
+      - smf
+      - udm
+      - udr
+      - i-upf-2
+      - psa-upf-2
+
+  ue-1:
+    container_name: ue-1
     image: free-ran-ue:latest
     command: ["tail", "-f", "/dev/null"]
     volumes:
-      - ./config/uecfg.yaml:/free-ran-ue/uecfg.yaml
+      - ./config/uecfg-1.yaml:/free-ran-ue/uecfg.yaml
     cap_add:
       - NET_ADMIN
     devices:
@@ -284,7 +363,23 @@ services:
       ran-ue:
         ipv4_address: 10.0.2.2
     depends_on:
-      - gnb
+      - gnb-1
+
+  ue-2:
+    container_name: ue-2
+    image: free-ran-ue:latest
+    command: ["tail", "-f", "/dev/null"]
+    volumes:
+      - ./config/uecfg-2.yaml:/free-ran-ue/uecfg.yaml
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    networks:
+      ran-ue:
+        ipv4_address: 10.0.2.4
+    depends_on:
+      - gnb-2
 
 networks:
   sbi:

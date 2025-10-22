@@ -1,4 +1,4 @@
-name: Integration Test
+name: Integration Test (Docker Compose)
 
 on:
   workflow_dispatch:
@@ -25,4 +25,5 @@ jobs:
           docker run --rm free-ran-ue:latest ls /free-ran-ue/console
 
       - name: Clean up docker resources
+        if: always()
         run: docker system prune -a -f --volumes

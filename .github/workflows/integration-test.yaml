@@ -4,11 +4,25 @@ on:
   workflow_dispatch:
   pull_request:
 
+env:
+  BASIC_COMPOSE_FILE: docker/docker-compose.yaml
+
 jobs:
   integration-test:
     runs-on: self-hosted
     
     steps:
-      - uses: actions/checkout@v4
-      - run: make docker
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Build free-ran-ue image
+        run: make docker
 
+      - name: Test free-ran-ue image
+        run: |
+          docker images
+          docker run --rm free-ran-ue:latest ls /free-ran-ue/free-ran-ue
+          docker run --rm free-ran-ue:latest ls /free-ran-ue/console
+
+      - name: Clean up docker resources
+        run: docker system prune -a -f --volumes

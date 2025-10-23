@@ -134,6 +134,45 @@ main() {
             fi
         ;;
         "dc-static")
+            if ! start_docker_compose $DC_STATIC_COMPOSE_FILE; then
+                echo "Failed to start docker compose!"
+                exit 1
+            fi
+
+            if ! webconsole_subscriber_action "post"; then
+                echo "Failed to create subscriber!"
+                stop_docker_compose $DC_STATIC_COMPOSE_FILE
+                exit 1
+            fi
+
+            docker exec -d ue ./free-ran-ue ue -c uecfg.yaml
+
+            sleep 3
+
+            if ! docker exec ue ping -I ueTun0 8.8.8.8 -c 5; then
+                echo "Failed to ping 8.8.8.8!"
+                webconsole_subscriber_action "delete"
+                stop_docker_compose $DC_STATIC_COMPOSE_FILE
+                exit 1
+            fi
+
+            if ! docker exec ue ping -I ueTun0 1.1.1.1 -c 5; then
+                echo "Failed to ping 8.8.8.8!"
+                webconsole_subscriber_action "delete"
+                stop_docker_compose $DC_STATIC_COMPOSE_FILE
+                exit 1
+            fi
+
+            if ! webconsole_subscriber_action "delete"; then
+                echo "Failed to delete subscriber!"
+                stop_docker_compose $DC_STATIC_COMPOSE_FILE
+                exit 1
+            fi
+
+            if ! stop_docker_compose $DC_STATIC_COMPOSE_FILE; then
+                echo "Failed to stop docker compose!"
+                exit 1
+            fi
         ;;
         "dc-dynamic")
         ;;

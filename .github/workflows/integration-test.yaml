@@ -17,7 +17,7 @@ jobs:
           docker --version
           curl --version
 
-      - name: Build free-ran-ue image
+      # - name: Build free-ran-ue image
         # run: make docker
 
       - name: Test free-ran-ue image
@@ -29,6 +29,6 @@ jobs:
       - name: Run test basic
         run: ./script/integration-test-script/integration-test.sh basic
 
-      - name: Clean up docker resources
-        if: always()
+      # - name: Clean up docker resources
+      #   if: always()
         # run: docker system prune -a -f --volumes

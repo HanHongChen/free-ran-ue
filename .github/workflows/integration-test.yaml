@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   pull_request:
 
-env:
-  BASIC_COMPOSE_FILE: docker/docker-compose.yaml
-
 jobs:
   integration-test:
     runs-on: self-hosted
@@ -23,6 +20,9 @@ jobs:
           docker images
           docker run --rm free-ran-ue:latest ls /free-ran-ue/free-ran-ue
           docker run --rm free-ran-ue:latest ls /free-ran-ue/console
+
+      - name: Run test basic
+        run: ./script/integration-test-script/integration-test.sh basic
 
       - name: Clean up docker resources
         if: always()

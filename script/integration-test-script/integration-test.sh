@@ -48,7 +48,7 @@ stop_docker_compose() {
     return 0
 }
 
-webconsole_login() {
+free5gc_console_login() {
     local token=$(curl -s -X POST $WEBCONSOLE_BASE_URL/api/login -H "Content-Type: application/json" -d @$WEBCONSOLE_LOGIN_DATA_FILE | jq -r '.access_token' | xargs)
     if [ -z "$token" ] || [ "$token" = "null" ]; then
         echo "Failed to get token!"
@@ -59,8 +59,8 @@ webconsole_login() {
     return 0
 }
 
-webconsole_subscriber_action() {
-    local token=$(webconsole_login)
+free5gc_console_subscriber_action() {
+    local token=$(free5gc_console_login)
     if [ -z "$token" ]; then
         echo "Failed to get token!"
         return 1
@@ -105,7 +105,7 @@ main() {
                 exit 1
             fi
 
-            if ! webconsole_subscriber_action "post"; then
+            if ! free5gc_console_subscriber_action "post"; then
                 echo "Failed to create subscriber!"
                 stop_docker_compose $BASIC_COMPOSE_FILE
                 exit 1
@@ -117,12 +117,12 @@ main() {
 
             if ! docker exec ue ping -I ueTun0 8.8.8.8 -c 5; then
                 echo "Failed to ping 8.8.8.8!"
-                webconsole_subscriber_action "delete"
+                free5gc_console_subscriber_action "delete"
                 stop_docker_compose $BASIC_COMPOSE_FILE
                 exit 1
             fi
 
-            if ! webconsole_subscriber_action "delete"; then
+            if ! free5gc_console_subscriber_action "delete"; then
                 echo "Failed to delete subscriber!"
                 stop_docker_compose $BASIC_COMPOSE_FILE
                 exit 1
@@ -139,7 +139,7 @@ main() {
                 exit 1
             fi
 
-            if ! webconsole_subscriber_action "post"; then
+            if ! free5gc_console_subscriber_action "post"; then
                 echo "Failed to create subscriber!"
                 stop_docker_compose $DC_STATIC_COMPOSE_FILE
                 exit 1
@@ -151,19 +151,19 @@ main() {
 
             if ! docker exec ue ping -I ueTun0 8.8.8.8 -c 5; then
                 echo "Failed to ping 8.8.8.8!"
-                webconsole_subscriber_action "delete"
+                free5gc_console_subscriber_action "delete"
                 stop_docker_compose $DC_STATIC_COMPOSE_FILE
                 exit 1
             fi
 
             if ! docker exec ue ping -I ueTun0 1.1.1.1 -c 5; then
                 echo "Failed to ping 8.8.8.8!"
-                webconsole_subscriber_action "delete"
+                free5gc_console_subscriber_action "delete"
                 stop_docker_compose $DC_STATIC_COMPOSE_FILE
                 exit 1
             fi
 
-            if ! webconsole_subscriber_action "delete"; then
+            if ! free5gc_console_subscriber_action "delete"; then
                 echo "Failed to delete subscriber!"
                 stop_docker_compose $DC_STATIC_COMPOSE_FILE
                 exit 1

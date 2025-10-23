@@ -29,6 +29,9 @@ jobs:
       - name: Run test basic
         run: ./script/integration-test-script/integration-test.sh basic
 
+      - name: Run test dc-static
+        run: ./script/integration-test-script/integration-test.sh dc-static
+
       # - name: Clean up docker resources
       #   if: always()
         # run: docker system prune -a -f --volumes

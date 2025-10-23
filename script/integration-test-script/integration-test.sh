@@ -10,6 +10,8 @@
 #   This script is used to test the functionality of free-ran-ue.
 ########################################################
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 DOCKER_PATH='../../docker'
 BASIC_COMPOSE_FILE="${DOCKER_PATH}/docker-compose.yaml"
 DC_STATIC_COMPOSE_FILE="${DOCKER_PATH}/docker-compose-dc-static.yaml"
@@ -17,8 +19,8 @@ DC_DYNAMIC_COMPOSE_FILE="${DOCKER_PATH}/docker-compose-dc-dynamic.yaml"
 
 WEBCONSOLE_BASE_URL='http://127.0.0.1:5000'
 
-WEBCONSOLE_LOGIN_DATA_FILE='webconsole_login_data.json'
-WEBCONSOLE_SUBSCRIBER_DATA_FILE='webconsole_subscriber_data.json'
+WEBCONSOLE_LOGIN_DATA_FILE="${SCRIPT_DIR}/webconsole_login_data.json"
+WEBCONSOLE_SUBSCRIBER_DATA_FILE="${SCRIPT_DIR}/webconsole_subscriber_data.json"
 
 TEST_POOL="basic|dc-static|dc-dynamic"
 
@@ -28,7 +30,7 @@ Usage() {
 }
 
 start_docker_compose() {
-    if !docker compose -f $1 up -d --wait --wait-timeout 180; then
+    if ! docker compose -f $1 up -d --wait --wait-timeout 180; then
         echo "Failed to start docker compose!"
         return 1
     fi
@@ -38,7 +40,7 @@ start_docker_compose() {
 }
 
 stop_docker_compose() {
-    if !docker compose -f $1 down; then
+    if ! docker compose -f $1 down; then
         echo "Failed to stop docker compose!"
         return 1
     fi
@@ -98,28 +100,24 @@ main() {
 
     case $1 in
         "basic")
-            start_docker_compose $BASIC_COMPOSE_FILE
-            if [ $? -ne 0 ]; then
+            if ! start_docker_compose $BASIC_COMPOSE_FILE; then
                 echo "Failed to start docker compose!"
                 exit 1
             fi
 
-            webconsole_subscriber_action "post"
-            if [ $? -ne 0 ]; then
+            if ! webconsole_subscriber_action "post"; then
                 echo "Failed to create subscriber!"
                 stop_docker_compose $BASIC_COMPOSE_FILE
                 exit 1
             fi
 
-            webconsole_subscriber_action "delete"
-            if [ $? -ne 0 ]; then
+            if ! webconsole_subscriber_action "delete"; then
                 echo "Failed to delete subscriber!"
                 stop_docker_compose $BASIC_COMPOSE_FILE
                 exit 1
             fi
 
-            stop_docker_compose $BASIC_COMPOSE_FILE
-            if [ $? -ne 0 ]; then
+            if ! stop_docker_compose $BASIC_COMPOSE_FILE; then
                 echo "Failed to stop docker compose!"
                 exit 1
             fi

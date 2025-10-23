@@ -11,7 +11,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
+      - name: Check commands
+        run: |
+          docker --version
+          curl --version
+
       - name: Build free-ran-ue image
         run: make docker
 

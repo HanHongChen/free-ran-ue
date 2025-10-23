@@ -19,8 +19,8 @@ DC_DYNAMIC_COMPOSE_FILE="${SCRIPT_DIR}/${DOCKER_PATH}/docker-compose-dc-dynamic.
 
 WEBCONSOLE_BASE_URL='http://127.0.0.1:5000'
 
-WEBCONSOLE_LOGIN_DATA_FILE="${SCRIPT_DIR}/webconsole_login_data.json"
-WEBCONSOLE_SUBSCRIBER_DATA_FILE="${SCRIPT_DIR}/webconsole_subscriber_data.json"
+WEBCONSOLE_LOGIN_DATA_FILE="${SCRIPT_DIR}/free5gc-console-login-data.json"
+WEBCONSOLE_SUBSCRIBER_DATA_FILE="${SCRIPT_DIR}/free5gc-console-subscriber-data.json"
 
 TEST_POOL="basic|dc-static|dc-dynamic"
 

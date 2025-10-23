@@ -18,8 +18,8 @@ jobs:
           curl --version
           jq --version
 
-      # - name: Build free-ran-ue image
-        # run: make docker
+      - name: Build free-ran-ue image
+        run: make docker
 
       - name: Test free-ran-ue image
         run: |
@@ -39,6 +39,6 @@ jobs:
       - name: Run test ulcl
         run: ./script/integration-test-script/integration-test.sh ulcl
 
-      # - name: Clean up docker resources
-      #   if: always()
-        # run: docker system prune -a -f --volumes
+      - name: Clean up docker resources
+        if: always()
+        run: docker system prune -a -f --volumes

@@ -16,6 +16,7 @@ jobs:
         run: |
           docker --version
           curl --version
+          jq --version
 
       # - name: Build free-ran-ue image
         # run: make docker

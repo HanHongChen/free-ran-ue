@@ -26,7 +26,7 @@ FREE5GC_CONSOLE_SUBSCRIBER_DATA_FILE="${SCRIPT_DIR}/free5gc-console-subscriber-d
 FRU_CONSOLE_BASE_URL='http://127.0.0.1:40104'
 
 FRU_CONSOLE_LOGIN_DATA_FILE="${SCRIPT_DIR}/fru-console-login-data.json"
-FRU_CONSOLE_UE_DC_SWITCH_DATA_FILE="${SCRIPT_DIR}/fru-console-ud-dc-switch-data.json"
+FRU_CONSOLE_UE_DC_SWITCH_DATA_FILE="${SCRIPT_DIR}/fru-console-ue-dc-switch-data.json"
 
 TEST_POOL="basic|dc-static|dc-dynamic|ulcl"
 
@@ -55,7 +55,7 @@ stop_docker_compose() {
 }
 
 free5gc_console_login() {
-    local token=$(curl -s -X POST $FREE5GC_CONSOLE_BASE_URL/api/login -H "Content-Type: application/json" -d @$FREE5GC_CONSOLE_LOGIN_DATA_FILE | jq -r '.access_token' | xargs)
+    local token=$(curl -s -X POST $FREE5GC_CONSOLE_BASE_URL/api/login -H "Content-Type: application/json" -d @$FREE5GC_CONSOLE_LOGIN_DATA_FILE | jq -r '.access_token')
     if [ -z "$token" ] || [ "$token" = "null" ]; then
         echo "Failed to get token!"
         return 1
@@ -98,7 +98,7 @@ free5gc_console_subscriber_action() {
 }
 
 fru_console_login() {
-    local token=$(curl -s -X POST $FRU_CONSOLE_BASE_URL/api/console/login -H "Content-Type: application/json" -d @$FRU_CONSOLE_LOGIN_DATA_FILE | jq -r '.token' | xargs)
+    local token=$(curl -s -X POST $FRU_CONSOLE_BASE_URL/api/console/login -H "Content-Type: application/json" -d @$FRU_CONSOLE_LOGIN_DATA_FILE | jq -r '.token')
     if [ -z "$token" ] || [ "$token" = "null" ]; then
         echo "Failed to get token!"
         return 1

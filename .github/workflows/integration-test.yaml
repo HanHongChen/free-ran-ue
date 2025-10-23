@@ -1,0 +1,43 @@
+name: Integration Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  integration-test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check commands
+        run: |
+          docker --version
+          curl --version
+          jq --version
+
+      - name: Build free-ran-ue image
+        run: make docker
+
+      - name: Test free-ran-ue image
+        run: |
+          docker images
+          docker run --rm free-ran-ue:latest ls /free-ran-ue/free-ran-ue
+          docker run --rm free-ran-ue:latest ls /free-ran-ue/console
+
+      - name: Run test basic
+        run: ./script/integration-test-script/integration-test.sh basic
+
+      - name: Run test dc-static
+        run: ./script/integration-test-script/integration-test.sh dc-static
+
+      - name: Run test dc-dynamic
+        run: ./script/integration-test-script/integration-test.sh dc-dynamic
+
+      - name: Run test ulcl
+        run: ./script/integration-test-script/integration-test.sh ulcl
+
+      - name: Clean up docker resources
+        if: always()
+        run: docker system prune -a -f --volumes

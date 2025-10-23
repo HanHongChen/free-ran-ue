@@ -26,6 +26,7 @@ FREE5GC_CONSOLE_SUBSCRIBER_DATA_FILE="${SCRIPT_DIR}/free5gc-console-subscriber-d
 FRU_CONSOLE_BASE_URL='http://127.0.0.1:40104'
 
 FRU_CONSOLE_LOGIN_DATA_FILE="${SCRIPT_DIR}/fru-console-login-data.json"
+FRU_CONSOLE_UE_DC_SWITCH_DATA_FILE="${SCRIPT_DIR}/fru-console-ud-dc-switch-data.json"
 
 TEST_POOL="basic|dc-static|dc-dynamic|ulcl"
 

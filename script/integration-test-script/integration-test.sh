@@ -16,16 +16,17 @@ DOCKER_PATH='../../docker'
 BASIC_COMPOSE_FILE="${SCRIPT_DIR}/${DOCKER_PATH}/docker-compose.yaml"
 DC_STATIC_COMPOSE_FILE="${SCRIPT_DIR}/${DOCKER_PATH}/docker-compose-dc-static.yaml"
 DC_DYNAMIC_COMPOSE_FILE="${SCRIPT_DIR}/${DOCKER_PATH}/docker-compose-dc-dynamic.yaml"
+ULCL_COMPOSE_FILE="${SCRIPT_DIR}/${DOCKER_PATH}/docker-compose-ulcl.yaml"
 
-WEBCONSOLE_BASE_URL='http://127.0.0.1:5000'
+FREE5GC_CONSOLE_BASE_URL='http://127.0.0.1:5000'
 
-WEBCONSOLE_LOGIN_DATA_FILE="${SCRIPT_DIR}/free5gc-console-login-data.json"
-WEBCONSOLE_SUBSCRIBER_DATA_FILE="${SCRIPT_DIR}/free5gc-console-subscriber-data.json"
+FREE5GC_CONSOLE_LOGIN_DATA_FILE="${SCRIPT_DIR}/free5gc-console-login-data.json"
+FREE5GC_CONSOLE_SUBSCRIBER_DATA_FILE="${SCRIPT_DIR}/free5gc-console-subscriber-data.json"
 
-TEST_POOL="basic|dc-static|dc-dynamic"
+TEST_POOL="basic|dc-static|dc-dynamic|ulcl"
 
 Usage() {
-    echo "Usage: $0 [basic | dc-static | dc-dynamic]"
+    echo "Usage: $0 [basic | dc-static | dc-dynamic | ulcl]"
     exit 1
 }
 
@@ -49,7 +50,7 @@ stop_docker_compose() {
 }
 
 free5gc_console_login() {
-    local token=$(curl -s -X POST $WEBCONSOLE_BASE_URL/api/login -H "Content-Type: application/json" -d @$WEBCONSOLE_LOGIN_DATA_FILE | jq -r '.access_token' | xargs)
+    local token=$(curl -s -X POST $FREE5GC_CONSOLE_BASE_URL/api/login -H "Content-Type: application/json" -d @$FREE5GC_CONSOLE_LOGIN_DATA_FILE | jq -r '.access_token' | xargs)
     if [ -z "$token" ] || [ "$token" = "null" ]; then
         echo "Failed to get token!"
         return 1
@@ -66,12 +67,12 @@ free5gc_console_subscriber_action() {
         return 1
     fi
 
-    local imsi=$(jq -r '.ueId' "$WEBCONSOLE_SUBSCRIBER_DATA_FILE" | sed 's/imsi-//')
-    local plmn_id=$(jq -r '.plmnID' "$WEBCONSOLE_SUBSCRIBER_DATA_FILE")
+    local imsi=$(jq -r '.ueId' "$FREE5GC_CONSOLE_SUBSCRIBER_DATA_FILE" | sed 's/imsi-//')
+    local plmn_id=$(jq -r '.plmnID' "$FREE5GC_CONSOLE_SUBSCRIBER_DATA_FILE")
 
     case $1 in
         "post")
-            if curl -s --fail -X POST $WEBCONSOLE_BASE_URL/api/subscriber/imsi-$imsi/$plmn_id -H "Content-Type: application/json" -H "Token: $token" -d @$WEBCONSOLE_SUBSCRIBER_DATA_FILE; then
+            if curl -s --fail -X POST $FREE5GC_CONSOLE_BASE_URL/api/subscriber/imsi-$imsi/$plmn_id -H "Content-Type: application/json" -H "Token: $token" -d @$FREE5GC_CONSOLE_SUBSCRIBER_DATA_FILE; then
                 echo "Subscriber created successfully!"
                 return 0
             else
@@ -80,7 +81,7 @@ free5gc_console_subscriber_action() {
             fi
         ;;
         "delete")
-            if curl -s --fail -X DELETE $WEBCONSOLE_BASE_URL/api/subscriber/imsi-$imsi/$plmn_id -H "Content-Type: application/json" -H "Token: $token" -d @$WEBCONSOLE_SUBSCRIBER_DATA_FILE; then
+            if curl -s --fail -X DELETE $FREE5GC_CONSOLE_BASE_URL/api/subscriber/imsi-$imsi/$plmn_id -H "Content-Type: application/json" -H "Token: $token" -d @$FREE5GC_CONSOLE_SUBSCRIBER_DATA_FILE; then
                 echo "Subscriber deleted successfully!"
                 return 0
             else

@@ -13,9 +13,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 DOCKER_PATH='../../docker'
-BASIC_COMPOSE_FILE="${DOCKER_PATH}/docker-compose.yaml"
-DC_STATIC_COMPOSE_FILE="${DOCKER_PATH}/docker-compose-dc-static.yaml"
-DC_DYNAMIC_COMPOSE_FILE="${DOCKER_PATH}/docker-compose-dc-dynamic.yaml"
+BASIC_COMPOSE_FILE="${SCRIPT_DIR}/${DOCKER_PATH}/docker-compose.yaml"
+DC_STATIC_COMPOSE_FILE="${SCRIPT_DIR}/${DOCKER_PATH}/docker-compose-dc-static.yaml"
+DC_DYNAMIC_COMPOSE_FILE="${SCRIPT_DIR}/${DOCKER_PATH}/docker-compose-dc-dynamic.yaml"
 
 WEBCONSOLE_BASE_URL='http://127.0.0.1:5000'
 

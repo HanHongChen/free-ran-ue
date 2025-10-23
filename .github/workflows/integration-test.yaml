@@ -32,6 +32,9 @@ jobs:
       - name: Run test dc-static
         run: ./script/integration-test-script/integration-test.sh dc-static
 
+      - name: Run test dc-dynamic
+        run: ./script/integration-test-script/integration-test.sh dc-dynamic
+
       - name: Run test ulcl
         run: ./script/integration-test-script/integration-test.sh ulcl
 

@@ -111,6 +111,17 @@ main() {
                 exit 1
             fi
 
+            docker exec -d ue ./free-ran-ue ue -c uecfg.yaml
+
+            sleep 3
+
+            if ! docker exec -it ue ping -I ueTun0 8.8.8.8 -c 5; then
+                echo "Failed to ping 8.8.8.8!"
+                webconsole_subscriber_action "delete"
+                stop_docker_compose $BASIC_COMPOSE_FILE
+                exit 1
+            fi
+
             if ! webconsole_subscriber_action "delete"; then
                 echo "Failed to delete subscriber!"
                 stop_docker_compose $BASIC_COMPOSE_FILE

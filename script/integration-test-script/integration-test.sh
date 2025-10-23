@@ -115,7 +115,7 @@ main() {
 
             sleep 3
 
-            if ! docker exec -it ue ping -I ueTun0 8.8.8.8 -c 5; then
+            if ! docker exec ue ping -I ueTun0 8.8.8.8 -c 5; then
                 echo "Failed to ping 8.8.8.8!"
                 webconsole_subscriber_action "delete"
                 stop_docker_compose $BASIC_COMPOSE_FILE

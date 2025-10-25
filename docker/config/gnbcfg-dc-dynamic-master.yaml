@@ -30,7 +30,7 @@ gnb:
 
   snssai:
     sst: "1"
-    sd: "010203"
+    sd: "000001"
 
   staticNrdc: false
 

@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/model"
 	"github.com/Alonza0314/free-ran-ue/util"
@@ -45,8 +44,8 @@ type authenticationSubscription struct {
 }
 
 type pduSession struct {
-	dnn          string
-	sNssai       *models.Snssai
+	dnn    string
+	sNssai *models.Snssai
 }
 
 type pduSessionEstablishmentAccept struct {
@@ -66,8 +65,16 @@ type nrdc struct {
 	enable bool
 	dcRanDataPlane
 	dcLocalDataPlaneIp string
-	specifiedFlow []string
-	rwLock        sync.RWMutex
+	specifiedFlow      []string
+	rwLock             sync.RWMutex
+}
+
+type sessionState struct {
+	ueIp        string
+	tunName     string
+	tunDev      *water.Interface
+	readFromTun chan []byte
+	readFromRan chan []byte
 }
 
 type Ue struct {
@@ -75,12 +82,17 @@ type Ue struct {
 	ranDataPlaneIp    string
 	localDataPlaneIp  string
 
+	ran2DataPlaneIp   string
+	localDataPlane2Ip string
+
 	ranControlPlanePort int
 	ranDataPlanePort    int
 
 	ranControlPlaneConn net.Conn
 	ranDataPlaneConn    net.Conn
-	dcRanDataPlaneConn  net.Conn
+	ran2DataPlaneConn   net.Conn
+
+	dcRanDataPlaneConn net.Conn
 
 	mcc  string
 	mnc  string
@@ -91,17 +103,20 @@ type Ue struct {
 	accessType models.AccessType
 	authenticationSubscription
 
-	pduSession
+	pduSessions []pduSession
 
 	nrdc
 
+	sessions map[int]*sessionState
+
 	ueTunnelDeviceName string
-	ueTunnelDevice     *water.Interface
+	// ueTunnelDevice     *water.Interface
 
-	readFromTun chan []byte
-	readFromRan chan []byte
+	// readFromTun chan []byte
+	// readFromRan chan []byte
 
-	pduSessionEstablishmentAccept
+	//這個也需要兩個
+	pduSessionEstablishmentAccepts map[int]*pduSessionEstablishmentAccept
 
 	*logger.UeLogger
 }
@@ -131,15 +146,29 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 		cipheringAlgorithm = security.AlgCiphering128NEA3
 	}
 
-	sstInt, err := strconv.Atoi(config.Ue.PduSession.Snssai.Sst)
-	if err != nil {
-		logger.CfgLog.Errorf("Error converting sst to int: %v", err)
+	var pduSessions []pduSession
+	for i, ps := range config.Ue.PduSessions {
+
+		sstInt, err := strconv.Atoi(ps.Snssai.Sst)
+		if err != nil {
+			logger.CfgLog.Errorf("Error converting [%d] sst to int: %v", i, err)
+		}
+		pduSessions = append(pduSessions, pduSession{
+			dnn: ps.Dnn,
+			sNssai: &models.Snssai{
+				Sst: int32(sstInt),
+				Sd:  ps.Snssai.Sd,
+			},
+		})
 	}
 
 	return &Ue{
 		ranControlPlaneIp: config.Ue.RanControlPlaneIp,
 		ranDataPlaneIp:    config.Ue.RanDataPlaneIp,
 		localDataPlaneIp:  config.Ue.LocalDataPlaneIp,
+
+		ran2DataPlaneIp:   config.Ue.Ran2DataPlaneIp,
+		localDataPlane2Ip: config.Ue.LocalDataPlane2Ip,
 
 		ranControlPlanePort: config.Ue.RanControlPlanePort,
 		ranDataPlanePort:    config.Ue.RanDataPlanePort,
@@ -167,13 +196,14 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 			sequenceNumber:                config.Ue.AuthenticationSubscription.SequenceNumber,
 		},
 
-		pduSession: pduSession{
-			dnn:          config.Ue.PduSession.Dnn,
-			sNssai: &models.Snssai{
-				Sst: int32(sstInt),
-				Sd:  config.Ue.PduSession.Snssai.Sd,
-			},
-		},
+		// pduSession: pduSession{
+		// 	dnn: config.Ue.PduSession.Dnn,
+		// 	sNssai: &models.Snssai{
+		// 		Sst: int32(sstInt),
+		// 		Sd:  config.Ue.PduSession.Snssai.Sd,
+		// 	},
+		// },
+		pduSessions: pduSessions,
 
 		nrdc: nrdc{
 			enable: config.Ue.Nrdc.Enable,
@@ -182,11 +212,13 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 				port: config.Ue.Nrdc.DcRanDataPlane.Port,
 			},
 			dcLocalDataPlaneIp: config.Ue.Nrdc.DcLocalDataPlaneIp,
-			specifiedFlow: make([]string, 0),
-			rwLock:        sync.RWMutex{},
+			specifiedFlow:      make([]string, 0),
+			rwLock:             sync.RWMutex{},
 		},
 
-		ueTunnelDeviceName: config.Ue.UeTunnelDevice,
+		sessions:                       make(map[int]*sessionState),
+		ueTunnelDeviceName:             config.Ue.UeTunnelDevice,
+		pduSessionEstablishmentAccepts: make(map[int]*pduSessionEstablishmentAccept),
 
 		UeLogger: logger,
 	}
@@ -195,6 +227,7 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 func (u *Ue) Start(ctx context.Context, wg *sync.WaitGroup) error {
 	u.UeLog.Infof("Starting UE: imsi-%s", u.supi)
 
+	// Dial to RAN control plane
 	if err := u.connectToRanControlPlane(); err != nil {
 		u.UeLog.Errorf("Error connecting to RAN: %v", err)
 		return err
@@ -208,15 +241,21 @@ func (u *Ue) Start(ctx context.Context, wg *sync.WaitGroup) error {
 		return err
 	}
 	time.Sleep(1 * time.Second)
-
-	if err := u.processPduSessionEstablishment(); err != nil {
-		u.UeLog.Errorf("Error processing PDU session establishment: %v", err)
-		if err := u.ranControlPlaneConn.Close(); err != nil {
-			u.UeLog.Errorf("Error closing RAN connection: %v", err)
-		}
-		return err
+	//這裡要根據有幾個pdu session去 send pdu session establishment
+	if len(u.pduSessions) == 0 {
+		u.UeLog.Warnf("No PDU Sessions configured")
 	}
-	time.Sleep(1 * time.Second)
+	for i, pduSession := range u.pduSessions {
+		u.UeLog.Debugf("send pduSessions[%d] [%v]", i, pduSession)
+		if err := u.processPduSessionEstablishment((uint8)(i+1), pduSession); err != nil {
+			u.UeLog.Errorf("Error processing [%d] PDU session establishment: %v", i, err)
+			if err := u.ranControlPlaneConn.Close(); err != nil {
+				u.UeLog.Errorf("Error closing RAN connection: %v", err)
+			}
+			return err
+		}
+		// time.Sleep(1 * time.Second)
+	}
 
 	if err := u.connectToRanDataPlane(); err != nil {
 		u.UeLog.Errorf("Error connecting to RAN data plane: %v", err)
@@ -226,10 +265,23 @@ func (u *Ue) Start(ctx context.Context, wg *sync.WaitGroup) error {
 		return err
 	}
 
+	if err := u.connectToRan2DataPlane(); err != nil {
+		u.UeLog.Errorf("Error connecting to RAN2 data plane: %v", err)
+		if err := u.ranControlPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing RAN connection: %v", err)
+		}
+		return err
+	}
+
 	if err := u.setupTunnelDevice(); err != nil {
+		u.UeLog.Infof("setupTunnelDevice: enter")
+
 		u.UeLog.Errorf("Error setting up tunnel device: %v", err)
 		if err := u.ranDataPlaneConn.Close(); err != nil {
 			u.UeLog.Errorf("Error closing RAN connection: %v", err)
+		}
+		if err := u.ran2DataPlaneConn.Close(); err != nil {
+			u.UeLog.Errorf("Error closing RAN2 connection: %v", err)
 		}
 		if err := u.ranControlPlaneConn.Close(); err != nil {
 			u.UeLog.Errorf("Error closing RAN connection: %v", err)
@@ -237,9 +289,11 @@ func (u *Ue) Start(ctx context.Context, wg *sync.WaitGroup) error {
 		return err
 	}
 
+	// 這是control plane的東西所以不需要改
 	// wait for RAN message
-	go u.waitForRanMessage(ctx, wg)
+	// go u.waitForRanMessage(ctx, wg)
 
+	// 這個就要改
 	// handle data plane
 	go u.handleDataPlane(ctx, wg)
 
@@ -254,8 +308,10 @@ func (u *Ue) Stop() {
 		u.UeLog.Errorf("Error processing UE deregistration: %v", err)
 	}
 
-	close(u.readFromTun)
-	close(u.readFromRan)
+	for _, sess := range u.sessions {
+		close(sess.readFromTun)
+		close(sess.readFromRan)
+	}
 
 	if err := u.cleanUpTunnelDevice(); err != nil {
 		u.UeLog.Errorf("Error cleaning up tunnel device: %v", err)
@@ -263,6 +319,10 @@ func (u *Ue) Stop() {
 
 	if err := u.ranDataPlaneConn.Close(); err != nil {
 		u.UeLog.Errorf("Error closing RAN connection: %v", err)
+	}
+
+	if err := u.ran2DataPlaneConn.Close(); err != nil {
+		u.UeLog.Errorf("Error closing RAN2 connection: %v", err)
 	}
 
 	if u.isNrdcEnabled() {
@@ -318,6 +378,31 @@ func (u *Ue) connectToRanDataPlane() error {
 	}
 
 	u.RanLog.Infof("Connected to RAN data plane: %s:%d", u.ranDataPlaneIp, u.ranDataPlanePort)
+	return nil
+}
+
+func (u *Ue) connectToRan2DataPlane() error {
+	u.RanLog.Infoln("Connecting to RAN2 data plane")
+
+	u.RanLog.Tracef("RAN2 data plane address: %s:%d", u.ran2DataPlaneIp, u.ranDataPlanePort)
+
+	conn, err := util.TcpDialWithOptionalLocalAddress(u.ran2DataPlaneIp, u.ranDataPlanePort, u.localDataPlane2Ip)
+	if err != nil {
+		return err
+	}
+	u.ran2DataPlaneConn = conn
+	u.RanLog.Debugln("Dial TCP to RAN2 data plane success")
+
+	if u.isNrdcEnabled() {
+		conn, err := util.TcpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
+		if err != nil {
+			return err
+		}
+		u.dcRanDataPlaneConn = conn
+		u.RanLog.Debugf("Connected to DC RAN data plane: %s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port)
+	}
+
+	u.RanLog.Infof("Connected to RAN2 data plane: %s:%d", u.ran2DataPlaneIp, u.ranDataPlanePort)
 	return nil
 }
 
@@ -463,17 +548,20 @@ func (u *Ue) processUeRegistration() error {
 	return nil
 }
 
-func (u *Ue) processPduSessionEstablishment() error {
+// 不知道在上一層跑兩次這個還是這裡面需要建兩次
+func (u *Ue) processPduSessionEstablishment(pduSessionId uint8, pduSession pduSession) error {
 	u.PduLog.Infoln("Processing PDU session establishment")
 
 	// send pdu session establishment request
-	pduSessionEstablishmentRequest, err := getPduSessionEstablishmentRequest(constant.PDU_SESSION_ID)
+	pduSessionEstablishmentRequest, err := getPduSessionEstablishmentRequest(pduSessionId)
 	if err != nil {
 		return fmt.Errorf("error get pdu session establishment request: %+v", err)
 	}
 	u.NasLog.Tracef("PDU session establishment request: %+v", pduSessionEstablishmentRequest)
 
-	ulNasTransportPduSessionEstablishmentRequest, err := getUlNasTransportMessage(pduSessionEstablishmentRequest, constant.PDU_SESSION_ID, nasMessage.ULNASTransportRequestTypeInitialRequest, u.pduSession.dnn, u.pduSession.sNssai)
+	// ulNasTransportPduSessionEstablishmentRequest, err := getUlNasTransportMessage(pduSessionEstablishmentRequest, constant.PDU_SESSION_ID, nasMessage.ULNASTransportRequestTypeInitialRequest, u.pduSession.dnn, u.pduSession.sNssai)
+	ulNasTransportPduSessionEstablishmentRequest, err := getUlNasTransportMessage(pduSessionEstablishmentRequest, pduSessionId, nasMessage.ULNASTransportRequestTypeInitialRequest, pduSession.dnn, pduSession.sNssai)
+
 	if err != nil {
 		return fmt.Errorf("error get ul nas transport pdu session establishment request: %+v", err)
 	}
@@ -485,6 +573,7 @@ func (u *Ue) processPduSessionEstablishment() error {
 	}
 	u.NasLog.Tracef("Encoded UL NAS transport pdu session establishment request: %+v", encodedUlNasTransportPduSessionEstablishmentRequest)
 
+	//發送請求到 RAN
 	n, err := u.ranControlPlaneConn.Write(encodedUlNasTransportPduSessionEstablishmentRequest)
 	if err != nil {
 		return fmt.Errorf("error send ul nas transport pdu session establishment request: %+v", err)
@@ -492,6 +581,7 @@ func (u *Ue) processPduSessionEstablishment() error {
 	u.NasLog.Tracef("Sent %d bytes of UL NAS transport pdu session establishment request to RAN", n)
 	u.NasLog.Debugln("Send UL NAS transport pdu session establishment request to RAN")
 
+	//等待 PDU Session Establishment Accept 回應：
 	// receive pdu session establishment accept
 	nasPduSessionEstablishmentAcceptRaw := make([]byte, 1024)
 	n, err = u.ranControlPlaneConn.Read(nasPduSessionEstablishmentAcceptRaw)
@@ -576,22 +666,30 @@ func (u *Ue) extractUeInformationFromNasPduSessionEstablishmentAccept(nasPduSess
 
 	switch nasMessage.GsmHeader.GetMessageType() {
 	case nas.MsgTypePDUSessionEstablishmentAccept:
-		pduSessionEstablishmentAccept := nasMessage.PDUSessionEstablishmentAccept
+		pduSessionEstablishmentAcc := nasMessage.PDUSessionEstablishmentAccept
+		pduId := int(pduSessionEstablishmentAcc.GetPDUSessionID())
 
-		pduAddress := pduSessionEstablishmentAccept.GetPDUAddressInformation()
-		u.pduSessionEstablishmentAccept.ueIp = fmt.Sprintf("%d.%d.%d.%d", pduAddress[0], pduAddress[1], pduAddress[2], pduAddress[3])
-		u.PduLog.Infof("PDU session UE IP: %s", u.pduSessionEstablishmentAccept.ueIp)
+		pduAddress := pduSessionEstablishmentAcc.GetPDUAddressInformation()
+		acc := &pduSessionEstablishmentAccept{
+			ueIp: fmt.Sprintf("%d.%d.%d.%d",
+				pduAddress[0],
+				pduAddress[1],
+				pduAddress[2],
+				pduAddress[3]),
+			qosRule: pduSessionEstablishmentAcc.AuthorizedQosRules.GetQosRule(),
+			dnn:     pduSessionEstablishmentAcc.GetDNN(),
+			sst:     pduSessionEstablishmentAcc.GetSST(),
+			sd:      pduSessionEstablishmentAcc.GetSD(),
+		}
+		if u.sessions[pduId] == nil {
+			u.sessions[pduId] = &sessionState{}
+		}
+		u.sessions[pduId].ueIp = acc.ueIp
+		u.PduLog.Infof("PDU session UE IP: %s", acc.ueIp)
+		u.PduLog.Infof("PDU session DNN: %s", acc.dnn)
+		u.PduLog.Infof("PDU session SNSSAI, sst: %d, sd: %s", acc.sst, fmt.Sprintf("%x%x%x", acc.sd[0], acc.sd[1], acc.sd[2]))
 
-		u.pduSessionEstablishmentAccept.qosRule = pduSessionEstablishmentAccept.AuthorizedQosRules.GetQosRule()
-		u.nrdc.specifiedFlow = append(u.nrdc.specifiedFlow, util.GetQosRule(u.pduSessionEstablishmentAccept.qosRule, u.UeLogger)...)
-		u.PduLog.Infof("PDU session QoS rule: %+v", u.nrdc.specifiedFlow)
-
-		u.pduSessionEstablishmentAccept.dnn = pduSessionEstablishmentAccept.GetDNN()
-		u.PduLog.Infof("PDU session DNN: %s", u.pduSessionEstablishmentAccept.dnn)
-
-		u.pduSessionEstablishmentAccept.sst = pduSessionEstablishmentAccept.GetSST()
-		u.pduSessionEstablishmentAccept.sd = pduSessionEstablishmentAccept.GetSD()
-		u.PduLog.Infof("PDU session SNSSAI, sst: %d, sd: %s", u.pduSessionEstablishmentAccept.sst, fmt.Sprintf("%x%x%x", u.pduSessionEstablishmentAccept.sd[0], u.pduSessionEstablishmentAccept.sd[1], u.pduSessionEstablishmentAccept.sd[2]))
+		u.pduSessionEstablishmentAccepts[pduId] = acc
 	case nas.MsgTypePDUSessionReleaseCommand:
 		return fmt.Errorf("not implemented: PDUSessionReleaseCommand")
 	case nas.MsgTypePDUSessionEstablishmentReject:
@@ -603,125 +701,145 @@ func (u *Ue) extractUeInformationFromNasPduSessionEstablishmentAccept(nasPduSess
 	return nil
 }
 
-func (u *Ue) waitForRanMessage(ctx context.Context, wg *sync.WaitGroup) {
-	u.RanLog.Infoln("Waiting for RAN message")
-	wg.Add(1)
+// func (u *Ue) waitForRanMessage(ctx context.Context, wg *sync.WaitGroup) {
+// 	u.RanLog.Infoln("Waiting for RAN message")
+// 	wg.Add(1)
 
-	buffer := make([]byte, 1024)
-	for {
-		if err := u.ranControlPlaneConn.SetReadDeadline(time.Now().Add(1 * time.Second)); err != nil {
-			u.RanLog.Errorf("Error set read deadline: %+v", err)
-			goto STOP_WAITING
-		}
-		select {
-		case <-ctx.Done():
-			if err := u.ranControlPlaneConn.SetReadDeadline(time.Time{}); err != nil {
-				u.RanLog.Errorf("Error set read deadline: %+v", err)
-			}
-			goto STOP_WAITING
-		default:
-			n, err := u.ranControlPlaneConn.Read(buffer)
-			if err != nil {
-				if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-					goto STOP_WAITING
-				}
-				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-					continue
-				}
-				u.RanLog.Warnf("Error read from ran control plane: %+v", err)
-			}
+// 	buffer := make([]byte, 1024)
+// 	for {
+// 		if err := u.ranControlPlaneConn.SetReadDeadline(time.Now().Add(1 * time.Second)); err != nil {
+// 			u.RanLog.Errorf("Error set read deadline: %+v", err)
+// 			goto STOP_WAITING
+// 		}
+// 		select {
+// 		case <-ctx.Done():
+// 			if err := u.ranControlPlaneConn.SetReadDeadline(time.Time{}); err != nil {
+// 				u.RanLog.Errorf("Error set read deadline: %+v", err)
+// 			}
+// 			goto STOP_WAITING
+// 		default:
+// 			n, err := u.ranControlPlaneConn.Read(buffer)
+// 			if err != nil {
+// 				if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
+// 					goto STOP_WAITING
+// 				}
+// 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+// 					continue
+// 				}
+// 				u.RanLog.Warnf("Error read from ran control plane: %+v", err)
+// 			}
 
-			switch string(buffer[:n]) {
-			case constant.UE_TUNNEL_UPDATE:
-				go u.updateDataPlane()
-			default:
-				u.RanLog.Warnf("Received unknown message from RAN: %+v", buffer[:n])
-			}
-		}
-	}
-STOP_WAITING:
-	u.RanLog.Infoln("Stop waiting for RAN message")
-	wg.Done()
-}
+// 			switch string(buffer[:n]) {
+// 			case constant.UE_TUNNEL_UPDATE:
+// 				go u.updateDataPlane()
+// 			default:
+// 				u.RanLog.Warnf("Received unknown message from RAN: %+v", buffer[:n])
+// 			}
+// 		}
+// 	}
+// STOP_WAITING:
+// 	u.RanLog.Infoln("Stop waiting for RAN message")
+// 	wg.Done()
+// }
 
 func (u *Ue) setupTunnelDevice() error {
-	u.TunLog.Infoln("Setting up UE tunnel device")
+	u.UeLog.Infof("setupTunnelDevice: enter")
 
-	waterInterface, err := bringUpUeTunnelDevice(u.ueTunnelDeviceName, u.ueIp)
-	if err != nil {
-		return fmt.Errorf("error bring up ue tunnel device: %+v", err)
-	}
-	u.TunLog.Debugln("Bring up ue tunnel device success")
+	for id, sess := range u.sessions {
+		// 組出獨一無二的 TUN 名稱，例如 ueTun1、ueTun2
+		sess.tunName = fmt.Sprintf("%s%d", u.ueTunnelDeviceName, id)
 
-	u.ueTunnelDevice = waterInterface
-
-	// go routine for read data from TUN
-	u.readFromTun = make(chan []byte)
-	go func() {
-		buffer := make([]byte, 4096)
-		for {
-			n, err := u.ueTunnelDevice.Read(buffer)
-			if err != nil {
-				u.TunLog.Errorf("Error read from ue tunnel device: %+v", err)
-				return
-			}
-			version := buffer[0] >> 4
-			if version == 6 {
-				continue
-			}
-			u.readFromTun <- buffer[:n]
+		// 建立 TUN 裝置並設定 IP
+		tunDev, err := bringUpUeTunnelDevice(sess.tunName, sess.ueIp)
+		if err != nil {
+			return fmt.Errorf("bring up TUN %s: %w", sess.tunName, err)
 		}
-	}()
-	u.TunLog.Debugln("Read from TUN started")
+		u.TunLog.Infof("Session %d: TUN %s up, IP=%s", id, sess.tunName, sess.ueIp)
+		sess.tunDev = tunDev
 
-	// go routing for read data from RAN
-	u.readFromRan = make(chan []byte, 2)
-	go func() {
-		buffer := make([]byte, 4096)
-		for {
-			n, err := u.ranDataPlaneConn.Read(buffer)
-			if err != nil {
-				if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-					u.TunLog.Debugln("RAN data plane connection closed")
+		// 為這條 Session 準備 channel
+		sess.readFromTun = make(chan []byte)
+		sess.readFromRan = make(chan []byte, 2)
+
+		// 從 TUN 讀資料
+		go func(ss *sessionState) {
+			buf := make([]byte, 4096)
+			for {
+				n, err := ss.tunDev.Read(buf)
+				if err != nil {
+					u.TunLog.Errorf("Session %d: read from TUN: %v", id, err)
 					return
 				}
-				u.RanLog.Errorf("Error read from ran data plane: %+v", err)
-				return
+				// 忽略 IPv6
+				if buf[0]>>4 == 6 {
+					continue
+				}
+				ss.readFromTun <- buf[:n]
 			}
-			u.readFromRan <- buffer[:n]
-		}
-	}()
-	u.TunLog.Debugln("Read from RAN started")
+		}(sess)
 
-	if u.isNrdcEnabled() {
-		go func() {
-			buffer := make([]byte, 4096)
+		var conn net.Conn
+		if id == 1 {
+			conn = u.ranDataPlaneConn
+		} else if id == 2 {
+			conn = u.ran2DataPlaneConn
+		} else {
+			u.TunLog.Warnf("Unknown session id %d, skipping", id)
+			continue
+		}
+
+		// 從 RAN 讀資料：此範例假設每條 Session 都有獨立的 data-plane 連線 (u.ranDataPlaneConn[id])
+		go func(ss *sessionState, conn net.Conn) {
+			buf := make([]byte, 4096)
 			for {
-				n, err := u.dcRanDataPlaneConn.Read(buffer)
+				n, err := conn.Read(buf)
 				if err != nil {
 					if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-						u.TunLog.Debugln("DC RAN data plane connection closed")
+						u.TunLog.Debugf("Session %d: RAN data plane closed", id)
 						return
 					}
-					u.RanLog.Errorf("Error read from dc ran data plane: %+v", err)
+					u.RanLog.Errorf("Session %d: read from RAN: %v", id, err)
+					return
 				}
-				u.readFromRan <- buffer[:n]
+				tmp := make([]byte, n)
+				copy(tmp, buf[:n])
+				ss.readFromRan <- tmp
 			}
-		}()
-		u.TunLog.Debugln("Read from DC RAN data plane started")
-	}
+		}(sess, conn) // 這裡的 ranDataPlaneConns 需自行定義/初始化
 
-	u.TunLog.Infof("UE tunnel device setup as %s", u.ueTunnelDeviceName)
+		// 如果 NR‑DC 模式開啟，同理啟第二條資料面連線
+		if u.isNrdcEnabled() {
+			go func(ss *sessionState, conn net.Conn) {
+				buf := make([]byte, 4096)
+				for {
+					n, err := conn.Read(buf)
+					if err != nil {
+						if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
+							u.TunLog.Debugf("Session %d: DC RAN closed", id)
+							return
+						}
+						u.RanLog.Errorf("Session %d: read from DC RAN: %v", id, err)
+						return
+					}
+					tmp := make([]byte, n)
+					copy(tmp, buf[:n])
+					ss.readFromRan <- tmp
+				}
+			}(sess, u.dcRanDataPlaneConn)
+		}
+	}
 	return nil
 }
 
 func (u *Ue) cleanUpTunnelDevice() error {
 	u.TunLog.Infoln("Cleaning up UE tunnel device")
 
-	if err := bringDownUeTunnelDevice(u.ueTunnelDeviceName); err != nil {
-		return fmt.Errorf("error bring down ue tunnel device: %+v", err)
+	for id, sess := range u.sessions {
+		if err := bringDownUeTunnelDevice(sess.tunName); err != nil {
+			return fmt.Errorf("error bring down ue tunnel device [%d]: %+v", id, err)
+		}
+		u.TunLog.Debugf("Bring down ue tunnel device [%d] success", id)
 	}
-	u.TunLog.Debugln("Bring down ue tunnel device success")
 
 	u.TunLog.Infoln("UE tunnel device cleaned up")
 	return nil
@@ -729,98 +847,150 @@ func (u *Ue) cleanUpTunnelDevice() error {
 
 func (u *Ue) handleDataPlane(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
+	defer wg.Done()
 
-	// forward data from TUN to RAN and RAN to TUN
-	for {
-		select {
-		case <-ctx.Done():
-			goto HANDLE_DATA_PLANE_FINISH
-		case buffer := <-u.readFromTun:
-			if !u.isNrdcEnabled() {
-				n, err := u.ranDataPlaneConn.Write(buffer)
-				if err != nil {
-					if errors.Is(err, net.ErrClosed) {
-						goto HANDLE_DATA_PLANE_FINISH
-					}
-					u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
-				}
-				u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
-			} else {
-				if util.IsIpInSpecifiedFlow(buffer, u.nrdc.specifiedFlow) {
-					n, err := u.dcRanDataPlaneConn.Write(buffer)
-					if err != nil {
-						if errors.Is(err, net.ErrClosed) {
-							goto HANDLE_DATA_PLANE_FINISH
-						}
-						u.RanLog.Warnf("Error sent to dc ran data plane: %+v", err)
-					}
-					u.RanLog.Tracef("Sent %d bytes of data to DC RAN: %+v", n, buffer[:n])
-				} else {
-					n, err := u.ranDataPlaneConn.Write(buffer)
-					if err != nil {
-						if errors.Is(err, net.ErrClosed) {
-							goto HANDLE_DATA_PLANE_FINISH
-						}
-						u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
-					}
-					u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
-				}
-			}
-		case buffer := <-u.readFromRan:
-			n, err := u.ueTunnelDevice.Write(buffer)
-			if err != nil {
-				u.TunLog.Warnf("Error write to ue tunnel device: %+v", err)
-			}
-			u.TunLog.Tracef("Wrote %d bytes of data to TUN: %+v", n, buffer[:n])
+	for id, sess := range u.sessions {
+		var conn net.Conn
+		if id == 1 {
+			conn = u.ranDataPlaneConn
+		} else if id == 2 {
+			conn = u.ran2DataPlaneConn
 		}
-	}
 
-HANDLE_DATA_PLANE_FINISH:
-	wg.Done()
-}
+		go func(id int, sess *sessionState, conn net.Conn) {
+			defer func() {
+				u.RanLog.Infof("Session %d data plane goroutine exit", id)
+			}()
 
-func (u *Ue) updateDataPlane() {
-	u.TunLog.Infoln("Updating data plane")
-
-	u.rwLock.Lock()
-	defer u.rwLock.Unlock()
-
-	if !u.nrdc.enable {
-		conn, err := util.TcpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
-		if err != nil {
-			u.TunLog.Errorf("Error connect to dc ran data plane: %+v", err)
-			return
-		}
-		u.dcRanDataPlaneConn = conn
-		u.RanLog.Debugf("Connected to DC RAN data plane: %s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port)
-
-		go func() {
-			buffer := make([]byte, 4096)
 			for {
-				n, err := u.dcRanDataPlaneConn.Read(buffer)
-				if err != nil {
-					if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-						u.TunLog.Debugln("DC RAN data plane connection closed")
+				select {
+				case <-ctx.Done():
+					u.RanLog.Infof("Session %d received cancel", id)
+					return
+				case buffer := <-sess.readFromTun:
+					n, err := conn.Write(buffer)
+					if err != nil {
+						u.RanLog.Warnf("Error sending to RAN (session %d): %v", id, err)
 						return
 					}
-					u.RanLog.Errorf("Error read from dc ran data plane: %+v", err)
+					u.RanLog.Tracef("Sent %d bytes to RAN (session %d)", n, id)
+				case buffer := <-sess.readFromRan:
+					// n, err := conn.Read(buffer)
+					// if err != nil {
+					// 	if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
+					// 		u.RanLog.Infof("Session %d RAN closed", id)
+					// 		return
+					// 	}
+					// 	u.RanLog.Warnf("Read error session %d: %v", id, err)
+					// 	return
+					// }
+					// tmp := make([]byte, n)
+					// copy(tmp, buffer[:n])
+					// sess.tunDev.Write(tmp)
+					if _, err := sess.tunDev.Write(buffer); err != nil {
+						u.TunLog.Warnf("Session %d: write to TUN error: %v", id, err)
+						return
+					}
 				}
-				u.readFromRan <- buffer[:n]
 			}
-		}()
-		u.TunLog.Debugln("Read from DC RAN data plane started")
-
-		u.nrdc.enable = true
-		u.TunLog.Infoln("Data plane is updated to NRDC mode")
-	} else {
-		if err := u.dcRanDataPlaneConn.Close(); err != nil {
-			u.UeLog.Errorf("Error closing DC RAN connection: %v", err)
-		}
-
-		u.nrdc.enable = false
-		u.TunLog.Infoln("Data plane is updated to non-NRDC mode")
+		}(id, sess, conn)
 	}
+
+	// 這邊不需要 goto，因為 defer 會自動在整體結束時執行清理
+	u.RanLog.Infoln("All data plane goroutines started")
+
+	// forward data from TUN to RAN and RAN to TUN
+	// for {
+	// 	select {
+	// 	case <-ctx.Done():
+	// 		goto HANDLE_DATA_PLANE_FINISH
+	// 	case buffer := <-u.readFromTun:
+	// 		if !u.isNrdcEnabled() {
+	// 			n, err := u.ranDataPlaneConn.Write(buffer)
+	// 			if err != nil {
+	// 				if errors.Is(err, net.ErrClosed) {
+	// 					goto HANDLE_DATA_PLANE_FINISH
+	// 				}
+	// 				u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
+	// 			}
+	// 			u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
+	// 		} else {
+	// 			if util.IsIpInSpecifiedFlow(buffer, u.nrdc.specifiedFlow) {
+	// 				n, err := u.dcRanDataPlaneConn.Write(buffer)
+	// 				if err != nil {
+	// 					if errors.Is(err, net.ErrClosed) {
+	// 						goto HANDLE_DATA_PLANE_FINISH
+	// 					}
+	// 					u.RanLog.Warnf("Error sent to dc ran data plane: %+v", err)
+	// 				}
+	// 				u.RanLog.Tracef("Sent %d bytes of data to DC RAN: %+v", n, buffer[:n])
+	// 			} else {
+	// 				n, err := u.ranDataPlaneConn.Write(buffer)
+	// 				if err != nil {
+	// 					if errors.Is(err, net.ErrClosed) {
+	// 						goto HANDLE_DATA_PLANE_FINISH
+	// 					}
+	// 					u.RanLog.Warnf("Error sent to ran data plane: %+v", err)
+	// 				}
+	// 				u.RanLog.Tracef("Sent %d bytes of data to RAN: %+v", n, buffer[:n])
+	// 			}
+	// 		}
+	// 	case buffer := <-u.readFromRan:
+	// 		n, err := u.ueTunnelDevice.Write(buffer)
+	// 		if err != nil {
+	// 			u.TunLog.Warnf("Error write to ue tunnel device: %+v", err)
+	// 		}
+	// 		u.TunLog.Tracef("Wrote %d bytes of data to TUN: %+v", n, buffer[:n])
+	// 	}
+	// }
+
+	// HANDLE_DATA_PLANE_FINISH:
+	//
+	//	wg.Done()
 }
+
+// func (u *Ue) updateDataPlane() {
+// 	u.TunLog.Infoln("Updating data plane")
+
+// 	u.rwLock.Lock()
+// 	defer u.rwLock.Unlock()
+
+// 	if !u.nrdc.enable {
+// 		conn, err := util.TcpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
+// 		if err != nil {
+// 			u.TunLog.Errorf("Error connect to dc ran data plane: %+v", err)
+// 			return
+// 		}
+// 		u.dcRanDataPlaneConn = conn
+// 		u.RanLog.Debugf("Connected to DC RAN data plane: %s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port)
+
+// 		go func() {
+// 			buffer := make([]byte, 4096)
+// 			for {
+// 				n, err := u.dcRanDataPlaneConn.Read(buffer)
+// 				if err != nil {
+// 					if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
+// 						u.TunLog.Debugln("DC RAN data plane connection closed")
+// 						return
+// 					}
+// 					u.RanLog.Errorf("Error read from dc ran data plane: %+v", err)
+// 				}
+// 				u.readFromRan <- buffer[:n]
+// 			}
+// 		}()
+// 		u.TunLog.Debugln("Read from DC RAN data plane started")
+
+// 		u.nrdc.enable = true
+// 		u.TunLog.Infoln("Data plane is updated to NRDC mode")
+// 	} else {
+// 		if err := u.dcRanDataPlaneConn.Close(); err != nil {
+// 			u.UeLog.Errorf("Error closing DC RAN connection: %v", err)
+// 		}
+
+// 		u.nrdc.enable = false
+// 		u.TunLog.Infoln("Data plane is updated to non-NRDC mode")
+// 	}
+// }
 
 func (u *Ue) getBearerType() uint8 {
 	switch u.accessType {

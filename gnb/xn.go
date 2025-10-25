@@ -146,6 +146,7 @@ func xnPduSessionResourceSetupProcessor(g *Gnb, conn net.Conn, imsi string, ngap
 		switch ie.Id.Value {
 		case ngapType.ProtocolIEIDPDUSessionAggregateMaximumBitRate:
 		case ngapType.ProtocolIEIDULNGUUPTNLInformation:
+			xnUe.SetUlTeid(ie.Value.ULNGUUPTNLInformation.GTPTunnel.GTPTEID.Value)
 		case ngapType.ProtocolIEIDAdditionalULNGUUPTNLInformation:
 			xnUe.SetUlTeid(ie.Value.AdditionalULNGUUPTNLInformation.List[0].NGUUPTNLInformation.GTPTunnel.GTPTEID.Value)
 		case ngapType.ProtocolIEIDPDUSessionType:
@@ -204,6 +205,7 @@ func xnPduSessionResourceSetupProcessor(g *Gnb, conn net.Conn, imsi string, ngap
 	g.XnLog.Infof("Accepted UE data plane connection from: %v", ueDataPlaneConn.RemoteAddr())
 	g.teidToConn.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe.GetDataPlaneConn())
 	g.XnLog.Debugf("Stored UE data plane connection with teid %s to teidToConn", hex.EncodeToString(xnUe.GetDlTeid()))
+	g.XnLog.Infof("DL TEID: %s, UL TEID: %s", hex.EncodeToString(xnUe.GetDlTeid()), hex.EncodeToString(xnUe.GetUlTeid()))
 
 	go g.startUeDataPlaneProcessor(ueDataPlaneConn, xnUe.GetUlTeid(), xnUe.GetDlTeid(), true, imsi)
 }
@@ -400,6 +402,7 @@ func xnPduSessionResourceModifyConfirmProcessor(g *Gnb, conn net.Conn, imsi stri
 	g.XnLog.Infof("Accepted UE data plane connection from: %v", ueDataPlaneConn.RemoteAddr())
 	g.teidToConn.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe.GetDataPlaneConn())
 	g.XnLog.Debugf("Stored UE data plane connection with teid %s to teidToConn", hex.EncodeToString(xnUe.GetDlTeid()))
+	g.XnLog.Infof("Confirm DL TEID: %s, UL TEID: %s", hex.EncodeToString(xnUe.GetDlTeid()), hex.EncodeToString(xnUe.GetUlTeid()))
 
 	go g.startUeDataPlaneProcessor(ueDataPlaneConn, xnUe.GetUlTeid(), xnUe.GetDlTeid(), true, imsi)
 }

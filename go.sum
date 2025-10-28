@@ -1,5 +1,5 @@
-github.com/Alonza0314/logger-go/v2 v2.0.3 h1:YoE3GpMiQ3e7NWLCWyNC3rDe+UjX+LO9dSUre9eWJ1E=
-github.com/Alonza0314/logger-go/v2 v2.0.3/go.mod h1:OXEncA2gNzwTKdAMg3kfe6MK12CljCCy3WL1bIjhpyk=
+github.com/Alonza0314/logger-go/v2 v2.0.4 h1:Akmf6+bgrctLAqwuIdIWbhb5YQMCUqsfzIeNcvMsJ54=
+github.com/Alonza0314/logger-go/v2 v2.0.4/go.mod h1:TPRyXAb7UOqmfw/5PTN/MrzAH5fP51y6GxvOSOVj6uM=
 github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 h1:+JkXLHME8vLJafGhOH4aoV2Iu8bR55nU6iKMVfYVLjY=
 github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1/go.mod h1:nuudZmJhzWtx2212z+pkuy7B6nkBqa+xwNXZHL1j8cg=
 github.com/bytedance/sonic v1.14.0 h1:/OfKt8HFw0kh2rj8N0F6C/qPGRESq0BbaNZgcNXXzQQ=

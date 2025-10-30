@@ -95,7 +95,7 @@ func forwardGtpPacketToN3Conn(ctx context.Context, n3Conn *net.UDPConn, gtpChann
 }
 
 // receive GTP packet from N3 connection and forward to UE according to the GTP header's TEID
-func receiveGtpPacketFromN3Conn(ctx context.Context, n3Conn *net.UDPConn, gnbLogger *logger.GnbLogger, teidToConn *sync.Map) {
+func receiveGtpPacketFromN3Conn(ctx context.Context, n3Conn *net.UDPConn, ranDataPlaneServer *net.UDPConn, gnbLogger *logger.GnbLogger, dlTeidToUe *sync.Map) {
 	buffer := make([]byte, 4096)
 	for {
 		n, err := n3Conn.Read(buffer)
@@ -110,7 +110,7 @@ func receiveGtpPacketFromN3Conn(ctx context.Context, n3Conn *net.UDPConn, gnbLog
 
 		tmp := make([]byte, n)
 		copy(tmp, buffer[:n])
-		forwardPacketToUe(tmp, teidToConn, gnbLogger)
+		forwardPacketToUe(tmp, ranDataPlaneServer, dlTeidToUe, gnbLogger)
 	}
 }
 
@@ -133,7 +133,7 @@ func formatGtpPacketAndWriteToGtpChannel(teid aper.OctetString, packet []byte, g
 }
 
 // forward packet to UE according to the GTP header's TEID
-func forwardPacketToUe(gtpPacket []byte, teidToConn *sync.Map, gnbLogger *logger.GnbLogger) {
+func forwardPacketToUe(gtpPacket []byte, ranDataPlaneServer *net.UDPConn, dlTeidToUe *sync.Map, gnbLogger *logger.GnbLogger) {
 	teid, payload, err := parseGtpPacket(gtpPacket)
 	if err != nil {
 		gnbLogger.GtpLog.Warnf("Error parsing GTP packet: %v", err)
@@ -141,20 +141,42 @@ func forwardPacketToUe(gtpPacket []byte, teidToConn *sync.Map, gnbLogger *logger
 	}
 	gnbLogger.GtpLog.Tracef("Parsed GTP packet: TEID: %s, Payload: %+v", teid, payload)
 
-	conn, found := teidToConn.Load(teid)
-	if !found {
-		gnbLogger.GtpLog.Warnf("No connection found for TEID: %s", teid)
+	ue, exists := dlTeidToUe.Load(teid)
+	if !exists {
+		gnbLogger.GtpLog.Warnf("No UE found for DL TEID: %s", teid)
 		return
 	}
-	gnbLogger.GtpLog.Debugf("Loaded connection %s for TEID: %s", conn.(net.Conn).RemoteAddr(), teid)
 
-	n, err := conn.(net.Conn).Write(payload)
-	if err != nil {
-		gnbLogger.GtpLog.Warnf("Error writing GTP packet to UE: %v", err)
-		return
+	switch u := ue.(type) {
+	case *RanUe:
+		gnbLogger.GtpLog.Debugf("Loaded UE %s for DL TEID: %s", u.GetMobileIdentityIMSI(), teid)
+		dataPlaneAddress := u.GetDataPlaneAddress()
+		if dataPlaneAddress == nil {
+			gnbLogger.GtpLog.Warnf("RAN UE %s data plane address not set yet, dropping packet", u.GetMobileIdentityIMSI())
+			return
+		}
+		n, err := ranDataPlaneServer.WriteToUDP(payload, dataPlaneAddress)
+		if err != nil {
+			gnbLogger.GtpLog.Warnf("Error writing GTP packet to RAN UE: %v", err)
+			return
+		}
+		gnbLogger.GtpLog.Tracef("Forwarded %d bytes of GTP packet to RAN UE", n)
+		gnbLogger.GtpLog.Debugln("Forwarded GTP packet to RAN UE")
+	case *XnUe:
+		gnbLogger.GtpLog.Debugf("Loaded UE %s for DL TEID: %s", u.GetIMSI(), teid)
+		dataPlaneAddress := u.GetDataPlaneAddress()
+		if dataPlaneAddress == nil {
+			gnbLogger.GtpLog.Warnf("XN UE %s data plane address not set yet, dropping packet", u.GetIMSI())
+			return
+		}
+		n, err := ranDataPlaneServer.WriteToUDP(payload, dataPlaneAddress)
+		if err != nil {
+			gnbLogger.GtpLog.Warnf("Error writing GTP packet to XN UE: %v", err)
+			return
+		}
+		gnbLogger.GtpLog.Tracef("Forwarded %d bytes of GTP packet to XN UE", n)
+		gnbLogger.GtpLog.Debugln("Forwarded GTP packet to XN UE")
 	}
-	gnbLogger.GtpLog.Tracef("Forwarded %d bytes of GTP packet to UE", n)
-	gnbLogger.GtpLog.Debugln("Forwarded GTP packet to UE")
 }
 
 // parse GTP packet, will return the TEID and payload

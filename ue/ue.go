@@ -301,20 +301,32 @@ func (u *Ue) connectToRanDataPlane() error {
 
 	u.RanLog.Tracef("RAN data plane address: %s:%d", u.ranDataPlaneIp, u.ranDataPlanePort)
 
-	conn, err := util.TcpDialWithOptionalLocalAddress(u.ranDataPlaneIp, u.ranDataPlanePort, u.localDataPlaneIp)
+	conn, err := util.UdpDialWithOptionalLocalAddress(u.ranDataPlaneIp, u.ranDataPlanePort, u.localDataPlaneIp)
 	if err != nil {
 		return err
 	}
 	u.ranDataPlaneConn = conn
-	u.RanLog.Debugln("Dial TCP to RAN data plane success")
+	u.RanLog.Debugln("Dial UDP to RAN data plane success")
+
+	_, err = u.ranDataPlaneConn.Write([]byte(constant.UE_DATA_PLANE_INITIAL_PACKET))
+	if err != nil {
+		return fmt.Errorf("error send initial packet: %+v", err)
+	}
+	u.RanLog.Debugln("Sent initial packet to RAN data plane UDP server")
 
 	if u.isNrdcEnabled() {
-		conn, err := util.TcpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
+		conn, err := util.UdpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
 		if err != nil {
 			return err
 		}
 		u.dcRanDataPlaneConn = conn
-		u.RanLog.Debugf("Connected to DC RAN data plane: %s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port)
+		u.RanLog.Debugln("Dial UDP to DC RAN data plane success")
+
+		_, err = u.dcRanDataPlaneConn.Write([]byte(constant.UE_DATA_PLANE_INITIAL_PACKET))
+		if err != nil {
+			return fmt.Errorf("error send initial packet: %+v", err)
+		}
+		u.RanLog.Debugln("Sent initial packet to DC RAN data plane UDP server")
 	}
 
 	u.RanLog.Infof("Connected to RAN data plane: %s:%d", u.ranDataPlaneIp, u.ranDataPlanePort)
@@ -691,7 +703,7 @@ func (u *Ue) setupTunnelDevice() error {
 				u.RanLog.Errorf("Error read from ran data plane: %+v", err)
 				return
 			}
-			// 必须复制数据！否则下一次循环会覆盖 buffer
+
 			tmp := make([]byte, n)
 			copy(tmp, buffer[:n])
 			u.readFromRan <- tmp
@@ -795,13 +807,19 @@ func (u *Ue) updateDataPlane() {
 	defer u.rwLock.Unlock()
 
 	if !u.nrdc.enable {
-		conn, err := util.TcpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
+		conn, err := util.UdpDialWithOptionalLocalAddress(u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port, u.nrdc.dcLocalDataPlaneIp)
 		if err != nil {
 			u.TunLog.Errorf("Error connect to dc ran data plane: %+v", err)
 			return
 		}
 		u.dcRanDataPlaneConn = conn
-		u.RanLog.Debugf("Connected to DC RAN data plane: %s:%d", u.nrdc.dcRanDataPlane.ip, u.nrdc.dcRanDataPlane.port)
+
+		_, err = u.dcRanDataPlaneConn.Write([]byte(constant.UE_DATA_PLANE_INITIAL_PACKET))
+		if err != nil {
+			u.TunLog.Errorf("Error send initial packet: %+v", err)
+			return
+		}
+		u.RanLog.Debugln("Sent initial packet to DC RAN data plane UDP server")
 
 		go func() {
 			buffer := make([]byte, 4096)

@@ -45,8 +45,8 @@ type authenticationSubscription struct {
 }
 
 type pduSession struct {
-	dnn          string
-	sNssai       *models.Snssai
+	dnn    string
+	sNssai *models.Snssai
 }
 
 type pduSessionEstablishmentAccept struct {
@@ -66,8 +66,8 @@ type nrdc struct {
 	enable bool
 	dcRanDataPlane
 	dcLocalDataPlaneIp string
-	specifiedFlow []string
-	rwLock        sync.RWMutex
+	specifiedFlow      []string
+	rwLock             sync.RWMutex
 }
 
 type Ue struct {
@@ -168,7 +168,7 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 		},
 
 		pduSession: pduSession{
-			dnn:          config.Ue.PduSession.Dnn,
+			dnn: config.Ue.PduSession.Dnn,
 			sNssai: &models.Snssai{
 				Sst: int32(sstInt),
 				Sd:  config.Ue.PduSession.Snssai.Sd,
@@ -182,8 +182,8 @@ func NewUe(config *model.UeConfig, logger *logger.UeLogger) *Ue {
 				port: config.Ue.Nrdc.DcRanDataPlane.Port,
 			},
 			dcLocalDataPlaneIp: config.Ue.Nrdc.DcLocalDataPlaneIp,
-			specifiedFlow: make([]string, 0),
-			rwLock:        sync.RWMutex{},
+			specifiedFlow:      make([]string, 0),
+			rwLock:             sync.RWMutex{},
 		},
 
 		ueTunnelDeviceName: config.Ue.UeTunnelDevice,
@@ -669,7 +669,10 @@ func (u *Ue) setupTunnelDevice() error {
 			if version == 6 {
 				continue
 			}
-			u.readFromTun <- buffer[:n]
+
+			tmp := make([]byte, n)
+			copy(tmp, buffer[:n])
+			u.readFromTun <- tmp
 		}
 	}()
 	u.TunLog.Debugln("Read from TUN started")
@@ -688,7 +691,10 @@ func (u *Ue) setupTunnelDevice() error {
 				u.RanLog.Errorf("Error read from ran data plane: %+v", err)
 				return
 			}
-			u.readFromRan <- buffer[:n]
+			// 必须复制数据！否则下一次循环会覆盖 buffer
+			tmp := make([]byte, n)
+			copy(tmp, buffer[:n])
+			u.readFromRan <- tmp
 		}
 	}()
 	u.TunLog.Debugln("Read from RAN started")
@@ -705,7 +711,10 @@ func (u *Ue) setupTunnelDevice() error {
 					}
 					u.RanLog.Errorf("Error read from dc ran data plane: %+v", err)
 				}
-				u.readFromRan <- buffer[:n]
+
+				tmp := make([]byte, n)
+				copy(tmp, buffer[:n])
+				u.readFromRan <- tmp
 			}
 		}()
 		u.TunLog.Debugln("Read from DC RAN data plane started")
@@ -805,7 +814,10 @@ func (u *Ue) updateDataPlane() {
 					}
 					u.RanLog.Errorf("Error read from dc ran data plane: %+v", err)
 				}
-				u.readFromRan <- buffer[:n]
+
+				tmp := make([]byte, n)
+				copy(tmp, buffer[:n])
+				u.readFromRan <- tmp
 			}
 		}()
 		u.TunLog.Debugln("Read from DC RAN data plane started")

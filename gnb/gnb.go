@@ -28,11 +28,11 @@ import (
 )
 
 type xnInterface struct {
-	enable bool
-	xnListenIp string
+	enable       bool
+	xnListenIp   string
 	xnListenPort int
-	xnDialIp   string
-	xnDialPort int
+	xnDialIp     string
+	xnDialPort   int
 }
 
 type api struct {
@@ -158,11 +158,11 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 
 		staticNrdc: config.Gnb.StaticNrdc,
 		xnInterface: xnInterface{
-			enable: config.Gnb.XnInterface.Enable,
+			enable:       config.Gnb.XnInterface.Enable,
 			xnListenIp:   config.Gnb.XnInterface.XnListenIp,
 			xnListenPort: config.Gnb.XnInterface.XnListenPort,
-			xnDialIp:   config.Gnb.XnInterface.XnDialIp,
-			xnDialPort: config.Gnb.XnInterface.XnDialPort,
+			xnDialIp:     config.Gnb.XnInterface.XnDialIp,
+			xnDialPort:   config.Gnb.XnInterface.XnDialPort,
 		},
 
 		ranUeConns: sync.Map{},

@@ -335,6 +335,10 @@ main() {
                 exit 1
             fi
         ;;
+        *)
+            Usage
+            exit 1
+        ;;
     esac
 }
 

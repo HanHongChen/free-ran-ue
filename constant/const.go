@@ -2,9 +2,14 @@ package constant
 
 import "net/http"
 
+type UeType string
+
 // for RAN
 const (
 	NGAP_PPID uint32 = 0x3c000000
+
+	UE_TYPE_RAN UeType = "ran"
+	UE_TYPE_XN  UeType = "xn"
 )
 
 // for UE
@@ -14,7 +19,8 @@ const (
 
 // between RAN and UE
 const (
-	UE_TUNNEL_UPDATE = "tunnel update"
+	UE_DATA_PLANE_INITIAL_PACKET = "initial packet"
+	UE_TUNNEL_UPDATE             = "tunnel update"
 )
 
 // for logger

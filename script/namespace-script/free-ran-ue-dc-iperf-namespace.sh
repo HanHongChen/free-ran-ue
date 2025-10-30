@@ -125,7 +125,6 @@ setup_network_namespace() {
     sudo ip netns exec $FREE_SRAN_NAMESPACE ip route add default via 10.0.1.1
     sudo ip netns exec $FREE_MRAN_NAMESPACE ip route add 10.0.2.0/24 dev fnsMGnb
     sudo ip netns exec $FREE_SRAN_NAMESPACE ip route add 10.0.3.0/24 dev fnsSGnb
-    sudo ip netns exec $FREE_UE_NAMESPACE ip route add default via 10.0.2.1
     sudo ip netns exec $FREE_UE_NAMESPACE ip route add 10.0.3.0/24 dev fnsSUe
 
     sudo ip netns exec $IPERF_A_NAMESPACE ip route add default via 10.1.0.1

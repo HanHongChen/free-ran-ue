@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"strconv"
@@ -26,6 +25,11 @@ import (
 	"github.com/free5gc/sctp"
 	"github.com/gin-gonic/gin"
 )
+
+type dlTeidAndUeType struct {
+	dlTeid aper.OctetString
+	ueType constant.UeType
+}
 
 type xnInterface struct {
 	enable       bool
@@ -75,14 +79,16 @@ type Gnb struct {
 	xnInterface
 
 	ranControlPlaneListener *net.Listener
-	ranDataPlaneListener    *net.Listener
+	ranDataPlaneServer      *net.UDPConn
 	xnListener              *net.Listener
 
-	ranUeConns sync.Map
-	xnUeConns  sync.Map
-	teidToConn sync.Map
+	ranUeConns  sync.Map
+	xnUeConns   sync.Map
+	dlTeidToUe  sync.Map
+	addressToUe sync.Map
 
-	gtpChannel chan []byte
+	gtpChannel             chan []byte
+	dlTeidAndUeTypeChannel chan dlTeidAndUeType
 
 	ranUeNgapIdGenerator *RanUeNgapIdGenerator
 	teidGenerator        *TeidGenerator
@@ -165,9 +171,12 @@ func NewGnb(config *model.GnbConfig, gnbLogger *logger.GnbLogger) *Gnb {
 			xnDialPort:   config.Gnb.XnInterface.XnDialPort,
 		},
 
-		ranUeConns: sync.Map{},
-		xnUeConns:  sync.Map{},
-		teidToConn: sync.Map{},
+		ranUeConns:  sync.Map{},
+		xnUeConns:   sync.Map{},
+		dlTeidToUe:  sync.Map{},
+		addressToUe: sync.Map{},
+
+		dlTeidAndUeTypeChannel: make(chan dlTeidAndUeType),
 
 		ranUeNgapIdGenerator: NewRanUeNgapIdGenerator(),
 		teidGenerator:        NewTeidGenerator(),
@@ -207,7 +216,6 @@ func (g *Gnb) Start(ctx context.Context) error {
 		}
 		return err
 	}
-	g.startGtpProcessor(ctx)
 
 	if g.xnInterface.enable {
 		if err := g.startXnListener(); err != nil {
@@ -240,7 +248,7 @@ func (g *Gnb) Start(ctx context.Context) error {
 		return err
 	}
 
-	if err := g.startRanDataPlaneListener(); err != nil {
+	if err := g.startRanDataPlaneServer(); err != nil {
 		g.RanLog.Errorf("Error starting ran data plane listener: %v", err)
 		if err := (*g.ranControlPlaneListener).Close(); err != nil {
 			g.RanLog.Errorf("Error closing ran control plane listener: %v", err)
@@ -257,6 +265,10 @@ func (g *Gnb) Start(ctx context.Context) error {
 		}
 		return err
 	}
+
+	g.startGtpProcessor(ctx)
+
+	go g.startDataPlaneProcessor()
 
 	go func() {
 		if !g.xnInterface.enable {
@@ -309,7 +321,7 @@ func (g *Gnb) Stop() {
 
 	g.stopApiServer()
 
-	if err := (*g.ranDataPlaneListener).Close(); err != nil {
+	if err := g.ranDataPlaneServer.Close(); err != nil {
 		g.RanLog.Errorf("Error stopping ran data plane listener: %v", err)
 		return
 	}
@@ -332,22 +344,6 @@ func (g *Gnb) Stop() {
 	}
 
 	var wg sync.WaitGroup
-	if g.xnInterface.enable {
-		g.xnUeConns.Range(func(key, value interface{}) bool {
-			wg.Add(1)
-			go func(xnUe *XnUe) {
-				defer wg.Done()
-				if xnUe, ok := key.(*XnUe); ok && xnUe.GetDataPlaneConn() != nil {
-					g.XnLog.Tracef("XN UE %v still in connection", xnUe.GetDataPlaneConn().RemoteAddr())
-					if err := xnUe.GetDataPlaneConn().Close(); err != nil {
-						g.XnLog.Errorf("Error closing XN UE connection: %v", err)
-					}
-					g.XnLog.Debugf("Closed XN UE connection from: %v", xnUe.GetDataPlaneConn().RemoteAddr())
-				}
-			}(key.(*XnUe))
-			return true
-		})
-	}
 	g.ranUeConns.Range(func(key, value interface{}) bool {
 		wg.Add(1)
 		go func(ranUe *RanUe) {
@@ -510,19 +506,7 @@ func (g *Gnb) setupN1(ranUe *RanUe) error {
 	}
 	time.Sleep(1 * time.Second)
 
-	// accept UE data plane connection
-	ueDataPlaneConn, err := (*g.ranDataPlaneListener).Accept()
-	if err != nil {
-		if errors.Is(err, net.ErrClosed) {
-			g.RanLog.Warnf("UE data plane connection acceptor closed: %v", err)
-			return nil
-		}
-		return err
-	}
-	ranUe.SetDataPlaneConn(ueDataPlaneConn)
-	g.RanLog.Infof("Accepted UE data plane connection from: %v", ueDataPlaneConn.RemoteAddr())
-
-	// configure UE mapping teid to conn
+	// configure UE mapping
 	for _, item := range pduSessionResourceSetupRequestTransfer.ProtocolIEs.List {
 		switch item.Id.Value {
 		case ngapType.ProtocolIEIDPDUSessionAggregateMaximumBitRate:
@@ -533,8 +517,15 @@ func (g *Gnb) setupN1(ranUe *RanUe) error {
 		case ngapType.ProtocolIEIDQosFlowSetupRequestList:
 		}
 	}
-	g.teidToConn.Store(hex.EncodeToString(ranUe.GetDlTeid()), ueDataPlaneConn)
-	g.GtpLog.Debugf("Stored UE %s data plane connection with teid %s to teidToConn", ranUe.GetMobileIdentityIMSI(), hex.EncodeToString(ranUe.GetDlTeid()))
+
+	g.dlTeidToUe.Store(hex.EncodeToString(ranUe.GetDlTeid()), ranUe)
+	g.GtpLog.Debugf("Stored RAN UE %s with DL TEID %s to dlTeidToUe", ranUe.GetMobileIdentityIMSI(), hex.EncodeToString(ranUe.GetDlTeid()))
+
+	g.dlTeidAndUeTypeChannel <- dlTeidAndUeType{
+		dlTeid: ranUe.GetDlTeid(),
+		ueType: constant.UE_TYPE_RAN,
+	}
+	g.GtpLog.Debugf("Sent DL TEID %s to teidChannel", hex.EncodeToString(ranUe.GetDlTeid()))
 
 	g.RanLog.Infof("UE %s N1 setup complete", ranUe.GetMobileIdentityIMSI())
 	return nil
@@ -559,7 +550,7 @@ func (g *Gnb) startGtpProcessor(ctx context.Context) {
 	go forwardGtpPacketToN3Conn(ctx, g.n3Conn, g.gtpChannel, g.GnbLogger)
 	g.GtpLog.Debugln("Forward GTP packet to N3 connection started")
 
-	go receiveGtpPacketFromN3Conn(ctx, g.n3Conn, g.GnbLogger, &g.teidToConn)
+	go receiveGtpPacketFromN3Conn(ctx, g.n3Conn, g.ranDataPlaneServer, g.GnbLogger, &g.dlTeidToUe)
 	g.GtpLog.Debugln("Receive GTP packet from N3 connection started")
 
 	g.GtpLog.Infoln("GTP processor started")
@@ -599,20 +590,20 @@ func (g *Gnb) startRanControlPlaneListener() error {
 	return nil
 }
 
-func (g *Gnb) startRanDataPlaneListener() error {
-	g.RanLog.Infoln("Starting RAN data plane listener")
+func (g *Gnb) startRanDataPlaneServer() error {
+	g.RanLog.Infoln("Starting RAN data plane server")
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", g.ranDataPlaneIp, g.ranDataPlanePort))
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(g.ranDataPlaneIp), Port: g.ranDataPlanePort})
 	if err != nil {
 		return err
 	}
-	g.ranDataPlaneListener = &listener
+	g.ranDataPlaneServer = conn
 
 	g.RanLog.Infoln("======= RAN Data Plane Info ========")
 	g.RanLog.Infof("RAN Data Plane access address: %s:%d", g.ranDataPlaneIp, g.ranDataPlanePort)
 	g.RanLog.Infoln("====================================")
 
-	g.RanLog.Infoln("RAN data plane listener started")
+	g.RanLog.Infoln("RAN data plane server started")
 	return nil
 }
 
@@ -632,9 +623,6 @@ func (g *Gnb) handleRanConnection(ctx context.Context, ranUe *RanUe) {
 	}
 	g.GtpLog.Debugf("DL TEID: %s, UL TEID: %s", hex.EncodeToString(ranUe.GetDlTeid()), hex.EncodeToString(ranUe.GetUlTeid()))
 
-	// handle data plane from UE
-	go g.startUeDataPlaneProcessor(ranUe.GetDataPlaneConn(), ranUe.GetUlTeid(), ranUe.GetDlTeid(), false, ranUe.GetMobileIdentityIMSI())
-
 	if err := g.releaseN1(ranUe); err != nil {
 		g.RanLog.Errorf("Error releasing N1: %v", err)
 		return
@@ -642,37 +630,63 @@ func (g *Gnb) handleRanConnection(ctx context.Context, ranUe *RanUe) {
 	g.RanLog.Infof("UE %s N1 released", ranUe.GetMobileIdentityIMSI())
 }
 
-func (g *Gnb) startUeDataPlaneProcessor(ueDataPlaneConn net.Conn, ulTeid, dlTeid aper.OctetString, isXnUe bool, imsi string) {
+func (g *Gnb) startDataPlaneProcessor() {
 	buffer := make([]byte, 4096)
 	for {
-		n, err := ueDataPlaneConn.Read(buffer)
+		n, ueAddress, err := g.ranDataPlaneServer.ReadFromUDP(buffer)
 		if err != nil {
-			if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-				g.teidToConn.Delete(hex.EncodeToString(dlTeid))
-				g.GtpLog.Debugf("Deleted teid %s from teidToConn", hex.EncodeToString(dlTeid))
-				g.GtpLog.Infof("Connection from UE IP: %v closed", ueDataPlaneConn.RemoteAddr())
-
-				if isXnUe {
-					g.xnUeConns.Range(func(key, value interface{}) bool {
-						if key.(*XnUe).GetIMSI() == imsi {
-							key.(*XnUe).Release(g.teidGenerator)
-							g.xnUeConns.Delete(key)
-							g.XnLog.Debugf("Deleted XN UE %s from xnUeConns", imsi)
-						}
-						return true
-					})
-					g.XnLog.Debugf("Deleted XN UE %s from xnUeConns", imsi)
-				}
+			if errors.Is(err, net.ErrClosed) {
+				g.RanLog.Infoln("RAN data plane server closed")
 				return
 			}
-			g.RanLog.Warnf("Error reading from UE connection: %v", err)
+			g.RanLog.Warnf("Error reading from RAN data plane server: %v", err)
+			continue
 		}
 		g.RanLog.Tracef("Received %d bytes of data from UE: %+v", n, buffer[:n])
 		g.RanLog.Tracef("Received %d bytes of data from UE", n)
 
-		tmp := make([]byte, n)
-		copy(tmp, buffer[:n])
-		go formatGtpPacketAndWriteToGtpChannel(ulTeid, tmp, g.gtpChannel, g.GnbLogger)
+		if string(buffer[:n]) == constant.UE_DATA_PLANE_INITIAL_PACKET {
+			go g.handleUeDataPlaneInitialPacket(ueAddress)
+		} else {
+			tmp := make([]byte, n)
+			copy(tmp, buffer[:n])
+			go g.handleUeDataPlanePacket(ueAddress, tmp)
+		}
+	}
+}
+
+func (g *Gnb) handleUeDataPlaneInitialPacket(ueAddress *net.UDPAddr) {
+	dlTeidAndUeType := <-g.dlTeidAndUeTypeChannel
+	ue, exists := g.dlTeidToUe.Load(hex.EncodeToString(dlTeidAndUeType.dlTeid))
+	if !exists {
+		g.RanLog.Warnf("No UE found for DL TEID: %s", hex.EncodeToString(dlTeidAndUeType.dlTeid))
+		return
+	}
+
+	switch dlTeidAndUeType.ueType {
+	case constant.UE_TYPE_RAN:
+		ue.(*RanUe).SetDataPlaneAddress(ueAddress)
+		g.addressToUe.Store(ueAddress.String(), ue)
+		g.RanLog.Infof("Set data plane address %s for UE: %s", ueAddress.String(), ue.(*RanUe).GetMobileIdentityIMSI())
+	case constant.UE_TYPE_XN:
+		ue.(*XnUe).SetDataPlaneAddress(ueAddress)
+		g.addressToUe.Store(ueAddress.String(), ue)
+		g.XnLog.Infof("Set data plane address %s for UE: %s", ueAddress.String(), ue.(*XnUe).GetIMSI())
+	}
+}
+
+func (g *Gnb) handleUeDataPlanePacket(ueAddress *net.UDPAddr, buffer []byte) {
+	ue, exists := g.addressToUe.Load(ueAddress.String())
+	if !exists {
+		g.RanLog.Warnf("No UE found for data plane address: %s", ueAddress.String())
+		return
+	}
+
+	switch ue.(type) {
+	case *RanUe:
+		go formatGtpPacketAndWriteToGtpChannel(ue.(*RanUe).GetUlTeid(), buffer, g.gtpChannel, g.GnbLogger)
+	case *XnUe:
+		go formatGtpPacketAndWriteToGtpChannel(ue.(*XnUe).GetUlTeid(), buffer, g.gtpChannel, g.GnbLogger)
 	}
 }
 

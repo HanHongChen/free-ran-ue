@@ -51,8 +51,8 @@ type RanUe struct {
 	ulTeid aper.OctetString
 	dlTeid aper.OctetString
 
-	n1Conn        net.Conn
-	dataPlaneConn net.Conn
+	n1Conn           net.Conn
+	dataPlaneAddress *net.UDPAddr
 
 	nrdcIndicator    bool
 	nrdcIndicatorMtx sync.Mutex
@@ -107,8 +107,8 @@ func (r *RanUe) GetN1Conn() net.Conn {
 	return r.n1Conn
 }
 
-func (r *RanUe) GetDataPlaneConn() net.Conn {
-	return r.dataPlaneConn
+func (r *RanUe) GetDataPlaneAddress() *net.UDPAddr {
+	return r.dataPlaneAddress
 }
 
 func (r *RanUe) SetAmfUeId(amfUeId int64) {
@@ -131,8 +131,8 @@ func (r *RanUe) SetDlTeid(dlTeid aper.OctetString) {
 	r.dlTeid = dlTeid
 }
 
-func (r *RanUe) SetDataPlaneConn(dataPlaneConn net.Conn) {
-	r.dataPlaneConn = dataPlaneConn
+func (r *RanUe) SetDataPlaneAddress(dataPlaneAddress *net.UDPAddr) {
+	r.dataPlaneAddress = dataPlaneAddress
 }
 
 func (r *RanUe) IsNrdcActivated() bool {

@@ -3,10 +3,10 @@ package gnb
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net"
 
+	"github.com/Alonza0314/free-ran-ue/constant"
 	"github.com/free5gc/aper"
 	"github.com/free5gc/ngap"
 	"github.com/free5gc/ngap/ngapConvert"
@@ -191,21 +191,16 @@ func xnPduSessionResourceSetupProcessor(g *Gnb, conn net.Conn, imsi string, ngap
 	g.XnLog.Tracef("Sent %d bytes of DC QoS Flow per TNL Information to XN", n)
 	g.XnLog.Debugln("Send DC QoS Flow per TNL Information to XN")
 
-	ueDataPlaneConn, err := (*g.ranDataPlaneListener).Accept()
-	if err != nil {
-		if errors.Is(err, net.ErrClosed) {
-			g.XnLog.Warnf("UE data plane connection acceptor closed: %v", err)
-			return
-		}
-		g.XnLog.Warnf("Error accept ue data plane connection: %v", err)
-		return
-	}
-	xnUe.SetDataPlaneConn(ueDataPlaneConn)
-	g.XnLog.Infof("Accepted UE data plane connection from: %v", ueDataPlaneConn.RemoteAddr())
-	g.teidToConn.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe.GetDataPlaneConn())
-	g.XnLog.Debugf("Stored UE data plane connection with teid %s to teidToConn", hex.EncodeToString(xnUe.GetDlTeid()))
+	// 先存储到 map，确保接收端能找到 UE
+	g.dlTeidToUe.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe)
+	g.XnLog.Debugf("Stored XN UE %s with DL TEID %s to dlTeidToUe", xnUe.GetIMSI(), hex.EncodeToString(xnUe.GetDlTeid()))
 
-	go g.startUeDataPlaneProcessor(ueDataPlaneConn, xnUe.GetUlTeid(), xnUe.GetDlTeid(), true, imsi)
+	// 然后通过 channel 通知接收端
+	g.dlTeidAndUeTypeChannel <- dlTeidAndUeType{
+		dlTeid: xnUe.GetDlTeid(),
+		ueType: constant.UE_TYPE_XN,
+	}
+	g.XnLog.Debugf("Sent DL TEID %s to dlTeidAndUeTypeChannel", hex.EncodeToString(xnUe.GetDlTeid()))
 }
 
 func xnPduSessionResourceModifyIndicationProcessor(g *Gnb, conn net.Conn, imsi string, ngapPduSessionResourceModifyIndication *ngapType.NGAPPDU) {
@@ -387,21 +382,14 @@ func xnPduSessionResourceModifyConfirmProcessor(g *Gnb, conn net.Conn, imsi stri
 	g.XnLog.Tracef("Sent %d bytes of NGAP PDU Session Resource Modify Confirm to XN", n)
 	g.XnLog.Debugln("Send NGAP PDU Session Resource Modify Confirm to XN")
 
-	ueDataPlaneConn, err := (*g.ranDataPlaneListener).Accept()
-	if err != nil {
-		if errors.Is(err, net.ErrClosed) {
-			g.XnLog.Warnf("UE data plane connection acceptor closed: %v", err)
-			return
-		}
-		g.XnLog.Warnf("Error accept ue data plane connection: %v", err)
-		return
-	}
-	xnUe.SetDataPlaneConn(ueDataPlaneConn)
-	g.XnLog.Infof("Accepted UE data plane connection from: %v", ueDataPlaneConn.RemoteAddr())
-	g.teidToConn.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe.GetDataPlaneConn())
-	g.XnLog.Debugf("Stored UE data plane connection with teid %s to teidToConn", hex.EncodeToString(xnUe.GetDlTeid()))
+	g.dlTeidToUe.Store(hex.EncodeToString(xnUe.GetDlTeid()), xnUe)
+	g.XnLog.Debugf("Stored XN UE %s with DL TEID %s to dlTeidToUe", xnUe.GetIMSI(), hex.EncodeToString(xnUe.GetDlTeid()))
 
-	go g.startUeDataPlaneProcessor(ueDataPlaneConn, xnUe.GetUlTeid(), xnUe.GetDlTeid(), true, imsi)
+	g.dlTeidAndUeTypeChannel <- dlTeidAndUeType{
+		dlTeid: xnUe.GetDlTeid(),
+		ueType: constant.UE_TYPE_XN,
+	}
+	g.XnLog.Debugf("Sent DL TEID %s to dlTeidAndUeTypeChannel", hex.EncodeToString(xnUe.GetDlTeid()))
 }
 
 func xnReleaseUeProcessor(g *Gnb, conn net.Conn, imsi string, ngapPduSessionResourceModifyConfirm *ngapType.NGAPPDU) bool {
@@ -419,12 +407,17 @@ func xnReleaseUeProcessor(g *Gnb, conn net.Conn, imsi string, ngapPduSessionReso
 		return false
 	}
 
-	if xnUe.GetDataPlaneConn() != nil {
-		// The connection close at here will cause the UE release in `startUeDataPlaneProcessor`
-		if err := xnUe.GetDataPlaneConn().Close(); err != nil {
-			g.XnLog.Warnf("Error close ue data plane connection: %v", err)
-		}
-	}
+	g.dlTeidToUe.Delete(hex.EncodeToString(xnUe.GetDlTeid()))
+	g.XnLog.Debugf("Deleted XN UE %s with DL TEID %s from dlTeidToUe", xnUe.GetIMSI(), hex.EncodeToString(xnUe.GetDlTeid()))
+
+	g.addressToUe.Delete(xnUe.GetDataPlaneAddress().String())
+	g.XnLog.Debugf("Deleted XN UE %s with data plane address %s from addressToUe", xnUe.GetIMSI(), xnUe.GetDataPlaneAddress().String())
+
+	xnUe.Release(g.teidGenerator)
+	g.XnLog.Debugf("Released XN UE %s with DL TEID %s", xnUe.GetIMSI(), hex.EncodeToString(xnUe.GetDlTeid()))
+
+	g.xnUeConns.Delete(xnUe)
+	g.XnLog.Debugf("Deleted XN UE %s from xnUeConns", xnUe.GetIMSI())
 
 	return true
 }

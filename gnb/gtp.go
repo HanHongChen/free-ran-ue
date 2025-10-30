@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/Alonza0314/free-ran-ue/constant"
+	"github.com/Alonza0314/free-ran-ue/logger"
 	"github.com/free5gc/aper"
 )
 
@@ -107,7 +107,10 @@ func receiveGtpPacketFromN3Conn(ctx context.Context, n3Conn *net.UDPConn, gnbLog
 		}
 		gnbLogger.GtpLog.Tracef("Received %d bytes of GTP packet from N3 connection: %+v", n, buffer[:n])
 		gnbLogger.GtpLog.Tracef("Received %d bytes of GTP packet from N3 connection", n)
-		go forwardPacketToUe(buffer[:n], teidToConn, gnbLogger)
+
+		tmp := make([]byte, n)
+		copy(tmp, buffer[:n])
+		forwardPacketToUe(tmp, teidToConn, gnbLogger)
 	}
 }
 

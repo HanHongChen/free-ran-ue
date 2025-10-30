@@ -682,11 +682,11 @@ func (g *Gnb) handleUeDataPlanePacket(ueAddress *net.UDPAddr, buffer []byte) {
 		return
 	}
 
-	switch ue.(type) {
+	switch u := ue.(type) {
 	case *RanUe:
-		go formatGtpPacketAndWriteToGtpChannel(ue.(*RanUe).GetUlTeid(), buffer, g.gtpChannel, g.GnbLogger)
+		go formatGtpPacketAndWriteToGtpChannel(u.GetUlTeid(), buffer, g.gtpChannel, g.GnbLogger)
 	case *XnUe:
-		go formatGtpPacketAndWriteToGtpChannel(ue.(*XnUe).GetUlTeid(), buffer, g.gtpChannel, g.GnbLogger)
+		go formatGtpPacketAndWriteToGtpChannel(u.GetUlTeid(), buffer, g.gtpChannel, g.GnbLogger)
 	}
 }
 

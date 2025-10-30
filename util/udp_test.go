@@ -33,7 +33,11 @@ func TestUdpDialWithOptionalLocalAddress(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error listening: %v", err)
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Logf("error closing connection: %v", err)
+		}
+	}()
 
 	go func() {
 		for {

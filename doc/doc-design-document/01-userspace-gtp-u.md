@@ -22,7 +22,7 @@ graph LR
 
     UE_Kernel -.->|"ICMP Packet"| TUN
     TUN -- "User Data" --> UE_Sim
-    UE_Sim -- "TCP" --> RAN_Sim
+    UE_Sim -- "UDP" --> RAN_Sim
     RAN_Sim -- "Encapsulate GTP-U <br/> with TEID" --> UPF
 
     %% 樣式美化
@@ -42,7 +42,7 @@ graph LR
 ```
 
 1. Create a TUN device in the UE to serve as a virtual network interface for user traffic.
-2. The UE reads packets from the TUN device in user space and sends them to the RAN simulator via TCP.
+2. The UE reads packets from the TUN device in user space and sends them to the RAN simulator via UDP.
 3. The RAN simulator receives the data from the UE and encapsulates the packets as GTP-U packets with the assigned TEID.
 4. The RAN simulator sends the encapsulated GTP-U packets to the UPF over UDP (port 2152).
 
@@ -188,18 +188,20 @@ The RAN will maintain a **MAP** for mapping each TEID to its corresponding UE co
 1. RAN continuously reads from the UE connection and formats the packet as a GTP packet:
 
     ```go
-    buffer, gtpChannel := make([]byte, 4096), make(chan []byte)
-    for {
-        n, err := ueDataPlaneConn.Read(buffer)
-        if err != nil {
-            if errors.Is(err, net.ErrClosed) || errors.Is(err, io.EOF) {
-                return
+    func (g *Gnb) startDataPlaneProcessor() {
+        buffer := make([]byte, 4096)
+        for {
+            n, ueAddress, err := g.ranDataPlaneServer.ReadFromUDP(buffer)
+            if err != nil {
+                continue
+            }
+
+            if string(buffer[:n]) == constant.UE_DATA_PLANE_INITIAL_PACKET {
+                go g.handleUeDataPlaneInitialPacket(ueAddress)
+            } else {
+                go g.handleUeDataPlanePacket(ueAddress, buffer)
             }
         }
-
-        tmp := make([]byte, n)
-        copy(tmp, buffer[:n])
-        go formatGtpPacketAndWriteToGtpChannel(ulTeidBytes, tmp, g.gtpChannel, g.GnbLogger)
     }
     ```
 
@@ -250,7 +252,7 @@ The RAN will maintain a **MAP** for mapping each TEID to its corresponding UE co
     }
     ```
 
-2. Parse the GTP packet and forward to the UE connection by TEID (from **MAP**):
+2. Parse the GTP packet and forward to the UE by TEID (from **MAP**):
 
     ```go
     teid, payload, err := parseGtpPacket(gtpPacket)
@@ -258,14 +260,30 @@ The RAN will maintain a **MAP** for mapping each TEID to its corresponding UE co
         return
     }
 
-    conn, found := teidToConn.Load(teid)
-    if !found {
+    ue, exists := dlTeidToUe.Load(teid)
+    if !exists {
         return
     }
 
-    n, err := conn.(net.Conn).Write(payload)
-    if err != nil {
-      return
+    switch u := ue.(type) {
+    case *RanUe:
+        dataPlaneAddress := u.GetDataPlaneAddress()
+        if dataPlaneAddress == nil {
+            return
+        }
+        n, err := ranDataPlaneServer.WriteToUDP(payload, dataPlaneAddress)
+        if err != nil {
+            return
+        }
+    case *XnUe:
+        dataPlaneAddress := u.GetDataPlaneAddress()
+        if dataPlaneAddress == nil {
+            return
+        }
+        n, err := ranDataPlaneServer.WriteToUDP(payload, dataPlaneAddress)
+        if err != nil {
+            return
+        }
     }
     ```
 

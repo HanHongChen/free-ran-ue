@@ -82,8 +82,8 @@ The supported `NGAP` types are:
             ulTeid aper.OctetString
             dlTeid aper.OctetString
 
-            n1Conn        net.Conn
-            dataPlaneConn net.Conn
+            n1Conn           net.Conn
+            dataPlaneAddress *net.UDPAddr
 
             nrdcIndicator    bool
             nrdcIndicatorMtx sync.Mutex
@@ -105,7 +105,7 @@ The supported `NGAP` types are:
             ulTeid aper.OctetString
             dlTeid aper.OctetString
 
-            dataPlaneConn net.Conn
+            dataPlaneAddress *net.UDPAddr
         }
         ```
 

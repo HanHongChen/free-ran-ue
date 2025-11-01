@@ -597,11 +597,20 @@ var testValidateUeIeCases = []struct {
 				Nia2: true,
 				Nia3: false,
 			},
-			PduSession: model.PduSessionIE{
-				Dnn: "internet",
-				Snssai: model.SnssaiIE{
-					Sst: "1",
-					Sd:  "010203",
+			PduSessions: []model.PduSessionIE{
+				{
+					Dnn: "internet",
+					Snssai: model.SnssaiIE{
+						Sst: "1",
+						Sd:  "010203",
+					},
+				},
+				{
+					Dnn: "internet",
+					Snssai: model.SnssaiIE{
+						Sst: "1",
+						Sd:  "110203",
+					},
 				},
 			},
 			UeTunnelDevice: "ueTun0",
@@ -640,11 +649,20 @@ var testValidateUeIeCases = []struct {
 				Nia2: true,
 				Nia3: false,
 			},
-			PduSession: model.PduSessionIE{
-				Dnn: "internet",
-				Snssai: model.SnssaiIE{
-					Sst: "1",
-					Sd:  "010203",
+			PduSessions: []model.PduSessionIE{
+				{
+					Dnn: "internet",
+					Snssai: model.SnssaiIE{
+						Sst: "1",
+						Sd:  "010203",
+					},
+				},
+				{
+					Dnn: "internet",
+					Snssai: model.SnssaiIE{
+						Sst: "1",
+						Sd:  "110203",
+					},
 				},
 			},
 			Nrdc: model.NrdcIE{
@@ -691,11 +709,20 @@ var testValidateUeIeCases = []struct {
 				Nia2: true,
 				Nia3: false,
 			},
-			PduSession: model.PduSessionIE{
-				Dnn: "internet",
-				Snssai: model.SnssaiIE{
-					Sst: "1",
-					Sd:  "010203",
+			PduSessions: []model.PduSessionIE{
+				{
+					Dnn: "internet",
+					Snssai: model.SnssaiIE{
+						Sst: "1",
+						Sd:  "010203",
+					},
+				},
+				{
+					Dnn: "internet",
+					Snssai: model.SnssaiIE{
+						Sst: "1",
+						Sd:  "110203",
+					},
 				},
 			},
 			Nrdc: model.NrdcIE{

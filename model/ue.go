@@ -12,6 +12,10 @@ type UeIE struct {
 	RanDataPlaneIp    string `yaml:"ranDataPlaneIp" valid:"required"`
 	LocalDataPlaneIp  string `yaml:"localDataPlaneIp"`
 
+	Ran2DataPlaneIp   string `yaml:"ran2DataPlaneIp" valid:"required"`
+	LocalDataPlane2Ip string `yaml:"localDataPlane2Ip"`
+
+
 	RanControlPlanePort int `yaml:"ranControlPlanePort" valid:"required"`
 	RanDataPlanePort    int `yaml:"ranDataPlanePort" valid:"required"`
 
@@ -24,7 +28,7 @@ type UeIE struct {
 	CipheringAlgorithm CipheringAlgorithmIE `yaml:"cipheringAlgorithm" valid:"required"`
 	IntegrityAlgorithm IntegrityAlgorithmIE `yaml:"integrityAlgorithm" valid:"required"`
 
-	PduSession PduSessionIE `yaml:"pduSession" valid:"required"`
+	PduSessions []PduSessionIE `yaml:"pduSessions" valid:"required"`
 
 	Nrdc NrdcIE `yaml:"nrdc"`
 

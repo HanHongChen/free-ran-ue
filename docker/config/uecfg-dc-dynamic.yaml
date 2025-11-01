@@ -2,6 +2,8 @@ ue:
   ranControlPlaneIp: "10.0.2.3"
   ranDataPlaneIp: "10.0.2.3"
   localDataPlaneIp: "10.0.2.2"
+  ran2DataPlaneIp: "10.0.3.3"
+  localDataPlane2Ip: "10.0.3.2"
 
   ranControlPlanePort: 31413
   ranDataPlanePort: 31414
@@ -28,11 +30,15 @@ ue:
     nea2: false
     nea3: false
 
-  pduSession:
-    dnn: "internet"
-    snssai:
-      sst: "1"
-      sd: "010203"
+  pduSessions:
+    - dnn: "internet"
+      snssai:
+        sst: "1"
+        sd: "000001"
+    - dnn: "internet1"
+      snssai:
+        sst: "1"
+        sd: "000002"
 
   accessType: "3GPP_ACCESS" # 3GPP_ACCESS, NON_3GPP_ACCESS
 
@@ -43,7 +49,7 @@ ue:
       port: 31414
     dcLocalDataPlaneIp: "10.0.3.2"
 
-  ueTunnelDevice: "ueTun0"
+  ueTunnelDevice: "ueTun"
 
 logger:
   level: "info" # error, warn, info, debug, trace

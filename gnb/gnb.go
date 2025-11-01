@@ -248,6 +248,7 @@ func (g *Gnb) Start(ctx context.Context) error {
 		return err
 	}
 
+	// listen udp port
 	if err := g.startRanDataPlaneServer(); err != nil {
 		g.RanLog.Errorf("Error starting ran data plane listener: %v", err)
 		if err := (*g.ranControlPlaneListener).Close(); err != nil {
@@ -267,7 +268,6 @@ func (g *Gnb) Start(ctx context.Context) error {
 	}
 
 	g.startGtpProcessor(ctx)
-
 	go g.startDataPlaneProcessor()
 
 	go func() {
@@ -306,6 +306,7 @@ func (g *Gnb) Start(ctx context.Context) error {
 			}
 
 			g.ranUeConns.Store(ranUe, struct{}{})
+			//這裡面要改
 			go g.handleRanConnection(ctx, ranUe)
 		}
 	}()
@@ -506,6 +507,13 @@ func (g *Gnb) setupN1(ranUe *RanUe) error {
 	}
 	time.Sleep(1 * time.Second)
 
+	pduSession2ResourceSetupRequestTransfer := ngapType.PDUSessionResourceSetupRequestTransfer{}
+	if err := g.processUePduSessionEstablishment(ranUe, &pduSession2ResourceSetupRequestTransfer); err != nil {
+		g.RanLog.Warnln("UE setting pdu session2 failed")
+		return err
+	}
+	time.Sleep(1 * time.Second)
+
 	// configure UE mapping
 	for _, item := range pduSessionResourceSetupRequestTransfer.ProtocolIEs.List {
 		switch item.Id.Value {
@@ -655,6 +663,7 @@ func (g *Gnb) startDataPlaneProcessor() {
 	}
 }
 
+// 決定要設定當前 gnb的data plane還是xn的data plane
 func (g *Gnb) handleUeDataPlaneInitialPacket(ueAddress *net.UDPAddr) {
 	dlTeidAndUeType := <-g.dlTeidAndUeTypeChannel
 	ue, exists := g.dlTeidToUe.Load(hex.EncodeToString(dlTeidAndUeType.dlTeid))
@@ -957,6 +966,10 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	g.NgapLog.Tracef("Received %d bytes of NGAP PDU Session Resource Setup Request from AMF", n)
 	g.NgapLog.Debugln("Receive NGAP PDU Session Resource Setup Request from AMF")
 
+	// 複製一份可能轉送要用到
+	ngapPduSessionResourceSetupRequestRawCopy := make([]byte, n)
+	copy(ngapPduSessionResourceSetupRequestRawCopy, ngapPduSessionResourceSetupRequestRaw[:n])
+
 	ngapPduSessionResourceSetupRequest, err := ngap.Decoder(ngapPduSessionResourceSetupRequestRaw[:n])
 	if err != nil {
 		return fmt.Errorf("error decode ngap pdu session resource setup request from AMF: %v", err)
@@ -967,12 +980,14 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	g.NgapLog.Tracef("NGAP PDU Session Resource Setup Request: %+v", ngapPduSessionResourceSetupRequest)
 
 	var nasPduSessionEstablishmentAccept []byte
+	var pduSessionId int64
 	for _, ie := range ngapPduSessionResourceSetupRequest.InitiatingMessage.Value.PDUSessionResourceSetupRequest.ProtocolIEs.List {
 		switch ie.Id.Value {
 		case ngapType.ProtocolIEIDAMFUENGAPID:
 		case ngapType.ProtocolIEIDRANUENGAPID:
 		case ngapType.ProtocolIEIDPDUSessionResourceSetupListSUReq:
 			for _, pduSessionResourceSetupItem := range ie.Value.PDUSessionResourceSetupListSUReq.List {
+				pduSessionId = pduSessionResourceSetupItem.PDUSessionID.Value
 				nasPduSessionEstablishmentAccept = make([]byte, len(pduSessionResourceSetupItem.PDUSessionNASPDU.Value))
 				copy(nasPduSessionEstablishmentAccept, pduSessionResourceSetupItem.PDUSessionNASPDU.Value)
 				g.NgapLog.Tracef("Get NASPDU: %+v", nasPduSessionEstablishmentAccept)
@@ -1001,13 +1016,45 @@ func (g *Gnb) processUePduSessionEstablishment(ranUe *RanUe, pduSessionResourceS
 	g.NasLog.Debugln("Send NAS PDU Session Establishment Accept to UE")
 
 	// send ngap pdu session resource setup response to AMF
-	ngapPduSessionResourceSetupResponseTransfer, err := getPduSessionResourceSetupResponseTransfer(ranUe.GetDlTeid(), g.ranN3Ip, 1, g.staticNrdc, qosFlowPerTNLInformationItem)
-	if err != nil {
-		return fmt.Errorf("error get pdu session resource setup response transfer: %v", err)
-	}
-	g.NgapLog.Tracef("Get pdu session resource setup response transfer: %+v", ngapPduSessionResourceSetupResponseTransfer)
+	var ngapPduSessionResourceSetupResponseTransfer []byte
+	if pduSessionId == 1 {
+		ngapPduSessionResourceSetupResponseTransfer, err = getPduSessionResourceSetupResponseTransfer(ranUe.GetDlTeid(), g.ranN3Ip, 1, g.staticNrdc, qosFlowPerTNLInformationItem)
+		if err != nil {
+			return fmt.Errorf("error get pdu session resource setup response transfer: %v", err)
+		}
+		g.NgapLog.Tracef("Get pdu session resource setup response transfer: %+v", ngapPduSessionResourceSetupResponseTransfer)
 
-	ngapPduSessionResourceSetupResponse, err := getPduSessionResourceSetupResponse(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), constant.PDU_SESSION_ID, ngapPduSessionResourceSetupResponseTransfer)
+	} else if pduSessionId == 2 {
+		gnb2PduSessionResourceSetupResponse, err := g.xnPduSessionResourceSetupRequestTransfer(
+			ranUe.GetMobileIdentityIMSI(),
+			ngapPduSessionResourceSetupRequestRawCopy,
+		)
+		if err != nil {
+			return fmt.Errorf("error xn pdu session resource setup request transfer: %v", err)
+		}
+
+		ngapPduSessionResourceSetupResponseTransfer, err = getPduSessionResourceSetupResponseTransfer(
+			gnb2PduSessionResourceSetupResponse.QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel.GTPTEID.Value,
+			g.xnDialIp,
+			// "10.0.1.4",
+			1,
+			false,
+			qosFlowPerTNLInformationItem,
+		)
+		if err != nil {
+			return fmt.Errorf("error get pdu session 2 resource setup response transfer: %v", err)
+		}
+		g.NgapLog.Tracef("Get pdu session 2 resource setup response transfer: %+v", ngapPduSessionResourceSetupResponseTransfer)
+
+	}
+
+	// ngapPduSessionResourceSetupResponseTransfer, err := getPduSessionResourceSetupResponseTransfer(ranUe.GetDlTeid(), g.ranN3Ip, 1, g.staticNrdc, qosFlowPerTNLInformationItem)
+	// if err != nil {
+	// 	return fmt.Errorf("error get pdu session resource setup response transfer: %v", err)
+	// }
+	// g.NgapLog.Tracef("Get pdu session resource setup response transfer: %+v", ngapPduSessionResourceSetupResponseTransfer)
+
+	ngapPduSessionResourceSetupResponse, err := getPduSessionResourceSetupResponse(ranUe.GetAmfUeId(), ranUe.GetRanUeId(), pduSessionId, ngapPduSessionResourceSetupResponseTransfer)
 	if err != nil {
 		return fmt.Errorf("error get pdu session resource setup response: %v", err)
 	}

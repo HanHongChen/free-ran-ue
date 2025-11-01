@@ -146,6 +146,7 @@ func xnPduSessionResourceSetupProcessor(g *Gnb, conn net.Conn, imsi string, ngap
 		switch ie.Id.Value {
 		case ngapType.ProtocolIEIDPDUSessionAggregateMaximumBitRate:
 		case ngapType.ProtocolIEIDULNGUUPTNLInformation:
+			xnUe.SetUlTeid(ie.Value.ULNGUUPTNLInformation.GTPTunnel.GTPTEID.Value)
 		case ngapType.ProtocolIEIDAdditionalULNGUUPTNLInformation:
 			xnUe.SetUlTeid(ie.Value.AdditionalULNGUUPTNLInformation.List[0].NGUUPTNLInformation.GTPTunnel.GTPTEID.Value)
 		case ngapType.ProtocolIEIDPDUSessionType:

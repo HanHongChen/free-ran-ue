@@ -507,6 +507,7 @@ func (g *Gnb) setupN1(ranUe *RanUe) error {
 	}
 	time.Sleep(1 * time.Second)
 
+	//
 	pduSession2ResourceSetupRequestTransfer := ngapType.PDUSessionResourceSetupRequestTransfer{}
 	if err := g.processUePduSessionEstablishment(ranUe, &pduSession2ResourceSetupRequestTransfer); err != nil {
 		g.RanLog.Warnln("UE setting pdu session2 failed")
@@ -658,6 +659,7 @@ func (g *Gnb) startDataPlaneProcessor() {
 		} else {
 			tmp := make([]byte, n)
 			copy(tmp, buffer[:n])
+
 			go g.handleUeDataPlanePacket(ueAddress, tmp)
 		}
 	}

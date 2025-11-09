@@ -221,7 +221,7 @@ func ValidateUeIe(ueIe *model.UeIE) error {
 	// 	return fmt.Errorf("invalid ue pdu session, %s", err.Error())
 	// }
 
-	for i, sess := range ueIe.PduSessions{
+	for i, sess := range ueIe.PduSessions {
 		if err := ValidatePduSession(&sess); err != nil {
 			return fmt.Errorf("invalid ue pdu session [%d], %s", i, err.Error())
 		}
